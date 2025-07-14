@@ -5,14 +5,32 @@ import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
 class UserDomainTest {
+
+    private UserId createValidUserId() {
+        return new UserId("member1");
+    }
+
+    private Email createValidEmail() {
+        return new Email("test@example.com");
+    }
+
+    private BirthDate createValidBirthDate() {
+        return new BirthDate("2000-01-01");
+    }
 
     @DisplayName("UserId 객체를 생성할 때,")
     @Nested
@@ -128,14 +146,19 @@ class UserDomainTest {
             BirthDate birthDate = new BirthDate("2000-01-01");
 
             // when
-            UserModel user = new UserModel(userId, email, gender, birthDate);
+            UserModel user = UserModel.builder()
+                                .userId(userId)
+                                .email(email)
+                                .gender(gender)
+                                .birthDate(birthDate)
+                                .build();
 
             // then
             assertAll(
                 () -> assertThat(user.getUserId()).isEqualTo(userId),
                 () -> assertThat(user.getEmail()).isEqualTo(email),
                 () -> assertThat(user.getGender()).isEqualTo(gender),
-                () -> assertThat(user.getBirthday()).isEqualTo(birthDate)
+                () -> assertThat(user.getBirthDate()).isEqualTo(birthDate)
             );
         }
 
@@ -150,11 +173,69 @@ class UserDomainTest {
 
             // then
             assertAll(
-                () -> assertThrows(CoreException.class, () -> new UserModel(null, email, gender, birthDate)),
-                () -> assertThrows(CoreException.class, () -> new UserModel(userId, null, gender, birthDate)),
-                () -> assertThrows(CoreException.class, () -> new UserModel(userId, email, null, birthDate)),
-                () -> assertThrows(CoreException.class, () -> new UserModel(userId, email, gender, null))
+                () -> assertThrows(CoreException.class, () -> UserModel.builder().email(email).gender(gender).birthDate(birthDate).build()),
+                () -> assertThrows(CoreException.class, () -> UserModel.builder().userId(userId).gender(gender).birthDate(birthDate).build()),
+                () -> assertThrows(CoreException.class, () -> UserModel.builder().userId(userId).email(email).birthDate(birthDate).build()),
+                () -> assertThrows(CoreException.class, () -> UserModel.builder().userId(userId).email(email).gender(gender).build())
             );
+        }
+    }
+
+    @DisplayName("UserService 객체를 생성할 때,")
+    @Nested
+    @ExtendWith(MockitoExtension.class)
+    class UserServiceTest {
+
+        @Mock
+        private UserRepository userRepository;
+
+        @InjectMocks
+        private UserService userService;
+
+        @DisplayName("이미 존재하는 아이디로 회원가입을 시도하면 예외가 발생한다.")
+        @Test
+        void createUser_withExistingUserId_throwsException() {
+            // given
+            UserId existingUserId = createValidUserId();
+            Email email = createValidEmail();
+            Gender gender = Gender.MALE;
+            BirthDate birthDate = createValidBirthDate();
+
+            when(userRepository.existsByUserId(existingUserId)).thenReturn(true);
+
+            // when & then
+            CoreException exception = assertThrows(CoreException.class, () ->
+                    userService.createUser(existingUserId, email, gender, birthDate)
+            );
+
+            assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+            assertThat(exception.getMessage()).isEqualTo("이미 존재하는 아이디입니다.");
+        }
+
+        @DisplayName("새로운 아이디로 회원가입을 시도하면 정상적으로 생성된다.")
+        @Test
+        void createUser_withNewUserId_createsUser() {
+            // given
+            UserId newUserId = createValidUserId();
+            Email email = createValidEmail();
+            Gender gender = Gender.MALE;
+            BirthDate birthDate = createValidBirthDate();
+
+            UserModel expectedUser = UserModel.builder()
+                    .userId(newUserId)
+                    .email(email)
+                    .gender(gender)
+                    .birthDate(birthDate)
+                    .build();
+
+            when(userRepository.existsByUserId(newUserId)).thenReturn(false);
+            when(userRepository.create(any(UserModel.class))).thenReturn(expectedUser);
+
+            // when
+            UserModel createdUser = userService.createUser(newUserId, email, gender, birthDate);
+
+            // then
+            assertThat(createdUser).isEqualTo(expectedUser);
         }
     }
 }

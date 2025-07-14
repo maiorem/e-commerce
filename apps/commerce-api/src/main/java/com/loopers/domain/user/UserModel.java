@@ -4,6 +4,7 @@ import com.loopers.domain.BaseEntity;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import jakarta.persistence.*;
+import lombok.Builder;
 
 @Entity
 @Table(name = "user")
@@ -20,11 +21,12 @@ public class UserModel extends BaseEntity {
     private Gender gender;
 
     @Embedded
-    private BirthDate birthday;
+    private BirthDate birthDate;
 
     protected UserModel() {}
 
-    public UserModel(UserId userId, Email email, Gender gender, BirthDate birthday) {
+    @Builder
+    public UserModel(UserId userId, Email email, Gender gender, BirthDate birthDate) {
         if (userId == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "아이디는 비어있을 수 없습니다.");
         }
@@ -34,13 +36,13 @@ public class UserModel extends BaseEntity {
         if (gender == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "성별은 비어있을 수 없습니다.");
         }
-        if (birthday == null) {
+        if (birthDate == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "생년월일은 비어있을 수 없습니다.");
         }
         this.userId = userId;
         this.email = email;
         this.gender = gender;
-        this.birthday = birthday;
+        this.birthDate = birthDate;
     }
 
     public UserId getUserId() {
@@ -55,7 +57,7 @@ public class UserModel extends BaseEntity {
         return gender;
     }
 
-    public BirthDate getBirthday() {
-        return birthday;
+    public BirthDate getBirthDate() {
+        return birthDate;
     }
 }

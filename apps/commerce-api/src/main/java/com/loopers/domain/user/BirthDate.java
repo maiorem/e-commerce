@@ -16,7 +16,7 @@ public class BirthDate {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd")
             .withResolverStyle(ResolverStyle.STRICT);
 
-    @Column(name = "birthday", nullable = false)
+    @Column(name = "birth_date", nullable = false)
     private LocalDate value;
 
     protected BirthDate() {}
