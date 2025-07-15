@@ -24,4 +24,10 @@ public class UserFacade {
         UserModel user = userService.createUser(regUserId, regEmail, regGender, regBirthDate);
         return UserInfo.from(user);
     }
+
+    public UserInfo getMyInfo(String userId) {
+        UserId myUserId = new UserId(userId);
+        UserModel user = userService.getUser(myUserId);
+        return UserInfo.from(user);
+    }
 }

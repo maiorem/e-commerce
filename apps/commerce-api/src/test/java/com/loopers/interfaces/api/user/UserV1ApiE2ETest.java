@@ -1,11 +1,15 @@
 package com.loopers.interfaces.api.user;
 
+import com.loopers.domain.user.BirthDate;
+import com.loopers.domain.user.Email;
 import com.loopers.domain.user.Gender;
 import com.loopers.domain.user.UserId;
+import com.loopers.domain.user.UserModel;
 import com.loopers.domain.user.UserRepository;
 import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -14,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,10 +27,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class UserV1ApiE2ETest {
 
     private static final String ENDPOINT_CREATE_USER = "/api/v1/users";
+    private static final String ENDPOINT_GET_MY_INFO = "/api/v1/users/me";
 
     private final TestRestTemplate testRestTemplate;
     private final UserRepository userRepository;
@@ -40,6 +47,17 @@ class UserV1ApiE2ETest {
         this.testRestTemplate = testRestTemplate;
         this.userRepository = userRepository;
         this.databaseCleanUp = databaseCleanUp;
+    }
+
+    @BeforeEach
+    void setUp() {
+        UserModel model = new UserModel(
+            new UserId("seyoung"),
+            new Email("seyoung@loopers.com"),
+            Gender.FEMALE,
+            new BirthDate("2000-01-01")
+        );
+        userRepository.create(model);
     }
 
     @AfterEach
@@ -136,6 +154,50 @@ class UserV1ApiE2ETest {
             // then
             assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST),
+                () -> assertTrue(response.getStatusCode().is4xxClientError())
+            );
+        }
+    }
+
+    @DisplayName("GET /api/v1/users/me")
+    @Nested
+    class GetMyInfo {
+
+        @DisplayName("내 정보 조회에 성공할 경우, 해당하는 유저 정보를 응답으로 반환한다.")
+        @Test
+        void getMyInfo_returns200Ok() {
+            
+            // given
+           HttpHeaders headers = new HttpHeaders();
+           headers.set("X-USER-ID", "seyoung");
+
+           // when
+           ParameterizedTypeReference<ApiResponse<UserV1Dto.UserResponse>> responseType = new ParameterizedTypeReference<>() {};
+           ResponseEntity<ApiResponse<UserV1Dto.UserResponse>> response =
+               testRestTemplate.exchange(ENDPOINT_GET_MY_INFO, HttpMethod.GET, new HttpEntity<>(headers), responseType);
+
+           // then
+           assertAll(
+               () -> assertTrue(response.getStatusCode().is2xxSuccessful()),
+               () -> assertThat(response.getBody().data().userId()).isEqualTo("seyoung")
+           );
+        }
+
+        @DisplayName("내 정보 조회에 실패할 경우, 404 Not Found 응답을 반환한다.")
+        @Test
+        void getMyInfo_returns404NotFound() {
+            // given
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-USER-ID", "nonexistentuser");
+
+            // when
+            ParameterizedTypeReference<ApiResponse<UserV1Dto.UserResponse>> responseType = new ParameterizedTypeReference<>() {};
+            ResponseEntity<ApiResponse<UserV1Dto.UserResponse>> response =
+                testRestTemplate.exchange(ENDPOINT_GET_MY_INFO, HttpMethod.GET, new HttpEntity<>(headers), responseType);
+
+            // then 
+            assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND),
                 () -> assertTrue(response.getStatusCode().is4xxClientError())
             );
         }
