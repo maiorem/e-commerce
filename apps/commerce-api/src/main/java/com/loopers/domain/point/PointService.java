@@ -40,4 +40,15 @@ public class PointService {
         return pointRepository.create(point);
     }
 
+    public PointModel getMyPoint(String userId) {
+        if (!userRepository.existsByUserId(new UserId(userId))) {
+            return null;
+        }
+        return pointRepository.findByUserId(new UserId(userId))
+                .orElseGet(() -> pointRepository.create(PointModel.builder()
+                        .userId(new UserId(userId))
+                        .amount(0)
+                        .build()
+                ));
+    }
 }

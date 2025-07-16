@@ -14,4 +14,7 @@ public interface PointV1ApiSpec {
     @Operation(summary = "포인트 충전", description = "포인트를 충전합니다.")
     ApiResponse<PointV1Dto.PointResponse> chargePoint(@RequestHeader("X-USER-ID") String userId, @RequestBody PointV1Dto.PointRequest request);
 
+    @Operation(summary = "포인트 조회", description = "사용자의 포인트 정보를 조회합니다.")
+    ApiResponse<Object> getPoint(@RequestHeader("X-USER-ID") String userId);
+
 }
