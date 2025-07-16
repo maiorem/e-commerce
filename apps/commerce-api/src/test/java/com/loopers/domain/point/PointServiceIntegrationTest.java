@@ -70,5 +70,45 @@ public class PointServiceIntegrationTest {
         }
     }
 
+    @DisplayName("포인트 조회 테스트")
+    @Nested
+    class GetPoint {
+
+        @DisplayName("해당 ID 의 회원이 존재할 경우, 보유 포인트가 반환된다.")
+        @Test
+        void getMyPointSuccess() {
+            // given
+            UserModel user = userRepository.create(UserModel.builder()
+                    .userId(new UserId("seyoung"))
+                    .email(new Email("seyoung@loopers.com"))
+                    .gender(Gender.MALE)
+                    .birthDate(new BirthDate("2000-01-01"))
+                    .build());
+            int initialAmount = 500;
+            pointService.chargeMyPoint(user.getUserId().getValue(), initialAmount);
+
+            // when
+            PointModel pointModel = pointService.getMyPoint(user.getUserId().getValue());
+
+            // then
+            assertThat(pointModel.getUserId()).isEqualTo(user.getUserId());
+            assertThat(pointModel.getAmount()).isEqualTo(initialAmount);
+
+        }
+
+        @DisplayName("해당 ID 의 회원이 존재하지 않을 경우, null 이 반환된다.")
+        @Test
+        void getMyPointFailureInvalidUserId() {
+            // given
+            String userId = "seyoung123";
+
+            // when
+            PointModel pointModel = pointService.getMyPoint(userId);
+
+            // then
+            assertThat(pointModel).isNull();
+        }
+    }
+
 
 }

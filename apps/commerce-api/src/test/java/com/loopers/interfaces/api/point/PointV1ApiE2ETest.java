@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.loopers.domain.point.PointModel;
 import com.loopers.domain.point.PointRepository;
 import com.loopers.domain.user.BirthDate;
 import com.loopers.domain.user.Email;
@@ -104,7 +105,8 @@ class PointV1ApiE2ETest {
             HttpHeaders initialHeaders = new HttpHeaders();
             initialHeaders.set("X-USER-ID", user.getUserId().getValue());
             PointV1Dto.PointRequest initialRequest = new PointV1Dto.PointRequest(initialAmount);
-            testRestTemplate.exchange(ENDPOINT_CHARGE_POINT, HttpMethod.POST, new HttpEntity<>(initialRequest, initialHeaders), new ParameterizedTypeReference<ApiResponse<PointV1Dto.PointResponse>>() {});
+            testRestTemplate.exchange(ENDPOINT_CHARGE_POINT, HttpMethod.POST, new HttpEntity<>(initialRequest, initialHeaders), new ParameterizedTypeReference<ApiResponse<PointV1Dto.PointResponse>>() {
+            });
 
             // 두 번째 충전
             int additionalAmount = 500;
@@ -113,7 +115,8 @@ class PointV1ApiE2ETest {
             PointV1Dto.PointRequest additionalRequest = new PointV1Dto.PointRequest(additionalAmount);
 
             // when
-            ParameterizedTypeReference<ApiResponse<PointV1Dto.PointResponse>> responseType = new ParameterizedTypeReference<>() {};
+            ParameterizedTypeReference<ApiResponse<PointV1Dto.PointResponse>> responseType = new ParameterizedTypeReference<>() {
+            };
             ResponseEntity<ApiResponse<PointV1Dto.PointResponse>> response =
                     testRestTemplate.exchange(ENDPOINT_CHARGE_POINT, HttpMethod.POST, new HttpEntity<>(additionalRequest, additionalHeaders), responseType);
 
@@ -134,7 +137,8 @@ class PointV1ApiE2ETest {
             PointV1Dto.PointRequest request = new PointV1Dto.PointRequest(1000);
 
             // when
-            ParameterizedTypeReference<ApiResponse<PointV1Dto.PointResponse>> responseType = new ParameterizedTypeReference<>() {};
+            ParameterizedTypeReference<ApiResponse<PointV1Dto.PointResponse>> responseType = new ParameterizedTypeReference<>() {
+            };
             ResponseEntity<ApiResponse<PointV1Dto.PointResponse>> response =
                     testRestTemplate.exchange(ENDPOINT_CHARGE_POINT, HttpMethod.POST, new HttpEntity<>(request, headers), responseType);
 
@@ -144,5 +148,64 @@ class PointV1ApiE2ETest {
                     () -> assertTrue(response.getStatusCode().is4xxClientError())
             );
         }
+    }
+
+    @DisplayName("GET /api/v1/points")
+    @Nested
+    class GetPoint {
+
+        @DisplayName("존재하는 유저의 포인트를 조회하면, 보유 포인트를 응답으로 반환한다.")
+        @Test
+        void getPoint_withExistingUser_returnsUserPoints() {
+            // given
+            UserModel user = userRepository.create(UserModel.builder()
+                    .userId(new UserId("seyoung"))
+                    .email(new Email("seyoung@loopers.com"))
+                    .gender(Gender.MALE)
+                    .birthDate(new BirthDate("2000-01-01"))
+                    .build());
+            int initialAmount = 1000;
+            pointRepository.create(PointModel.builder()
+                    .userId(user.getUserId())
+                    .amount(initialAmount)
+                    .build());
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-USER-ID", user.getUserId().getValue());
+
+            // when
+            ParameterizedTypeReference<ApiResponse<PointV1Dto.PointResponse>> responseType = new ParameterizedTypeReference<>() {
+            };
+            ResponseEntity<ApiResponse<PointV1Dto.PointResponse>> response =
+                    testRestTemplate.exchange(ENDPOINT_GET_POINT, HttpMethod.GET, new HttpEntity<>(null, headers), responseType);
+
+            // then
+            assertAll(
+                    () -> assertTrue(response.getStatusCode().is2xxSuccessful()),
+                    () -> assertThat(response.getBody().data().totalAmount()).isEqualTo(initialAmount)
+            );
+        }
+
+        @DisplayName("X-USER-ID 헤더가 없는 경우, 400 BAD_REQUEST 응답을 반환한다.")
+        @Test
+        void getPoint_withoutUserIdHeader_returns400BadRequest() {
+            //given
+            HttpHeaders headers = new HttpHeaders(); // 헤더에 X-USER-ID가 없음
+
+            // when
+            ParameterizedTypeReference<ApiResponse<PointV1Dto.PointResponse>> responseType = new ParameterizedTypeReference<>() {
+            };
+            ResponseEntity<ApiResponse<PointV1Dto.PointResponse>> response =
+                    testRestTemplate.exchange(ENDPOINT_GET_POINT, HttpMethod.GET, new HttpEntity<>(null, headers), responseType);
+
+            // then
+            assertAll(
+                    () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST),
+                    () -> assertTrue(response.getStatusCode().is4xxClientError())
+            );
+
+        }
+
+
     }
 }

@@ -18,4 +18,8 @@ public class PointFacade {
         return PointInfo.from(model);
     }
 
+    public PointInfo getMyPoint(String userId) {
+        PointModel model = pointService.getMyPoint(userId);
+        return PointInfo.from(model);
+    }
 }
