@@ -27,7 +27,6 @@ public class UserService {
     }
 
     public UserModel getUser(UserId userId) {
-        return userRepository.findByUserId(userId)
-                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 유저입니다."));
+        return userRepository.findByUserId(userId).orElse(null);
     }
 }

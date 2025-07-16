@@ -1,15 +1,11 @@
 package com.loopers.interfaces.api.user;
 
-import com.loopers.domain.user.BirthDate;
-import com.loopers.domain.user.Email;
 import com.loopers.domain.user.Gender;
 import com.loopers.domain.user.UserId;
-import com.loopers.domain.user.UserModel;
 import com.loopers.domain.user.UserRepository;
 import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -47,17 +43,6 @@ class UserV1ApiE2ETest {
         this.testRestTemplate = testRestTemplate;
         this.userRepository = userRepository;
         this.databaseCleanUp = databaseCleanUp;
-    }
-
-    @BeforeEach
-    void setUp() {
-        UserModel model = new UserModel(
-            new UserId("seyoung"),
-            new Email("seyoung@loopers.com"),
-            Gender.FEMALE,
-            new BirthDate("2000-01-01")
-        );
-        userRepository.create(model);
     }
 
     @AfterEach
@@ -166,8 +151,13 @@ class UserV1ApiE2ETest {
         @DisplayName("내 정보 조회에 성공할 경우, 해당하는 유저 정보를 응답으로 반환한다.")
         @Test
         void getMyInfo_returns200Ok() {
-            
-            // given
+           // given
+           UserV1Dto.UserRequest existingUserRequest = new UserV1Dto.UserRequest(
+                    "seyoung", "seyoung@loopers.com", Gender.FEMALE.name(), "1990-05-10"
+            );
+           // 회원가입
+           testRestTemplate.exchange(ENDPOINT_CREATE_USER, HttpMethod.POST, new HttpEntity<>(existingUserRequest), new ParameterizedTypeReference<ApiResponse<UserV1Dto.UserResponse>>() {});
+
            HttpHeaders headers = new HttpHeaders();
            headers.set("X-USER-ID", "seyoung");
 
@@ -188,7 +178,7 @@ class UserV1ApiE2ETest {
         void getMyInfo_returns404NotFound() {
             // given
             HttpHeaders headers = new HttpHeaders();
-            headers.set("X-USER-ID", "nonexistentuser");
+            headers.set("X-USER-ID", "seyoung123");
 
             // when
             ParameterizedTypeReference<ApiResponse<UserV1Dto.UserResponse>> responseType = new ParameterizedTypeReference<>() {};
