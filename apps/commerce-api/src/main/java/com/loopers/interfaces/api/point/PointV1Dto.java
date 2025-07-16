@@ -8,7 +8,7 @@ public class PointV1Dto {
 
     public record PointRequest(
         @NotBlank(message = "충전 금액을 입력해주세요.")
-        @Parameter(name = "충전금액", description = "충전하고자 하는 그맹ㄱ")
+        @Parameter(name = "충전금액", description = "충전하고자 하는 금액")
         int amount
     ) {
         public static PointRequest from(int amount) {

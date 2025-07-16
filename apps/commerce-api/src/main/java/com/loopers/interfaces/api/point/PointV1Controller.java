@@ -11,17 +11,17 @@ import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.interfaces.api.point.PointV1Dto.PointRequest;
 import com.loopers.interfaces.api.point.PointV1Dto.PointResponse;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import org.springframework.web.bind.annotation.RequestBody;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/vi/points")
+@RequestMapping("/api/v1/points")
 public class PointV1Controller implements PointV1ApiSpec{
     
     private final PointFacade pointFacade;
 
-    @PostMapping()
+    @PostMapping("/charge")
     @Override
     public ApiResponse<PointResponse> chargePoint(
         @RequestHeader("X-USER-ID") String userId, 

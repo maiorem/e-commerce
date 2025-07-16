@@ -14,7 +14,7 @@ public class UserRepositoryImpl implements UserRepository {
 
     @Override
     public UserModel create(UserModel user) {
-        return userJpaRepository.save(user);
+        return userJpaRepository.saveAndFlush(user);
     }
 
     @Override
