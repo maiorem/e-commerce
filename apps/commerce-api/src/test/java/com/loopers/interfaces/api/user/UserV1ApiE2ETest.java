@@ -14,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,10 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class UserV1ApiE2ETest {
 
     private static final String ENDPOINT_CREATE_USER = "/api/v1/users";
+    private static final String ENDPOINT_GET_MY_INFO = "/api/v1/users/me";
 
     private final TestRestTemplate testRestTemplate;
     private final UserRepository userRepository;
@@ -136,6 +139,55 @@ class UserV1ApiE2ETest {
             // then
             assertAll(
                 () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST),
+                () -> assertTrue(response.getStatusCode().is4xxClientError())
+            );
+        }
+    }
+
+    @DisplayName("GET /api/v1/users/me")
+    @Nested
+    class GetMyInfo {
+
+        @DisplayName("내 정보 조회에 성공할 경우, 해당하는 유저 정보를 응답으로 반환한다.")
+        @Test
+        void getMyInfo_returns200Ok() {
+           // given
+           UserV1Dto.UserRequest existingUserRequest = new UserV1Dto.UserRequest(
+                    "seyoung", "seyoung@loopers.com", Gender.FEMALE.name(), "1990-05-10"
+            );
+           // 회원가입
+           testRestTemplate.exchange(ENDPOINT_CREATE_USER, HttpMethod.POST, new HttpEntity<>(existingUserRequest), new ParameterizedTypeReference<ApiResponse<UserV1Dto.UserResponse>>() {});
+
+           HttpHeaders headers = new HttpHeaders();
+           headers.set("X-USER-ID", "seyoung");
+
+           // when
+           ParameterizedTypeReference<ApiResponse<UserV1Dto.UserResponse>> responseType = new ParameterizedTypeReference<>() {};
+           ResponseEntity<ApiResponse<UserV1Dto.UserResponse>> response =
+               testRestTemplate.exchange(ENDPOINT_GET_MY_INFO, HttpMethod.GET, new HttpEntity<>(headers), responseType);
+
+           // then
+           assertAll(
+               () -> assertTrue(response.getStatusCode().is2xxSuccessful()),
+               () -> assertThat(response.getBody().data().userId()).isEqualTo("seyoung")
+           );
+        }
+
+        @DisplayName("내 정보 조회에 실패할 경우, 404 Not Found 응답을 반환한다.")
+        @Test
+        void getMyInfo_returns404NotFound() {
+            // given
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("X-USER-ID", "seyoung123");
+
+            // when
+            ParameterizedTypeReference<ApiResponse<UserV1Dto.UserResponse>> responseType = new ParameterizedTypeReference<>() {};
+            ResponseEntity<ApiResponse<UserV1Dto.UserResponse>> response =
+                testRestTemplate.exchange(ENDPOINT_GET_MY_INFO, HttpMethod.GET, new HttpEntity<>(headers), responseType);
+
+            // then 
+            assertAll(
+                () -> assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND),
                 () -> assertTrue(response.getStatusCode().is4xxClientError())
             );
         }

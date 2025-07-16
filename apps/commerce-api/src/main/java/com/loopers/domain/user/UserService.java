@@ -25,4 +25,8 @@ public class UserService {
                         .build();
         return userRepository.create(user);
     }
+
+    public UserModel getUser(UserId userId) {
+        return userRepository.findByUserId(userId).orElse(null);
+    }
 }

@@ -17,8 +17,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 class UserServiceIntegrationTest {
@@ -68,11 +67,11 @@ class UserServiceIntegrationTest {
 
             // then
             assertAll(
-                () -> assertThat(userModel).isNotNull(),
-                () -> assertThat(userModel.getUserId()).isEqualTo(userId),
-                () -> assertThat(userModel.getEmail()).isEqualTo(email),
-                () -> assertThat(userModel.getGender()).isEqualTo(gender),
-                () -> assertThat(userModel.getBirthDate()).isEqualTo(birthDate)
+                    () -> assertThat(userModel).isNotNull(),
+                    () -> assertThat(userModel.getUserId()).isEqualTo(userId),
+                    () -> assertThat(userModel.getEmail()).isEqualTo(email),
+                    () -> assertThat(userModel.getGender()).isEqualTo(gender),
+                    () -> assertThat(userModel.getBirthDate()).isEqualTo(birthDate)
             );
             assertThat(userRepository.existsByUserId(userId)).isTrue();
 
@@ -103,5 +102,45 @@ class UserServiceIntegrationTest {
 
             assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
         }
+    }
+
+
+    @DisplayName("내 정보 조회 시")
+    @Nested
+    class GetMyInfo {
+
+        @DisplayName("존재하는 유저의 아이디가 주어지면, 해당 유저의 정보를 조회한다.")
+        @Test
+        void getMyInfo_withExistingUserId_success() {
+            // given
+            UserId userId = createValidUserId();
+            Email email = createValidEmail();
+            Gender gender = Gender.MALE;
+            BirthDate birthDate = createValidBirthDate();
+
+            // 회원가입
+            userService.createUser(userId, email, gender, birthDate);
+
+            //when
+            UserModel userModel = userService.getUser(userId);
+
+            // then
+            assertAll(
+                () -> assertThat(userModel).isNotNull(),
+                () -> assertThat(userModel.getUserId()).isEqualTo(userId),
+                () -> assertThat(userModel.getEmail()).isEqualTo(email)
+            );
+        }
+
+        @DisplayName("존재하지 않는 유저의 아이디가 주어지면 null이 발생한다.")
+        @Test
+        void getMyInfo_withNonExistingUserId_null() {
+            // given
+            UserId userId = createValidUserId();
+
+            // when & then
+            assertThat(userService.getUser(userId)).isNull();
+        }
+    
     }
 }
