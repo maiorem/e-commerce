@@ -23,9 +23,6 @@ public class PointServiceIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
-    private PointRepository pointRepository;
-
-    @Autowired
     private DatabaseCleanUp databaseCleanUp;
 
     @AfterEach
@@ -37,7 +34,7 @@ public class PointServiceIntegrationTest {
     @Nested
     class ChargePoint {
 
-        @DisplayName("포인트 충전 성공")
+        @DisplayName("Header로 회원 정보, Body로 충전할 포인트가 주어지면 포인트 충전에 성공한다")
         @Test
         void chargeMyPointSuccess() {
             // given
