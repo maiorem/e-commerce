@@ -129,5 +129,7 @@ erDiagram
     PRODUCT ||--o{ LIKE : liked_by
 
     ORDER ||--o{ ORDER_ITEM : contains
+    
+    ORDER ||--o{ PAYMENT_HISTORY : has
 
 ```
