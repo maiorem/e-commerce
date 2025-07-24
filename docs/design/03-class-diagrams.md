@@ -80,6 +80,15 @@ classDiagram
         -int quantity
         -int priceAtOrder
     }
+    
+    class PaymentHistory {
+        -Long id
+        -Order order 
+        -PaymentMethod paymentMethod
+        -PaymentStatus paymentStatus
+        -int amount
+        -DateTime paymentDate
+    }
 
     %% --- Value Objects ---
     class UserIdVo {
@@ -115,6 +124,21 @@ classDiagram
         REFUND
         PROMOTION
     }
+    
+    class PaymentStatus {
+        <<enumeration>>
+        SUCCESS
+        FAILED
+        PENDING
+    }
+    
+    class PaymentMethod {
+        <<enumeration>>
+        CREDIT_CARD
+        DEBIT_CARD
+        PAYPAL
+        BANK_TRANSFER
+    }
 
     User "1" --> "1" Point : associated_with
     User "1" --> "N" Order : places
@@ -129,6 +153,9 @@ classDiagram
 
     Order "1" --> "N" OrderItem : contains
     OrderItem "N" --> "1" Product : refers_to
+    Order "1" --> "1" PaymentHistory : has
+    
+    PaymentHistory "1" --> "1" Order : for
 
     Like "N" --> "1" User : by
     Like "N" --> "1" Product : on

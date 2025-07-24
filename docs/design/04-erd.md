@@ -11,6 +11,7 @@ erDiagram
         DATE birthDate "생년월일"
         DATETIME createdAt "생성 시간"
         DATETIME updatedAt "수정 시간"
+        DATETIME deletedAt "삭제 시간"
     }
 
     POINT {
@@ -19,6 +20,7 @@ erDiagram
         INT amount "현재 포인트"
         DATETIME createdAt "생성 시간"
         DATETIME updatedAt "수정 시간"
+        DATETIME deletedAt "삭제 시간"
     }
 
     POINT_HISTORY {
@@ -36,6 +38,7 @@ erDiagram
         VARCHAR description "브랜드 설명"
         DATETIME createdAt "생성 시간"
         DATETIME updatedAt "수정 시간"
+        DATETIME deletedAt "삭제 시간"
     }
 
     PRODUCT {
@@ -49,6 +52,7 @@ erDiagram
         INT likesCount "좋아요 총 개수"
         DATETIME createdAt "생성 시간"
         DATETIME updatedAt "수정 시간"
+        DATETIME deletedAt "삭제 시간"
     }
 
     PRODUCT_OPTION {
@@ -59,6 +63,7 @@ erDiagram
         INT optionStock "옵션_재고"
         DATETIME createdAt "생성 시간"
         DATETIME updatedAt "수정 시간"
+        DATETIME deletedAt "삭제 시간"
     }
 
     CATEGORY {
@@ -67,6 +72,7 @@ erDiagram
         VARCHAR description "카테고리 설명"
         DATETIME createdAt "생성 시간"
         DATETIME updatedAt "수정 시간"
+        DATETIME deletedAt "삭제 시간"
     }
 
     LIKE {
@@ -84,6 +90,7 @@ erDiagram
         VARCHAR status "주문 상태"
         DATETIME createdAt "생성 시간"
         DATETIME updatedAt "수정 시간"
+        DATETIME deletedAt "삭제 시간"
     }
 
     ORDER_ITEM {
@@ -94,6 +101,18 @@ erDiagram
         INT priceAtOrder "주문 당시 가격"
         DATETIME createdAt "생성 시간"
         DATETIME updatedAt "수정 시간"
+        DATETIME deletedAt "삭제 시간"
+    }
+    
+    PAYMENT_HISTORY {
+        BIGINT id PK "결제 기록 ID"
+        BIGINT orderId FK "주문 ID"
+        VARCHAR paymentMethod "결제 수단"
+        VARCHAR paymentStatus "결제 상태"
+        INT amount "결제 금액"
+        DATETIME paymentDate "결제 일시"
+        DATETIME createdAt "생성 시간"
+        DATETIME deletedAt "삭제 시간"
     }
 
     USER ||--o{ POINT : has
