@@ -137,6 +137,8 @@ sequenceDiagram
     participant PointRepository
     participant OrderRepository
     participant OrderItemRepository
+    participant PaymentHistoryService
+    participant PaymentHistoryRepository
     participant PG as 외부 결제 시스템
 
     User->>OrderV1Controller: POST /api/v1/orders (userId, items)
@@ -173,8 +175,16 @@ sequenceDiagram
     deactivate OrderService
     OrderFacade->>PG: 주문 정보 외부 전송 (orderModel)
     activate PG
-    PG-->>OrderFacade: 전송 결과 반환
+    PG-->>OrderFacade: 전송 결과 반환 (결제 결과)
     deactivate PG
+    OrderFacade->>PaymentHistoryService: 결제 이력 저장 요청 (orderId, 결제정보)
+    activate PaymentHistoryService
+    PaymentHistoryService->>PaymentHistoryRepository: 결제 이력 저장 (orderId, 결제정보)
+    activate PaymentHistoryRepository
+    PaymentHistoryRepository-->>PaymentHistoryService: 결제 이력 저장 결과 반환
+    deactivate PaymentHistoryRepository
+    PaymentHistoryService-->>OrderFacade: 결제 이력 저장 결과 반환
+    deactivate PaymentHistoryService
     OrderFacade->>OrderV1Controller: 주문 성공 응답 변환 (OrderResponse)
     deactivate OrderFacade
     OrderV1Controller-->>User: 주문 성공 응답 전달
