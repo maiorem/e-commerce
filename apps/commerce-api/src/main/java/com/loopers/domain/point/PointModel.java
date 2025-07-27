@@ -7,7 +7,6 @@ import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import lombok.Builder;
 
 @Entity
 @Table(name = "point")
@@ -20,16 +19,17 @@ public class PointModel extends BaseEntity {
 
     protected PointModel() {}
 
-    @Builder
-    public PointModel(UserId userId, int amount) {
+    public static PointModel of(UserId userId, int amount) {
         if (userId == null) {
             throw new CoreException(ErrorType.BAD_REQUEST, "사용자 ID는 비어있을 수 없습니다.");
         }
         if (amount < 0) {
             throw new CoreException(ErrorType.BAD_REQUEST, "포인트는 음수가 될 수 없습니다.");
         }
-        this.userId = userId;
-        this.amount = amount;
+        PointModel point = new PointModel();
+        point.userId = userId;
+        point.amount = amount;
+        return point;
     }
 
     public UserId getUserId() {

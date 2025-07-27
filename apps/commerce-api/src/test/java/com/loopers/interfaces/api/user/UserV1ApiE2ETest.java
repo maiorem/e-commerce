@@ -73,7 +73,7 @@ class UserV1ApiE2ETest {
                 () -> assertThat(response.getBody().data().userId()).isEqualTo(request.userId()),
                 () -> assertThat(response.getBody().data().email()).isEqualTo(request.email())
             );
-            assertThat(userRepository.existsByUserId(new UserId(request.userId()))).isTrue();
+            assertThat(userRepository.existsByUserId(UserId.of(request.userId()))).isTrue();
         }
 
         @DisplayName("이미 존재하는 아이디로 회원가입을 시도하면, 400 BAD_REQUEST 응답을 반환한다.")

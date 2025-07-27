@@ -20,14 +20,16 @@ public class UserId {
     protected UserId() {
     }
 
-    public UserId(String value) {
+    public static UserId of(String value) {
         if (value == null || value.isBlank()) {
             throw new CoreException(ErrorType.BAD_REQUEST, "아이디는 비어있을 수 없습니다.");
         }
         if (!USER_ID_PATTERN.matcher(value).matches()) {
             throw new CoreException(ErrorType.BAD_REQUEST, "아이디는 10자 이하의 영문 소문자와 숫자로만 구성되어야 합니다.");
         }
-        this.value = value;
+        UserId userId = new UserId();
+        userId.value = value;
+        return userId;
     }
 
     public String getValue() {

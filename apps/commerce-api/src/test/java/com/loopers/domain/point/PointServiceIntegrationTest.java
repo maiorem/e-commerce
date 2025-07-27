@@ -39,10 +39,10 @@ public class PointServiceIntegrationTest {
         void chargeMyPointSuccess() {
             // given
             UserModel user = userRepository.create(UserModel.builder()
-                    .userId(new UserId("seyoung"))
-                    .email(new Email("seyoung@loopers.com"))
+                    .userId(UserId.of("seyoung"))
+                    .email(Email.of("seyoung@loopers.com"))
                     .gender(Gender.MALE)
-                    .birthDate(new BirthDate("2000-01-01"))
+                    .birthDate(BirthDate.of("2000-01-01"))
                     .build());
 
             int amount = 1000;
@@ -76,10 +76,10 @@ public class PointServiceIntegrationTest {
         void getMyPointSuccess() {
             // given
             UserModel user = userRepository.create(UserModel.builder()
-                    .userId(new UserId("seyoung"))
-                    .email(new Email("seyoung@loopers.com"))
+                    .userId(UserId.of("seyoung"))
+                    .email(Email.of("seyoung@loopers.com"))
                     .gender(Gender.MALE)
-                    .birthDate(new BirthDate("2000-01-01"))
+                    .birthDate(BirthDate.of("2000-01-01"))
                     .build());
             int initialAmount = 500;
             pointService.chargeMyPoint(user.getUserId().getValue(), initialAmount);

@@ -18,17 +18,17 @@ public class UserFacade {
     private final UserService userService;
 
     public UserInfo createUser(String userId, String email, String gender, String birthDate) {
-        UserId regUserId = new UserId(userId);
-        Email regEmail = new Email(email);
+        UserId regUserId = UserId.of(userId);
+        Email regEmail = Email.of(email);
         Gender regGender = Gender.valueOf(gender);
-        BirthDate regBirthDate = new BirthDate(birthDate);
+        BirthDate regBirthDate = BirthDate.of(birthDate);
 
         UserModel user = userService.createUser(regUserId, regEmail, regGender, regBirthDate);
         return UserInfo.from(user);
     }
 
     public UserInfo getMyInfo(String userId) {
-        UserId myUserId = new UserId(userId);
+        UserId myUserId = UserId.of(userId);
         UserModel user = userService.getUser(myUserId);
         if (user == null) {
             throw new CoreException(ErrorType.NOT_FOUND, "사용자를 찾을 수 없습니다.");
