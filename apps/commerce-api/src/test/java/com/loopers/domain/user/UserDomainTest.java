@@ -15,7 +15,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("User 도메인 테스트")
 class UserDomainTest {
 
     @InjectMocks
@@ -23,7 +22,7 @@ class UserDomainTest {
 
     @Nested
     @DisplayName("UserId 생성 시,")
-    class UserId_생성_시 {
+    class Create_UserId {
 
         @Nested
         @DisplayName("유효한 사용자 ID로 요청할 경우")
@@ -79,7 +78,7 @@ class UserDomainTest {
 
     @Nested
     @DisplayName("Email 생성 시,")
-    class Email_생성_시 {
+    class Create_Email {
 
         @Nested
         @DisplayName("유효한 이메일로 요청할 경우")
@@ -133,7 +132,7 @@ class UserDomainTest {
 
     @Nested
     @DisplayName("BirthDate 생성 시,")
-    class BirthDate_생성_시 {
+    class Create_BirthDate {
 
         @Nested
         @DisplayName("유효한 생년월일로 요청할 경우")
@@ -199,7 +198,7 @@ class UserDomainTest {
 
     @Nested
     @DisplayName("UserModel 생성 시,")
-    class UserModel_생성_시 {
+    class Create_User {
 
         @Nested
         @DisplayName("유효한 파라미터로 요청할 경우")
@@ -228,7 +227,7 @@ class UserDomainTest {
 
     @Nested
     @DisplayName("UserDomainService 사용자 생성 시,")
-    class UserDomainService_사용자_생성_시 {
+    class UserDomainService_Create_User {
 
         @Nested
         @DisplayName("유효한 파라미터로 요청할 경우")
@@ -304,7 +303,7 @@ class UserDomainTest {
 
     @Nested
     @DisplayName("UserDomainService 사용자 정보 수정 시,")
-    class UserDomainService_사용자_정보_수정_시 {
+    class UserDomainService_Update_UserInfo {
 
         @Nested
         @DisplayName("유효한 파라미터로 요청할 경우")

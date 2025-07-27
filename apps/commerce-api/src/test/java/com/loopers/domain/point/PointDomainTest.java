@@ -24,8 +24,8 @@ class PointDomainTest {
     private PointDomainService pointDomainService;
 
     @Nested
-    @DisplayName("PointModel 생성")
-    class CreatePointModel {
+    @DisplayName("PointModel 생성 시,")
+    class Create_Point {
 
         @Test
         @DisplayName("유효한 파라미터로 PointModel을 생성하면 성공한다.")
@@ -96,7 +96,7 @@ class PointDomainTest {
 
     @Nested
     @DisplayName("포인트 충전 시,")
-    class ChargePoint {
+    class Charge_Point {
 
         @Test
         @DisplayName("유효한 금액으로 포인트를 충전하면 성공한다.")
@@ -131,7 +131,7 @@ class PointDomainTest {
 
     @Nested
     @DisplayName("포인트 사용 시,")
-    class UsePoint {
+    class User_Point {
 
         @Test
         @DisplayName("유효한 금액으로 포인트를 사용하면 성공한다.")
@@ -178,7 +178,7 @@ class PointDomainTest {
 
     @Nested
     @DisplayName("포인트 만료 확인 시,")
-    class CheckExpiration {
+    class Check_Expiration {
 
         @Test
         @DisplayName("만료되지 않은 포인트는 false를 반환한다.")
@@ -212,8 +212,8 @@ class PointDomainTest {
     }
 
     @Nested
-    @DisplayName("PointDomainService 포인트 충전")
-    class DomainServiceChargePoint {
+    @DisplayName("PointDomainService 포인트 충전 시,")
+    class DomainService_Charge_Point {
 
         @Test
         @DisplayName("유효한 파라미터로 포인트를 충전하면 성공한다.")
@@ -265,8 +265,8 @@ class PointDomainTest {
     }
 
     @Nested
-    @DisplayName("PointDomainService 포인트 사용")
-    class DomainServiceUsePoint {
+    @DisplayName("PointDomainService 포인트 사용 시,")
+    class DomainService_Use_Point {
 
         @Test
         @DisplayName("유효한 금액으로 포인트를 사용하면 성공한다.")
@@ -310,8 +310,8 @@ class PointDomainTest {
     }
 
     @Nested
-    @DisplayName("PointDomainService 포인트 환불")
-    class DomainServiceRefundPoint {
+    @DisplayName("PointDomainService 포인트 환불 시,")
+    class DomainService_Refund_Point {
 
         @Test
         @DisplayName("유효한 금액으로 포인트를 환불하면 성공한다.")
@@ -342,8 +342,8 @@ class PointDomainTest {
     }
 
     @Nested
-    @DisplayName("PointDomainService 포인트 만료 확인")
-    class DomainServiceCheckExpiration {
+    @DisplayName("PointDomainService 포인트 만료 확인 시,")
+    class DomainService_Check_Expire_Point {
 
         @Test
         @DisplayName("만료되지 않은 포인트는 false를 반환한다.")
@@ -387,8 +387,8 @@ class PointDomainTest {
     }
 
     @Nested
-    @DisplayName("PointDomainService 포인트 만료 처리")
-    class DomainServiceExpirePoint {
+    @DisplayName("PointDomainService 포인트 만료 처리 시,")
+    class DomainService_Expire_Point {
 
         @Test
         @DisplayName("만료되지 않은 포인트는 그대로 반환한다.")
@@ -432,8 +432,8 @@ class PointDomainTest {
     }
 
     @Nested
-    @DisplayName("PointDomainService 포인트 내역 생성")
-    class DomainServiceCreatePointHistory {
+    @DisplayName("PointDomainService 포인트 내역 생성 시,")
+    class DomainService_Create_PointHistory {
 
         @Test
         @DisplayName("유효한 파라미터로 포인트 내역을 생성하면 성공한다.")
@@ -483,8 +483,8 @@ class PointDomainTest {
     }
 
     @Nested
-    @DisplayName("PointDomainService 포인트 잔액 확인")
-    class DomainServiceCheckSufficientPoint {
+    @DisplayName("PointDomainService 포인트 잔액 확인 시,")
+    class DomainService_Check_Sufficient_Point {
 
         @Test
         @DisplayName("충분한 포인트가 있으면 true를 반환한다.")
