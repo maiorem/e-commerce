@@ -4,7 +4,6 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Component
@@ -12,7 +11,6 @@ public class UserService {
 
     private final UserRepository userRepository;
 
-    @Transactional
     public UserModel createUser(UserId userId, Email email, Gender gender, BirthDate birthDate) {
         if (userRepository.existsByUserId(userId)) {
             throw new CoreException(ErrorType.BAD_REQUEST, "이미 존재하는 아이디입니다.");

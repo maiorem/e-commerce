@@ -21,12 +21,14 @@ public class BirthDate {
 
     protected BirthDate() {}
 
-    public BirthDate(String value) {
+    public static BirthDate of(String value) {
         if (value == null || value.isBlank()) {
             throw new CoreException(ErrorType.BAD_REQUEST, "생년월일은 비어있을 수 없습니다.");
         }
         try {
-            this.value = LocalDate.parse(value, FORMATTER);
+            BirthDate birthDate = new BirthDate();
+            birthDate.value = LocalDate.parse(value, FORMATTER);
+            return birthDate;
         } catch (DateTimeParseException e) {
             throw new CoreException(ErrorType.BAD_REQUEST, "생년월일 형식이 올바르지 않습니다. (yyyy-MM-dd)");
         }

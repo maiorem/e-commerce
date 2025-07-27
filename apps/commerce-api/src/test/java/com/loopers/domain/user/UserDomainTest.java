@@ -21,15 +21,15 @@ import static org.mockito.Mockito.when;
 class UserDomainTest {
 
     private UserId createValidUserId() {
-        return new UserId("member1");
+        return UserId.of("member1");
     }
 
     private Email createValidEmail() {
-        return new Email("test@example.com");
+        return Email.of("test@example.com");
     }
 
     private BirthDate createValidBirthDate() {
-        return new BirthDate("2000-01-01");
+        return BirthDate.of("2000-01-01");
     }
 
     @DisplayName("UserId 객체를 생성할 때,")
@@ -43,7 +43,7 @@ class UserDomainTest {
             String validId = "member1";
 
             // when
-            UserId userId = new UserId(validId);
+            UserId userId = UserId.of(validId);
 
             // then
             assertThat(userId.getValue()).isEqualTo(validId);
@@ -54,7 +54,7 @@ class UserDomainTest {
         @ValueSource(strings = {"abc", "longlonguserid"})
         void createUserId_withInvalidLength_throwsException(String invalidId) {
             // when
-            CoreException exception = assertThrows(CoreException.class, () -> new UserId(invalidId));
+            CoreException exception = assertThrows(CoreException.class, () -> UserId.of(invalidId));
 
             // then
             assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
@@ -67,7 +67,7 @@ class UserDomainTest {
             String invalidId = "user!@#";
 
             // when
-            CoreException exception = assertThrows(CoreException.class, () -> new UserId(invalidId));
+            CoreException exception = assertThrows(CoreException.class, () -> UserId.of(invalidId));
 
             // then
             assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
@@ -85,7 +85,7 @@ class UserDomainTest {
             String validEmail = "test@example.com";
 
             // when
-            Email email = new Email(validEmail);
+            Email email = Email.of(validEmail);
 
             // then
             assertThat(email.getValue()).isEqualTo(validEmail);
@@ -96,7 +96,7 @@ class UserDomainTest {
         @ValueSource(strings = {"seyoung", "seyoung@", "@loopers.com", "seyoung@loopers"})
         void createEmail_withInvalidEmail_throwsException(String invalidEmail) {
             // when
-            CoreException exception = assertThrows(CoreException.class, () -> new Email(invalidEmail));
+            CoreException exception = assertThrows(CoreException.class, () -> Email.of(invalidEmail));
 
             // then
             assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
@@ -114,7 +114,7 @@ class UserDomainTest {
             String validDate = "2000-01-01";
 
             // when
-            BirthDate birthDate = new BirthDate(validDate);
+            BirthDate birthDate = BirthDate.of(validDate);
 
             // then
             assertThat(birthDate.getValue().toString()).isEqualTo(validDate);
@@ -125,7 +125,7 @@ class UserDomainTest {
         @ValueSource(strings = {"2000/01/01", "2000-1-1", "2000-02-30"})
         void createBirthDate_withInvalidDateString_throwsException(String invalidDate) {
             // when
-            CoreException exception = assertThrows(CoreException.class, () -> new BirthDate(invalidDate));
+            CoreException exception = assertThrows(CoreException.class, () -> BirthDate.of(invalidDate));
 
             // then
             assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
@@ -140,10 +140,10 @@ class UserDomainTest {
         @Test
         void createUserModel_withValidData() {
             // given
-            UserId userId = new UserId("seyoung123");
-            Email email = new Email("hong@loopers.com");
+            UserId userId = UserId.of("seyoung123");
+            Email email = Email.of("hong@loopers.com");
             Gender gender = Gender.FEMALE;
-            BirthDate birthDate = new BirthDate("2000-01-01");
+            BirthDate birthDate = BirthDate.of("2000-01-01");
 
             // when
             UserModel user = UserModel.builder()
@@ -166,10 +166,10 @@ class UserDomainTest {
         @Test
         void createUserModel_withNullData_throwsException() {
             // given
-            UserId userId = new UserId("seyoung123");
-            Email email = new Email("hong@loopers.com");
+            UserId userId = UserId.of("seyoung123");
+            Email email = Email.of("hong@loopers.com");
             Gender gender = Gender.FEMALE;
-            BirthDate birthDate = new BirthDate("2000-01-01");
+            BirthDate birthDate = BirthDate.of("2000-01-01");
 
             // then
             assertAll(

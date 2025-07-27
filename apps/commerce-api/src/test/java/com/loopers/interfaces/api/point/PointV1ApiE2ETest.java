@@ -63,10 +63,10 @@ class PointV1ApiE2ETest {
         void chargePoint_withExistingUser_returnsChargedTotalAmount() {
             // given
             UserModel user = userRepository.create(UserModel.builder()
-                    .userId(new UserId("seyoung"))
-                    .email(new Email("seyoung@loopers.com"))
+                    .userId(UserId.of("seyoung"))
+                    .email(Email.of("seyoung@loopers.com"))
                     .gender(Gender.MALE)
-                    .birthDate(new BirthDate("2000-01-01"))
+                    .birthDate(BirthDate.of("2000-01-01"))
                     .build());
 
             // when
@@ -94,10 +94,10 @@ class PointV1ApiE2ETest {
         void chargePoint_withExistingUser_addsToTotalAmount() {
             // given
             UserModel user = userRepository.create(UserModel.builder()
-                    .userId(new UserId("testuser2"))
-                    .email(new Email("testuser2@loopers.com"))
+                    .userId(UserId.of("testuser2"))
+                    .email(Email.of("testuser2@loopers.com"))
                     .gender(Gender.FEMALE)
-                    .birthDate(new BirthDate("1995-05-05"))
+                    .birthDate(BirthDate.of("1995-05-05"))
                     .build());
 
             // 첫 번째 충전
@@ -159,16 +159,13 @@ class PointV1ApiE2ETest {
         void getPoint_withExistingUser_returnsUserPoints() {
             // given
             UserModel user = userRepository.create(UserModel.builder()
-                    .userId(new UserId("seyoung"))
-                    .email(new Email("seyoung@loopers.com"))
+                    .userId(UserId.of("seyoung"))
+                    .email(Email.of("seyoung@loopers.com"))
                     .gender(Gender.MALE)
-                    .birthDate(new BirthDate("2000-01-01"))
+                    .birthDate(BirthDate.of("2000-01-01"))
                     .build());
             int initialAmount = 1000;
-            pointRepository.create(PointModel.builder()
-                    .userId(user.getUserId())
-                    .amount(initialAmount)
-                    .build());
+            pointRepository.create(PointModel.of(user.getUserId(), initialAmount));
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("X-USER-ID", user.getUserId().getValue());

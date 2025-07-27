@@ -42,15 +42,15 @@ class UserServiceIntegrationTest {
     }
 
     private UserId createValidUserId() {
-        return new UserId(UUID.randomUUID().toString().substring(0, 8));
+        return UserId.of(UUID.randomUUID().toString().substring(0, 8));
     }
 
     private Email createValidEmail() {
-        return new Email("seyoung@loopers.com");
+        return Email.of("seyoung@loopers.com");
     }
 
     private BirthDate createValidBirthDate() {
-        return new BirthDate("2000-01-01");
+        return BirthDate.of("2000-01-01");
     }
 
     @DisplayName("회원가입 시,")
@@ -102,7 +102,7 @@ class UserServiceIntegrationTest {
 
             // when & then
             CoreException exception = assertThrows(CoreException.class, () ->
-                    userService.createUser(userId, new Email("new@loopers.com"), Gender.MALE, new BirthDate("2001-01-01"))
+                    userService.createUser(userId, Email.of("new@loopers.com"), Gender.MALE, BirthDate.of("2001-01-01"))
             );
 
             assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);

@@ -20,14 +20,16 @@ public class Email{
 
     protected Email() {}
 
-    public Email(String value) {
+    public static Email of(String value) {
         if (value == null || value.isEmpty()) {
             throw new CoreException(ErrorType.BAD_REQUEST, "이메일은 비어있을 수 없습니다.");
         }
         if (!EMAIL_PATTERN.matcher(value).matches()){
             throw new CoreException(ErrorType.BAD_REQUEST, "이메일 형식에 맞지 않습니다.");
         }
-        this.value = value;
+        Email email = new Email();
+        email.value = value;
+        return email;
     }
 
     public String getValue() {

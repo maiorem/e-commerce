@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class PointDomainTest {
 
     private UserId createValidUserId() {
-        return new UserId("testuser");
+        return UserId.of("testuser");
     }
 
     @DisplayName("PointModel 객체를 생성할 때,")
@@ -29,7 +29,7 @@ class PointDomainTest {
             int initialAmount = 1000;
 
             // when
-            PointModel pointModel = new PointModel(userId, initialAmount);
+            PointModel pointModel = PointModel.of(userId, initialAmount);
 
             // then
             assertAll(
@@ -46,7 +46,7 @@ class PointDomainTest {
             int initialAmount = 1000;
 
             // when & then
-            CoreException exception = assertThrows(CoreException.class, () -> new PointModel(userId, initialAmount));
+            CoreException exception = assertThrows(CoreException.class, () -> PointModel.of(userId, initialAmount));
             assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
         }
 
@@ -58,7 +58,7 @@ class PointDomainTest {
             int initialAmount = -100;
 
             // when & then
-            CoreException exception = assertThrows(CoreException.class, () -> new PointModel(userId, initialAmount));
+            CoreException exception = assertThrows(CoreException.class, () -> PointModel.of(userId, initialAmount));
             assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
         }
     }
@@ -71,7 +71,7 @@ class PointDomainTest {
         @Test
         void addPositivePoint_increasesAmount() {
             // given
-            PointModel pointModel = new PointModel(createValidUserId(), 1000);
+            PointModel pointModel = PointModel.of(createValidUserId(), 1000);
             int pointToAdd = 500;
 
             // when
@@ -86,7 +86,7 @@ class PointDomainTest {
         @Test
         void addZeroOrNegativePoint_throwsException() {
             // given
-            PointModel pointModel = new PointModel(createValidUserId(), 1000);
+            PointModel pointModel = PointModel.of(createValidUserId(), 1000);
 
             // when & then
             assertAll(
@@ -110,7 +110,7 @@ class PointDomainTest {
         @Test
         void removePositivePoint_decreasesAmount() {
             // given
-            PointModel pointModel = new PointModel(createValidUserId(), 1000);
+            PointModel pointModel = PointModel.of(createValidUserId(), 1000);
             int pointToRemove = 300;
 
             // when
@@ -125,7 +125,7 @@ class PointDomainTest {
         @Test
         void removeMoreThanCurrentAmount_throwsException() {
             // given
-            PointModel pointModel = new PointModel(createValidUserId(), 500);
+            PointModel pointModel = PointModel.of(createValidUserId(), 500);
             int pointToRemove = 1000;
 
             // when & then
@@ -137,7 +137,7 @@ class PointDomainTest {
         @Test
         void removeZeroOrNegativePoint_throwsException() {
             // given
-            PointModel pointModel = new PointModel(createValidUserId(), 1000);
+            PointModel pointModel = PointModel.of(createValidUserId(), 1000);
 
             // when & then
             assertAll(
