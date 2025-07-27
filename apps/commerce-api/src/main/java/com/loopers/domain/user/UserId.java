@@ -14,7 +14,7 @@ public class UserId {
     private static final String USER_ID_REGEX = "^[a-zA-Z0-9]{4,10}$";
     private static final Pattern USER_ID_PATTERN = Pattern.compile(USER_ID_REGEX);
 
-    @Column(name = "user_id", nullable = false, unique = true, length = 10)
+    @Column(name = "user_id")
     private String value;
 
     protected UserId() {

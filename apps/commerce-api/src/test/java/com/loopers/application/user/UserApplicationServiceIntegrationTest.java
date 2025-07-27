@@ -1,5 +1,6 @@
-package com.loopers.domain.user;
+package com.loopers.application.user;
 
+import com.loopers.domain.user.*;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
@@ -23,10 +24,10 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @Import(TestConfig.class)
-class UserServiceIntegrationTest {
+class UserApplicationServiceIntegrationTest {
 
     @Autowired
-    private UserService userService;
+    private UserApplicationService userApplicationService;
 
     @Autowired
     private UserRepository userRepository;
@@ -68,7 +69,7 @@ class UserServiceIntegrationTest {
             ArgumentCaptor<UserModel> userModelArgumentCaptor = ArgumentCaptor.forClass(UserModel.class);
 
             // when
-            UserModel userModel = userService.createUser(userId, email, gender, birthDate);
+            UserModel userModel = userApplicationService.createUser(userId, email, gender, birthDate);
 
             // then
             assertAll(
@@ -81,7 +82,7 @@ class UserServiceIntegrationTest {
             assertThat(userRepository.existsByUserId(userId)).isTrue();
 
             // 행위 검증
-            verify(userRepository, times(1)).create(userModelArgumentCaptor.capture());
+            verify(userRepository, times(1)).save(userModelArgumentCaptor.capture());
             UserModel capturedUser = userModelArgumentCaptor.getValue();
             assertThat(capturedUser.getUserId()).isEqualTo(userId);
             assertThat(capturedUser.getEmail()).isEqualTo(email);
@@ -98,11 +99,11 @@ class UserServiceIntegrationTest {
             BirthDate birthDate = createValidBirthDate();
 
             // 첫 번째 회원가입 (성공)
-            userService.createUser(userId, email, gender, birthDate);
+            userApplicationService.createUser(userId, email, gender, birthDate);
 
             // when & then
             CoreException exception = assertThrows(CoreException.class, () ->
-                    userService.createUser(userId, Email.of("new@loopers.com"), Gender.MALE, BirthDate.of("2001-01-01"))
+                    userApplicationService.createUser(userId, Email.of("new@loopers.com"), Gender.MALE, BirthDate.of("2001-01-01"))
             );
 
             assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
@@ -124,10 +125,10 @@ class UserServiceIntegrationTest {
             BirthDate birthDate = createValidBirthDate();
 
             // 회원가입
-            userService.createUser(userId, email, gender, birthDate);
+            userApplicationService.createUser(userId, email, gender, birthDate);
 
             //when
-            UserModel userModel = userService.getUser(userId);
+            UserModel userModel = userApplicationService.getUser(userId);
 
             // then
             assertAll(
@@ -144,8 +145,8 @@ class UserServiceIntegrationTest {
             UserId userId = createValidUserId();
 
             // when & then
-            assertThat(userService.getUser(userId)).isNull();
+            assertThat(userApplicationService.getUser(userId)).isNull();
         }
     
     }
-}
+} 

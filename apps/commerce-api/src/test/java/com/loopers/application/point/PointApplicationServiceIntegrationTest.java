@@ -1,5 +1,6 @@
-package com.loopers.domain.point;
+package com.loopers.application.point;
 
+import com.loopers.domain.point.*;
 import com.loopers.domain.user.*;
 import com.loopers.support.error.CoreException;
 import com.loopers.utils.DatabaseCleanUp;
@@ -14,10 +15,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
-public class PointServiceIntegrationTest {
+public class PointApplicationServiceIntegrationTest {
 
     @Autowired
-    private PointService pointService;
+    private PointApplicationService pointApplicationService;
 
     @Autowired
     private UserRepository userRepository;
@@ -38,17 +39,17 @@ public class PointServiceIntegrationTest {
         @Test
         void chargeMyPointSuccess() {
             // given
-            UserModel user = userRepository.create(UserModel.builder()
-                    .userId(UserId.of("seyoung"))
-                    .email(Email.of("seyoung@loopers.com"))
-                    .gender(Gender.MALE)
-                    .birthDate(BirthDate.of("2000-01-01"))
-                    .build());
+            UserModel user = userRepository.save(UserModel.of(
+                    UserId.of("seyoung"),
+                    Email.of("seyoung@loopers.com"),
+                    Gender.MALE,
+                    BirthDate.of("2000-01-01")
+            ));
 
             int amount = 1000;
 
             // when
-            PointModel pointModel = pointService.chargeMyPoint(user.getUserId().getValue(), amount);
+            PointModel pointModel = pointApplicationService.chargeMyPoint(user.getUserId().getValue(), amount);
 
             // then
             assertThat(pointModel.getAmount()).isEqualTo(amount);
@@ -62,7 +63,7 @@ public class PointServiceIntegrationTest {
             int amount = 1000;
 
             // when & then
-            assertThatThrownBy(() -> pointService.chargeMyPoint(userId, amount))
+            assertThatThrownBy(() -> pointApplicationService.chargeMyPoint(userId, amount))
                     .isInstanceOf(CoreException.class);
         }
     }
@@ -75,17 +76,17 @@ public class PointServiceIntegrationTest {
         @Test
         void getMyPointSuccess() {
             // given
-            UserModel user = userRepository.create(UserModel.builder()
-                    .userId(UserId.of("seyoung"))
-                    .email(Email.of("seyoung@loopers.com"))
-                    .gender(Gender.MALE)
-                    .birthDate(BirthDate.of("2000-01-01"))
-                    .build());
+            UserModel user = userRepository.save(UserModel.of(
+                    UserId.of("seyoung"),
+                    Email.of("seyoung@loopers.com"),
+                    Gender.MALE,
+                    BirthDate.of("2000-01-01")
+            ));
             int initialAmount = 500;
-            pointService.chargeMyPoint(user.getUserId().getValue(), initialAmount);
+            pointApplicationService.chargeMyPoint(user.getUserId().getValue(), initialAmount);
 
             // when
-            PointModel pointModel = pointService.getMyPoint(user.getUserId().getValue());
+            PointModel pointModel = pointApplicationService.getMyPoint(user.getUserId().getValue());
 
             // then
             assertThat(pointModel.getUserId()).isEqualTo(user.getUserId());
@@ -100,7 +101,7 @@ public class PointServiceIntegrationTest {
             String userId = "seyoung123";
 
             // when
-            PointModel pointModel = pointService.getMyPoint(userId);
+            PointModel pointModel = pointApplicationService.getMyPoint(userId);
 
             // then
             assertThat(pointModel).isNull();
@@ -108,4 +109,4 @@ public class PointServiceIntegrationTest {
     }
 
 
-}
+} 

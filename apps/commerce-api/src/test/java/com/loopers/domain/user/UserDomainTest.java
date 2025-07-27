@@ -9,233 +9,388 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+@ExtendWith(MockitoExtension.class)
+@DisplayName("User 도메인 테스트")
 class UserDomainTest {
 
-    private UserId createValidUserId() {
-        return UserId.of("member1");
-    }
+    @InjectMocks
+    private UserDomainService userDomainService;
 
-    private Email createValidEmail() {
-        return Email.of("test@example.com");
-    }
-
-    private BirthDate createValidBirthDate() {
-        return BirthDate.of("2000-01-01");
-    }
-
-    @DisplayName("UserId 객체를 생성할 때,")
     @Nested
-    class UserIdTest {
+    @DisplayName("UserId 생성 시,")
+    class UserId_생성_시 {
 
-        @DisplayName("유효한 아이디가 주어지면 정상적으로 생성된다.")
-        @Test
-        void createUserId_withValidId() {
-            // given
-            String validId = "member1";
+        @Nested
+        @DisplayName("유효한 사용자 ID로 요청할 경우")
+        class Valid_UserId_Request {
 
-            // when
-            UserId userId = UserId.of(validId);
+            @DisplayName("4~10자 영문 및 숫자로 구성된 사용자 ID가 생성된다.")
+            @ParameterizedTest
+            @ValueSource(strings = {"user", "user123", "user12345", "user123456"})
+            void createUserId_withValidUserId_success(String validUserId) {
+                // when
+                UserId userId = UserId.of(validUserId);
 
-            // then
-            assertThat(userId.getValue()).isEqualTo(validId);
+                // then
+                assertThat(userId.getValue()).isEqualTo(validUserId);
+            }
         }
 
-        @DisplayName("아이디가 4자 미만이거나 10자를 초과하면 예외가 발생한다.")
-        @ParameterizedTest
-        @ValueSource(strings = {"abc", "longlonguserid"})
-        void createUserId_withInvalidLength_throwsException(String invalidId) {
-            // when
-            CoreException exception = assertThrows(CoreException.class, () -> UserId.of(invalidId));
+        @Nested
+        @DisplayName("유효하지 않은 사용자 ID로 요청할 경우")
+        class Invalid_UserId_Request {
 
-            // then
-            assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
-        }
+            @DisplayName("3자 이하의 사용자 ID로 요청 시 예외가 발생한다.")
+            @ParameterizedTest
+            @ValueSource(strings = {"", "a", "ab", "abc"})
+            void createUserId_withTooShortUserId_throwsException(String invalidUserId) {
+                // when & then
+                assertThatThrownBy(() -> UserId.of(invalidUserId))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
 
-        @DisplayName("아이디에 허용되지 않은 특수문자가 포함되면 예외가 발생한다.")
-        @Test
-        void createUserId_withSpecialCharacters_throwsException() {
-            // given
-            String invalidId = "user!@#";
+            @DisplayName("11자 이상의 사용자 ID로 요청 시 예외가 발생한다.")
+            @ParameterizedTest
+            @ValueSource(strings = {"user12345678", "user123456789"})
+            void createUserId_withTooLongUserId_throwsException(String invalidUserId) {
+                // when & then
+                assertThatThrownBy(() -> UserId.of(invalidUserId))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
 
-            // when
-            CoreException exception = assertThrows(CoreException.class, () -> UserId.of(invalidId));
-
-            // then
-            assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+            @DisplayName("특수문자가 포함된 사용자 ID로 요청 시 예외가 발생한다.")
+            @ParameterizedTest
+            @ValueSource(strings = {"user@123", "user-123", "user_123", "user#123"})
+            void createUserId_withSpecialCharacters_throwsException(String invalidUserId) {
+                // when & then
+                assertThatThrownBy(() -> UserId.of(invalidUserId))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
         }
     }
 
-    @DisplayName("Email 객체를 생성할 때,")
     @Nested
-    class EmailTest {
+    @DisplayName("Email 생성 시,")
+    class Email_생성_시 {
 
-        @DisplayName("유효한 이메일 주소가 주어지면 정상적으로 생성된다.")
-        @Test
-        void createEmail_withValidEmail() {
-            // given
-            String validEmail = "test@example.com";
+        @Nested
+        @DisplayName("유효한 이메일로 요청할 경우")
+        class Valid_Email_Request {
 
-            // when
-            Email email = Email.of(validEmail);
+            @DisplayName("올바른 형식의 이메일이 생성된다.")
+            @ParameterizedTest
+            @ValueSource(strings = {"test@example.com", "user@domain.co.kr", "user123@test.org"})
+            void createEmail_withValidEmail_success(String validEmail) {
+                // when
+                Email email = Email.of(validEmail);
 
-            // then
-            assertThat(email.getValue()).isEqualTo(validEmail);
+                // then
+                assertThat(email.getValue()).isEqualTo(validEmail);
+            }
         }
 
-        @DisplayName("유효하지 않은 이메일 형식이 주어지면 예외가 발생한다.")
-        @ParameterizedTest
-        @ValueSource(strings = {"seyoung", "seyoung@", "@loopers.com", "seyoung@loopers"})
-        void createEmail_withInvalidEmail_throwsException(String invalidEmail) {
-            // when
-            CoreException exception = assertThrows(CoreException.class, () -> Email.of(invalidEmail));
+        @Nested
+        @DisplayName("유효하지 않은 이메일로 요청할 경우")
+        class Invalid_Email_Request {
 
-            // then
-            assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+            @DisplayName("이메일 형식이 올바르지 않은 경우 예외가 발생한다.")
+            @ParameterizedTest
+            @ValueSource(strings = {"seyoung", "seyoung@", "@loopers.com"})
+            void createEmail_withInvalidEmail_throwsException(String invalidEmail) {
+                // when & then
+                assertThatThrownBy(() -> Email.of(invalidEmail))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
+
+            @DisplayName("빈 이메일로 요청 시 예외가 발생한다.")
+            @Test
+            void createEmail_withEmptyEmail_throwsException() {
+                // when & then
+                assertThatThrownBy(() -> Email.of(""))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
+
+            @DisplayName("null 이메일로 요청 시 예외가 발생한다.")
+            @Test
+            void createEmail_withNullEmail_throwsException() {
+                // when & then
+                assertThatThrownBy(() -> Email.of(null))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
         }
     }
 
-    @DisplayName("BirthDate 객체를 생성할 때,")
     @Nested
-    class BirthDateTest {
+    @DisplayName("BirthDate 생성 시,")
+    class BirthDate_생성_시 {
 
-        @DisplayName("유효한 날짜 문자열(yyyy-MM-dd)이 주어지면 정상적으로 생성된다.")
-        @Test
-        void createBirthDate_withValidDateString() {
-            // given
-            String validDate = "2000-01-01";
+        @Nested
+        @DisplayName("유효한 생년월일로 요청할 경우")
+        class Valid_BirthDate_Request {
 
-            // when
-            BirthDate birthDate = BirthDate.of(validDate);
+            @DisplayName("올바른 형식의 생년월일이 생성된다.")
+            @ParameterizedTest
+            @ValueSource(strings = {"1990-01-01", "2000-12-31", "1985-06-15"})
+            void createBirthDate_withValidBirthDate_success(String validBirthDate) {
+                // when
+                BirthDate birthDate = BirthDate.of(validBirthDate);
 
-            // then
-            assertThat(birthDate.getValue().toString()).isEqualTo(validDate);
+                // then
+                assertThat(birthDate.getValue().toString()).isEqualTo(validBirthDate);
+            }
         }
 
-        @DisplayName("유효하지 않은 날짜 형식이나 존재하지 않는 날짜가 주어지면 예외가 발생한다.")
-        @ParameterizedTest
-        @ValueSource(strings = {"2000/01/01", "2000-1-1", "2000-02-30"})
-        void createBirthDate_withInvalidDateString_throwsException(String invalidDate) {
-            // when
-            CoreException exception = assertThrows(CoreException.class, () -> BirthDate.of(invalidDate));
+        @Nested
+        @DisplayName("유효하지 않은 생년월일로 요청할 경우")
+        class Invalid_BirthDate_Request {
 
-            // then
-            assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+            @DisplayName("미래 날짜로 요청 시 예외가 발생한다.")
+            @Test
+            void createBirthDate_withFutureDate_throwsException() {
+                // given
+                String futureDate = "2030-01-01";
+
+                // when & then
+                assertThatThrownBy(() -> BirthDate.of(futureDate))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
+
+            @DisplayName("잘못된 날짜 형식으로 요청 시 예외가 발생한다.")
+            @ParameterizedTest
+            @ValueSource(strings = {"1990/01/01", "1990.01.01", "1990-13-01", "1990-01-32"})
+            void createBirthDate_withInvalidFormat_throwsException(String invalidBirthDate) {
+                // when & then
+                assertThatThrownBy(() -> BirthDate.of(invalidBirthDate))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
+
+            @DisplayName("빈 생년월일로 요청 시 예외가 발생한다.")
+            @Test
+            void createBirthDate_withEmptyBirthDate_throwsException() {
+                // when & then
+                assertThatThrownBy(() -> BirthDate.of(""))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
+
+            @DisplayName("null 생년월일로 요청 시 예외가 발생한다.")
+            @Test
+            void createBirthDate_withNullBirthDate_throwsException() {
+                // when & then
+                assertThatThrownBy(() -> BirthDate.of(null))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
         }
     }
 
-    @DisplayName("UserModel 객체를 생성할 때,")
     @Nested
-    class UserModelTest {
+    @DisplayName("UserModel 생성 시,")
+    class UserModel_생성_시 {
 
-        @DisplayName("모든 정보가 유효하면 정상적으로 생성된다.")
-        @Test
-        void createUserModel_withValidData() {
-            // given
-            UserId userId = UserId.of("seyoung123");
-            Email email = Email.of("hong@loopers.com");
-            Gender gender = Gender.FEMALE;
-            BirthDate birthDate = BirthDate.of("2000-01-01");
+        @Nested
+        @DisplayName("유효한 파라미터로 요청할 경우")
+        class Valid_Parameters_Request {
 
-            // when
-            UserModel user = UserModel.builder()
-                                .userId(userId)
-                                .email(email)
-                                .gender(gender)
-                                .birthDate(birthDate)
-                                .build();
+            @DisplayName("올바른 사용자 정보로 UserModel이 생성된다.")
+            @Test
+            void createUserModel_withValidParameters_success() {
+                // given
+                UserId userId = UserId.of("testuser");
+                Email email = Email.of("test@example.com");
+                Gender gender = Gender.MALE;
+                BirthDate birthDate = BirthDate.of("1990-01-01");
 
-            // then
-            assertAll(
-                () -> assertThat(user.getUserId()).isEqualTo(userId),
-                () -> assertThat(user.getEmail()).isEqualTo(email),
-                () -> assertThat(user.getGender()).isEqualTo(gender),
-                () -> assertThat(user.getBirthDate()).isEqualTo(birthDate)
-            );
-        }
+                // when
+                UserModel user = UserModel.of(userId, email, gender, birthDate);
 
-        @DisplayName("필수 정보 중 하나라도 null이면 예외가 발생한다.")
-        @Test
-        void createUserModel_withNullData_throwsException() {
-            // given
-            UserId userId = UserId.of("seyoung123");
-            Email email = Email.of("hong@loopers.com");
-            Gender gender = Gender.FEMALE;
-            BirthDate birthDate = BirthDate.of("2000-01-01");
-
-            // then
-            assertAll(
-                () -> assertThrows(CoreException.class, () -> UserModel.builder().email(email).gender(gender).birthDate(birthDate).build()),
-                () -> assertThrows(CoreException.class, () -> UserModel.builder().userId(userId).gender(gender).birthDate(birthDate).build()),
-                () -> assertThrows(CoreException.class, () -> UserModel.builder().userId(userId).email(email).birthDate(birthDate).build()),
-                () -> assertThrows(CoreException.class, () -> UserModel.builder().userId(userId).email(email).gender(gender).build())
-            );
+                // then
+                assertThat(user.getUserId()).isEqualTo(userId);
+                assertThat(user.getEmail()).isEqualTo(email);
+                assertThat(user.getGender()).isEqualTo(gender);
+                assertThat(user.getBirthDate()).isEqualTo(birthDate);
+            }
         }
     }
 
-    @DisplayName("UserService 객체를 생성할 때,")
     @Nested
-    @ExtendWith(MockitoExtension.class)
-    class UserServiceTest {
+    @DisplayName("UserDomainService 사용자 생성 시,")
+    class UserDomainService_사용자_생성_시 {
 
-        @Mock
-        private UserRepository userRepository;
+        @Nested
+        @DisplayName("유효한 파라미터로 요청할 경우")
+        class Valid_Parameters_Request {
 
-        @InjectMocks
-        private UserService userService;
+            @DisplayName("올바른 사용자 정보로 사용자가 생성된다.")
+            @Test
+            void createUser_withValidParameters_success() {
+                // given
+                UserId userId = UserId.of("testuser");
+                Email email = Email.of("test@example.com");
+                Gender gender = Gender.MALE;
+                BirthDate birthDate = BirthDate.of("1990-01-01");
 
-        @DisplayName("이미 존재하는 아이디로 회원가입을 시도하면 예외가 발생한다.")
-        @Test
-        void createUser_withExistingUserId_throwsException() {
-            // given
-            UserId existingUserId = createValidUserId();
-            Email email = createValidEmail();
-            Gender gender = Gender.MALE;
-            BirthDate birthDate = createValidBirthDate();
+                // when
+                UserModel user = userDomainService.createUser(userId, email, gender, birthDate);
 
-            when(userRepository.existsByUserId(existingUserId)).thenReturn(true);
-
-            // when & then
-            CoreException exception = assertThrows(CoreException.class, () ->
-                    userService.createUser(existingUserId, email, gender, birthDate)
-            );
-
-            assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
-            assertThat(exception.getMessage()).isEqualTo("이미 존재하는 아이디입니다.");
+                // then
+                assertThat(user.getUserId()).isEqualTo(userId);
+                assertThat(user.getEmail()).isEqualTo(email);
+                assertThat(user.getGender()).isEqualTo(gender);
+                assertThat(user.getBirthDate()).isEqualTo(birthDate);
+            }
         }
 
-        @DisplayName("새로운 아이디로 회원가입을 시도하면 정상적으로 생성된다.")
-        @Test
-        void createUser_withNewUserId_createsUser() {
-            // given
-            UserId newUserId = createValidUserId();
-            Email email = createValidEmail();
-            Gender gender = Gender.MALE;
-            BirthDate birthDate = createValidBirthDate();
+        @Nested
+        @DisplayName("유효하지 않은 파라미터로 요청할 경우")
+        class Invalid_Parameters_Request {
 
-            UserModel expectedUser = UserModel.builder()
-                    .userId(newUserId)
-                    .email(email)
-                    .gender(gender)
-                    .birthDate(birthDate)
-                    .build();
+            @DisplayName("null UserId로 요청 시 예외가 발생한다.")
+            @Test
+            void createUser_withNullUserId_throwsException() {
+                // given
+                Email email = Email.of("test@example.com");
+                Gender gender = Gender.MALE;
+                BirthDate birthDate = BirthDate.of("1990-01-01");
 
-            when(userRepository.existsByUserId(newUserId)).thenReturn(false);
-            when(userRepository.create(any(UserModel.class))).thenReturn(expectedUser);
+                // when & then
+                assertThatThrownBy(() -> userDomainService.createUser(null, email, gender, birthDate))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
 
-            // when
-            UserModel createdUser = userService.createUser(newUserId, email, gender, birthDate);
+            @DisplayName("null Email로 요청 시 예외가 발생한다.")
+            @Test
+            void createUser_withNullEmail_throwsException() {
+                // given
+                UserId userId = UserId.of("testuser");
+                Gender gender = Gender.MALE;
+                BirthDate birthDate = BirthDate.of("1990-01-01");
 
-            // then
-            assertThat(createdUser).isEqualTo(expectedUser);
+                // when & then
+                assertThatThrownBy(() -> userDomainService.createUser(userId, null, gender, birthDate))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
+
+            @DisplayName("null BirthDate로 요청 시 예외가 발생한다.")
+            @Test
+            void createUser_withNullBirthDate_throwsException() {
+                // given
+                UserId userId = UserId.of("testuser");
+                Email email = Email.of("test@example.com");
+                Gender gender = Gender.MALE;
+
+                // when & then
+                assertThatThrownBy(() -> userDomainService.createUser(userId, email, gender, null))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
         }
     }
+
+    @Nested
+    @DisplayName("UserDomainService 사용자 정보 수정 시,")
+    class UserDomainService_사용자_정보_수정_시 {
+
+        @Nested
+        @DisplayName("유효한 파라미터로 요청할 경우")
+        class Valid_Parameters_Request {
+
+            @DisplayName("올바른 사용자 정보로 사용자 정보가 수정된다.")
+            @Test
+            void updateUserInfo_withValidParameters_success() {
+                // given
+                UserModel existingUser = UserModel.of(
+                        UserId.of("testuser"),
+                        Email.of("old@example.com"),
+                        Gender.MALE,
+                        BirthDate.of("1990-01-01")
+                );
+                Email newEmail = Email.of("new@example.com");
+                Gender newGender = Gender.FEMALE;
+                BirthDate newBirthDate = BirthDate.of("1995-01-01");
+
+                // when
+                UserModel updatedUser = userDomainService.updateUserInfo(existingUser, newEmail, newGender, newBirthDate);
+
+                // then
+                assertThat(updatedUser.getUserId()).isEqualTo(existingUser.getUserId());
+                assertThat(updatedUser.getEmail()).isEqualTo(newEmail);
+                assertThat(updatedUser.getGender()).isEqualTo(newGender);
+                assertThat(updatedUser.getBirthDate()).isEqualTo(newBirthDate);
+            }
+        }
+
+        @Nested
+        @DisplayName("유효하지 않은 파라미터로 요청할 경우")
+        class Invalid_Parameters_Request {
+
+            @DisplayName("null 기존 사용자로 요청 시 예외가 발생한다.")
+            @Test
+            void updateUserInfo_withNullExistingUser_throwsException() {
+                // given
+                Email newEmail = Email.of("new@example.com");
+                Gender newGender = Gender.FEMALE;
+                BirthDate newBirthDate = BirthDate.of("1995-01-01");
+
+                // when & then
+                assertThatThrownBy(() -> userDomainService.updateUserInfo(null, newEmail, newGender, newBirthDate))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND);
+            }
+
+            @DisplayName("null 새 이메일로 요청 시 예외가 발생한다.")
+            @Test
+            void updateUserInfo_withNullNewEmail_throwsException() {
+                // given
+                UserModel existingUser = UserModel.of(
+                        UserId.of("testuser"),
+                        Email.of("old@example.com"),
+                        Gender.MALE,
+                        BirthDate.of("1990-01-01")
+                );
+                Gender newGender = Gender.FEMALE;
+                BirthDate newBirthDate = BirthDate.of("1995-01-01");
+
+                // when & then
+                assertThatThrownBy(() -> userDomainService.updateUserInfo(existingUser, null, newGender, newBirthDate))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
+
+            @DisplayName("null 새 생년월일로 요청 시 예외가 발생한다.")
+            @Test
+            void updateUserInfo_withNullNewBirthDate_throwsException() {
+                // given
+                UserModel existingUser = UserModel.of(
+                        UserId.of("testuser"),
+                        Email.of("old@example.com"),
+                        Gender.MALE,
+                        BirthDate.of("1990-01-01")
+                );
+                Email newEmail = Email.of("new@example.com");
+                Gender newGender = Gender.FEMALE;
+
+                // when & then
+                assertThatThrownBy(() -> userDomainService.updateUserInfo(existingUser, newEmail, newGender, null))
+                        .isInstanceOf(CoreException.class)
+                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            }
+        }
+    }
+
 }

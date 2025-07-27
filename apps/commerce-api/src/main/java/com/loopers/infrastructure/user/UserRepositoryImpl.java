@@ -16,17 +16,22 @@ public class UserRepositoryImpl implements UserRepository {
     private final UserJpaRepository userJpaRepository;
 
     @Override
-    public UserModel create(UserModel user) {
+    public UserModel save(UserModel user) {
         return userJpaRepository.saveAndFlush(user);
     }
 
     @Override
     public boolean existsByUserId(UserId userId) {
-        return userJpaRepository.existsByUserId_Value(userId.getValue());
+        return userJpaRepository.existsByUserId(userId);
     }
 
     @Override
     public Optional<UserModel> findByUserId(UserId userId) {
-        return userJpaRepository.findByUserId_Value(userId.getValue());
+        return userJpaRepository.findByUserId(userId);
+    }
+
+    @Override
+    public void delete(UserModel user) {
+        userJpaRepository.delete(user);
     }
 }
