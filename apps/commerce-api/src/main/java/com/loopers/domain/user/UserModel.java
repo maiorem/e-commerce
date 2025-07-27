@@ -1,13 +1,16 @@
 package com.loopers.domain.user;
 
 import com.loopers.domain.BaseEntity;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
-import jakarta.persistence.*;
-import lombok.Builder;
+import jakarta.persistence.Embedded;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Table;
+import lombok.Getter;
 
 @Entity
 @Table(name = "user")
+@Getter
 public class UserModel extends BaseEntity {
 
     @Embedded
@@ -16,7 +19,6 @@ public class UserModel extends BaseEntity {
     @Embedded
     private Email email;
 
-    @Column(name = "gender", nullable = false, length = 10)
     @Enumerated(EnumType.STRING)
     private Gender gender;
 
@@ -25,39 +27,12 @@ public class UserModel extends BaseEntity {
 
     protected UserModel() {}
 
-    @Builder
-    public UserModel(UserId userId, Email email, Gender gender, BirthDate birthDate) {
-        if (userId == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "아이디는 비어있을 수 없습니다.");
-        }
-        if (email == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "이메일은 비어있을 수 없습니다.");
-        }
-        if (gender == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "성별은 비어있을 수 없습니다.");
-        }
-        if (birthDate == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "생년월일은 비어있을 수 없습니다.");
-        }
-        this.userId = userId;
-        this.email = email;
-        this.gender = gender;
-        this.birthDate = birthDate;
-    }
-
-    public UserId getUserId() {
-        return userId;
-    }
-
-    public Email getEmail() {
-        return email;
-    }
-
-    public Gender getGender() {
-        return gender;
-    }
-
-    public BirthDate getBirthDate() {
-        return birthDate;
+    public static UserModel of(UserId userId, Email email, Gender gender, BirthDate birthDate) {
+        UserModel user = new UserModel();
+        user.userId = userId;
+        user.email = email;
+        user.gender = gender;
+        user.birthDate = birthDate;
+        return user;
     }
 }

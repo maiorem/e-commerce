@@ -6,150 +6,522 @@ import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.InjectMocks;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertAll;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+@ExtendWith(MockitoExtension.class)
 class PointDomainTest {
 
-    private UserId createValidUserId() {
-        return UserId.of("testuser");
-    }
+    @InjectMocks
+    private PointDomainService pointDomainService;
 
-    @DisplayName("PointModel 객체를 생성할 때,")
     @Nested
-    class Create {
+    @DisplayName("PointModel 생성 시,")
+    class Create_Point {
 
-        @DisplayName("유효한 userId와 초기 포인트가 주어지면 정상적으로 생성된다.")
         @Test
-        void createPointModel_withValidData() {
+        @DisplayName("유효한 파라미터로 PointModel을 생성하면 성공한다.")
+        void createPointModel_withValidParameters_success() {
             // given
-            UserId userId = createValidUserId();
-            int initialAmount = 1000;
+            UserId userId = UserId.of("testuser");
+            int amount = 1000;
 
             // when
-            PointModel pointModel = PointModel.of(userId, initialAmount);
+            PointModel point = PointModel.of(userId, amount);
 
             // then
-            assertAll(
-                () -> assertThat(pointModel.getUserId()).isEqualTo(userId),
-                () -> assertThat(pointModel.getAmount()).isEqualTo(initialAmount)
-            );
+            assertThat(point.getUserId()).isEqualTo(userId);
+            assertThat(point.getAmount()).isEqualTo(amount);
+            assertThat(point.getExpiredAt()).isAfter(LocalDateTime.now());
         }
 
-        @DisplayName("userId가 null이면 예외가 발생한다.")
         @Test
+        @DisplayName("유효한 파라미터와 만료일로 PointModel을 생성하면 성공한다.")
+        void createPointModel_withValidParametersAndExpiredAt_success() {
+            // given
+            UserId userId = UserId.of("testuser");
+            int amount = 1000;
+            LocalDateTime expiredAt = LocalDateTime.now().plusDays(30);
+
+            // when
+            PointModel point = PointModel.of(userId, amount, expiredAt);
+
+            // then
+            assertThat(point.getUserId()).isEqualTo(userId);
+            assertThat(point.getAmount()).isEqualTo(amount);
+            assertThat(point.getExpiredAt()).isEqualTo(expiredAt);
+        }
+
+        @Test
+        @DisplayName("null UserId로 PointModel을 생성하면 예외가 발생한다.")
         void createPointModel_withNullUserId_throwsException() {
-            // given
-            UserId userId = null;
-            int initialAmount = 1000;
-
             // when & then
-            CoreException exception = assertThrows(CoreException.class, () -> PointModel.of(userId, initialAmount));
-            assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+            assertThatThrownBy(() -> PointModel.of(null, 1000))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
         }
 
-        @DisplayName("초기 포인트가 음수이면 예외가 발생한다.")
         @Test
-        void createPointModel_withNegativeInitialAmount_throwsException() {
+        @DisplayName("음수 포인트로 PointModel을 생성하면 예외가 발생한다.")
+        void createPointModel_withNegativeAmount_throwsException() {
             // given
-            UserId userId = createValidUserId();
-            int initialAmount = -100;
+            UserId userId = UserId.of("testuser");
 
             // when & then
-            CoreException exception = assertThrows(CoreException.class, () -> PointModel.of(userId, initialAmount));
-            assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+            assertThatThrownBy(() -> PointModel.of(userId, -100))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+        }
+
+        @Test
+        @DisplayName("null 만료일로 PointModel을 생성하면 예외가 발생한다.")
+        void createPointModel_withNullExpiredAt_throwsException() {
+            // given
+            UserId userId = UserId.of("testuser");
+
+            // when & then
+            assertThatThrownBy(() -> PointModel.of(userId, 1000, null))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
         }
     }
 
-    @DisplayName("포인트를 추가할 때,")
     @Nested
-    class AddPoint {
+    @DisplayName("포인트 충전 시,")
+    class Charge_Point {
 
-        @DisplayName("양수 포인트를 추가하면 잔여 포인트가 증가한다.")
         @Test
-        void addPositivePoint_increasesAmount() {
+        @DisplayName("유효한 금액으로 포인트를 충전하면 성공한다.")
+        void chargePoint_withValidAmount_success() {
             // given
-            PointModel pointModel = PointModel.of(createValidUserId(), 1000);
-            int pointToAdd = 500;
+            PointModel point = PointModel.of(UserId.of("testuser"), 1000);
 
             // when
-            int newAmount = pointModel.addPoint(pointToAdd);
+            int result = point.charge(500);
 
             // then
-            assertThat(newAmount).isEqualTo(1500);
-            assertThat(pointModel.getAmount()).isEqualTo(1500);
+            assertThat(result).isEqualTo(1500);
+            assertThat(point.getAmount()).isEqualTo(1500);
         }
 
-        @DisplayName("0 또는 음수 포인트를 추가하려 하면 예외가 발생한다.")
         @Test
-        void addZeroOrNegativePoint_throwsException() {
+        @DisplayName("0 이하의 금액으로 포인트를 충전하면 예외가 발생한다.")
+        void chargePoint_withInvalidAmount_throwsException() {
             // given
-            PointModel pointModel = PointModel.of(createValidUserId(), 1000);
+            PointModel point = PointModel.of(UserId.of("testuser"), 1000);
 
             // when & then
-            assertAll(
-                () -> {
-                    CoreException exception = assertThrows(CoreException.class, () -> pointModel.addPoint(0));
-                    assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
-                },
-                () -> {
-                    CoreException exception = assertThrows(CoreException.class, () -> pointModel.addPoint(-100));
-                    assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
-                }
-            );
+            assertThatThrownBy(() -> point.charge(0))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+
+            assertThatThrownBy(() -> point.charge(-100))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
         }
     }
 
-    @DisplayName("포인트를 차감할 때,")
     @Nested
-    class RemovePoint {
+    @DisplayName("포인트 사용 시,")
+    class User_Point {
 
-        @DisplayName("양수 포인트를 차감하면 잔여 포인트가 감소한다.")
         @Test
-        void removePositivePoint_decreasesAmount() {
+        @DisplayName("유효한 금액으로 포인트를 사용하면 성공한다.")
+        void usePoint_withValidAmount_success() {
             // given
-            PointModel pointModel = PointModel.of(createValidUserId(), 1000);
-            int pointToRemove = 300;
+            PointModel point = PointModel.of(UserId.of("testuser"), 1000);
 
             // when
-            int newAmount = pointModel.removePoint(pointToRemove);
+            int result = point.use(500);
 
             // then
-            assertThat(newAmount).isEqualTo(700);
-            assertThat(pointModel.getAmount()).isEqualTo(700);
+            assertThat(result).isEqualTo(500);
+            assertThat(point.getAmount()).isEqualTo(500);
         }
 
-        @DisplayName("잔여 포인트보다 많은 포인트를 차감하려 하면 예외가 발생한다.")
         @Test
-        void removeMoreThanCurrentAmount_throwsException() {
+        @DisplayName("0 이하의 금액으로 포인트를 사용하면 예외가 발생한다.")
+        void usePoint_withInvalidAmount_throwsException() {
             // given
-            PointModel pointModel = PointModel.of(createValidUserId(), 500);
-            int pointToRemove = 1000;
+            PointModel point = PointModel.of(UserId.of("testuser"), 1000);
 
             // when & then
-            CoreException exception = assertThrows(CoreException.class, () -> pointModel.removePoint(pointToRemove));
-            assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
+            assertThatThrownBy(() -> point.use(0))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+
+            assertThatThrownBy(() -> point.use(-100))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
         }
 
-        @DisplayName("0 또는 음수 포인트를 차감하려 하면 예외가 발생한다.")
         @Test
-        void removeZeroOrNegativePoint_throwsException() {
+        @DisplayName("잔액보다 많은 금액으로 포인트를 사용하면 예외가 발생한다.")
+        void usePoint_withInsufficientBalance_throwsException() {
             // given
-            PointModel pointModel = PointModel.of(createValidUserId(), 1000);
+            PointModel point = PointModel.of(UserId.of("testuser"), 1000);
 
             // when & then
-            assertAll(
-                () -> {
-                    CoreException exception = assertThrows(CoreException.class, () -> pointModel.removePoint(0));
-                    assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
-                },
-                () -> {
-                    CoreException exception = assertThrows(CoreException.class, () -> pointModel.removePoint(-100));
-                    assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
-                }
+            assertThatThrownBy(() -> point.use(1500))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+        }
+    }
+
+    @Nested
+    @DisplayName("포인트 만료 확인 시,")
+    class Check_Expiration {
+
+        @Test
+        @DisplayName("만료되지 않은 포인트는 false를 반환한다.")
+        void isExpired_withNotExpiredPoint_returnsFalse() {
+            // given
+            PointModel point = PointModel.of(UserId.of("testuser"), 1000);
+
+            // when
+            boolean result = point.isExpired();
+
+            // then
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("만료된 포인트는 true를 반환한다.")
+        void isExpired_withExpiredPoint_returnsTrue() {
+            // given
+            PointModel point = PointModel.of(
+                    UserId.of("testuser"), 
+                    1000, 
+                    LocalDateTime.now().minusDays(1)
             );
+
+            // when
+            boolean result = point.isExpired();
+
+            // then
+            assertThat(result).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("PointDomainService 포인트 충전 시,")
+    class DomainService_Charge_Point {
+
+        @Test
+        @DisplayName("유효한 파라미터로 포인트를 충전하면 성공한다.")
+        void chargePoint_withValidParameters_success() {
+            // given
+            UserId userId = UserId.of("testuser");
+            int amount = 1000;
+
+            // when
+            PointModel result = pointDomainService.chargePoint(userId, amount);
+
+            // then
+            assertThat(result.getUserId()).isEqualTo(userId);
+            assertThat(result.getAmount()).isEqualTo(amount);
+        }
+
+        @Test
+        @DisplayName("기존 포인트에 유효한 금액을 충전하면 성공한다.")
+        void chargePoint_withExistingPoint_success() {
+            // given
+            PointModel existingPoint = PointModel.of(UserId.of("testuser"), 1000);
+            int amount = 500;
+
+            // when
+            PointModel result = pointDomainService.chargePoint(existingPoint, amount);
+
+            // then
+            assertThat(result.getAmount()).isEqualTo(1500);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0, -100})
+        @DisplayName("유효하지 않은 충전 금액이 주어지면 예외가 발생한다.")
+        void chargePoint_withInvalidAmount_throwsException(int invalidAmount) {
+            // when & then
+            assertThatThrownBy(() -> pointDomainService.chargePoint(UserId.of("testuser"), invalidAmount))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+        }
+
+        @Test
+        @DisplayName("100만원을 초과하는 금액으로 충전하면 예외가 발생한다.")
+        void chargePoint_withExcessiveAmount_throwsException() {
+            // when & then
+            assertThatThrownBy(() -> pointDomainService.chargePoint(UserId.of("testuser"), 1000001))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+        }
+    }
+
+    @Nested
+    @DisplayName("PointDomainService 포인트 사용 시,")
+    class DomainService_Use_Point {
+
+        @Test
+        @DisplayName("유효한 금액으로 포인트를 사용하면 성공한다.")
+        void usePoint_withValidAmount_success() {
+            // given
+            PointModel existingPoint = PointModel.of(UserId.of("testuser"), 1000);
+            int amount = 500;
+
+            // when
+            PointModel result = pointDomainService.usePoint(existingPoint, amount);
+
+            // then
+            assertThat(result.getAmount()).isEqualTo(500);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0, -100})
+        @DisplayName("유효하지 않은 사용 금액이 주어지면 예외가 발생한다.")
+        void usePoint_withInvalidAmount_throwsException(int invalidAmount) {
+            // given
+            PointModel existingPoint = PointModel.of(UserId.of("testuser"), 1000);
+
+            // when & then
+            assertThatThrownBy(() -> pointDomainService.usePoint(existingPoint, invalidAmount))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+        }
+
+        @Test
+        @DisplayName("잔액보다 많은 금액으로 포인트를 사용하면 예외가 발생한다.")
+        void usePoint_withInsufficientBalance_throwsException() {
+            // given
+            PointModel existingPoint = PointModel.of(UserId.of("testuser"), 1000);
+            int amount = 1500;
+
+            // when & then
+            assertThatThrownBy(() -> pointDomainService.usePoint(existingPoint, amount))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+        }
+    }
+
+    @Nested
+    @DisplayName("PointDomainService 포인트 환불 시,")
+    class DomainService_Refund_Point {
+
+        @Test
+        @DisplayName("유효한 금액으로 포인트를 환불하면 성공한다.")
+        void refundPoint_withValidAmount_success() {
+            // given
+            PointModel existingPoint = PointModel.of(UserId.of("testuser"), 1000);
+            int amount = 500;
+
+            // when
+            PointModel result = pointDomainService.refundPoint(existingPoint, amount);
+
+            // then
+            assertThat(result.getAmount()).isEqualTo(1500);
+        }
+
+        @ParameterizedTest
+        @ValueSource(ints = {0, -100})
+        @DisplayName("유효하지 않은 환불 금액이 주어지면 예외가 발생한다.")
+        void refundPoint_withInvalidAmount_throwsException(int invalidAmount) {
+            // given
+            PointModel existingPoint = PointModel.of(UserId.of("testuser"), 1000);
+
+            // when & then
+            assertThatThrownBy(() -> pointDomainService.refundPoint(existingPoint, invalidAmount))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+        }
+    }
+
+    @Nested
+    @DisplayName("PointDomainService 포인트 만료 확인 시,")
+    class DomainService_Check_Expire_Point {
+
+        @Test
+        @DisplayName("만료되지 않은 포인트는 false를 반환한다.")
+        void isPointExpired_withNotExpiredPoint_returnsFalse() {
+            // given
+            PointModel point = PointModel.of(UserId.of("testuser"), 1000);
+
+            // when
+            boolean result = pointDomainService.isPointExpired(point);
+
+            // then
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("만료된 포인트는 true를 반환한다.")
+        void isPointExpired_withExpiredPoint_returnsTrue() {
+            // given
+            PointModel point = PointModel.of(
+                    UserId.of("testuser"), 
+                    1000, 
+                    LocalDateTime.now().minusDays(1)
+            );
+
+            // when
+            boolean result = pointDomainService.isPointExpired(point);
+
+            // then
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        @DisplayName("null 포인트는 false를 반환한다.")
+        void isPointExpired_withNullPoint_returnsFalse() {
+            // when
+            boolean result = pointDomainService.isPointExpired(null);
+
+            // then
+            assertThat(result).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("PointDomainService 포인트 만료 처리 시,")
+    class DomainService_Expire_Point {
+
+        @Test
+        @DisplayName("만료되지 않은 포인트는 그대로 반환한다.")
+        void expirePoint_withNotExpiredPoint_returnsSame() {
+            // given
+            PointModel point = PointModel.of(UserId.of("testuser"), 1000);
+
+            // when
+            PointModel result = pointDomainService.expirePoint(point);
+
+            // then
+            assertThat(result).isEqualTo(point);
+        }
+
+        @Test
+        @DisplayName("만료된 포인트는 0으로 설정하여 반환한다.")
+        void expirePoint_withExpiredPoint_returnsZeroAmount() {
+            // given
+            PointModel point = PointModel.of(
+                    UserId.of("testuser"), 
+                    1000, 
+                    LocalDateTime.now().minusDays(1)
+            );
+
+            // when
+            PointModel result = pointDomainService.expirePoint(point);
+
+            // then
+            assertThat(result.getAmount()).isEqualTo(0);
+            assertThat(result.getUserId()).isEqualTo(point.getUserId());
+        }
+
+        @Test
+        @DisplayName("null 포인트로 만료 처리를 시도하면 예외가 발생한다.")
+        void expirePoint_withNullPoint_throwsException() {
+            // when & then
+            assertThatThrownBy(() -> pointDomainService.expirePoint(null))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND);
+        }
+    }
+
+    @Nested
+    @DisplayName("PointDomainService 포인트 내역 생성 시,")
+    class DomainService_Create_PointHistory {
+
+        @Test
+        @DisplayName("유효한 파라미터로 포인트 내역을 생성하면 성공한다.")
+        void createPointHistory_withValidParameters_success() {
+            // given
+            UserId userId = UserId.of("testuser");
+            int changedAmount = 1000;
+            int currentAmount = 1500;
+            PointChangeReason reason = PointChangeReason.PROMOTION;
+
+            // when
+            PointHistoryModel result = pointDomainService.createPointHistory(userId, changedAmount, currentAmount, reason);
+
+            // then
+            assertThat(result.getUserId()).isEqualTo(userId);
+            assertThat(result.getChangedAmount()).isEqualTo(changedAmount);
+            assertThat(result.getCurrentAmount()).isEqualTo(currentAmount);
+            assertThat(result.getReason()).isEqualTo(reason);
+        }
+
+        @Test
+        @DisplayName("null UserId로 포인트 내역을 생성하면 예외가 발생한다.")
+        void createPointHistory_withNullUserId_throwsException() {
+            // when & then
+            assertThatThrownBy(() -> pointDomainService.createPointHistory(null, 1000, 1500, PointChangeReason.PROMOTION))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+        }
+
+        @Test
+        @DisplayName("null 이유로 포인트 내역을 생성하면 예외가 발생한다.")
+        void createPointHistory_withNullReason_throwsException() {
+            // when & then
+            assertThatThrownBy(() -> pointDomainService.createPointHistory(UserId.of("testuser"), 1000, 1500, null))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+        }
+
+        @Test
+        @DisplayName("음수 잔액으로 포인트 내역을 생성하면 예외가 발생한다.")
+        void createPointHistory_withNegativeCurrentAmount_throwsException() {
+            // when & then
+            assertThatThrownBy(() -> pointDomainService.createPointHistory(UserId.of("testuser"), 1000, -100, PointChangeReason.PROMOTION))
+                    .isInstanceOf(CoreException.class)
+                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+        }
+    }
+
+    @Nested
+    @DisplayName("PointDomainService 포인트 잔액 확인 시,")
+    class DomainService_Check_Sufficient_Point {
+
+        @Test
+        @DisplayName("충분한 포인트가 있으면 true를 반환한다.")
+        void hasSufficientPoint_withSufficientPoint_returnsTrue() {
+            // given
+            PointModel point = PointModel.of(UserId.of("testuser"), 1000);
+            int requiredAmount = 500;
+
+            // when
+            boolean result = pointDomainService.hasSufficientPoint(point, requiredAmount);
+
+            // then
+            assertThat(result).isTrue();
+        }
+
+        @Test
+        @DisplayName("부족한 포인트가 있으면 false를 반환한다.")
+        void hasSufficientPoint_withInsufficientPoint_returnsFalse() {
+            // given
+            PointModel point = PointModel.of(UserId.of("testuser"), 1000);
+            int requiredAmount = 1500;
+
+            // when
+            boolean result = pointDomainService.hasSufficientPoint(point, requiredAmount);
+
+            // then
+            assertThat(result).isFalse();
+        }
+
+        @Test
+        @DisplayName("null 포인트는 false를 반환한다.")
+        void hasSufficientPoint_withNullPoint_returnsFalse() {
+            // when
+            boolean result = pointDomainService.hasSufficientPoint(null, 500);
+
+            // then
+            assertThat(result).isFalse();
         }
     }
 }
