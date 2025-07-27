@@ -18,8 +18,8 @@ classDiagram
         -Long id
         -User user 
         -int amount
-        +int incrementPoint(int point)
-        +int decrementPoint(int point)
+        +int charge(int point)
+        +int use(int point)
     }
     class PointHistory {
         -Long id
