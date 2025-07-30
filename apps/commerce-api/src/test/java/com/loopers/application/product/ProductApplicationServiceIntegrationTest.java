@@ -333,9 +333,9 @@ public class ProductApplicationServiceIntegrationTest {
                         .likesCount(0) // 좋아요 수를 3으로 설정
                         .build();
                 ProductModel savedProduct = productJpaRepository.save(product);
-                LikeModel likeModel1 = LikeModel.of(UserId.of("user1"), savedProduct.getId());
-                LikeModel likeModel2 = LikeModel.of(UserId.of("user2"), savedProduct.getId());
-                LikeModel likeModel3 = LikeModel.of(UserId.of("user3"), savedProduct.getId());
+                LikeModel likeModel1 = LikeModel.create(UserId.of("user1"), savedProduct.getId());
+                LikeModel likeModel2 = LikeModel.create(UserId.of("user2"), savedProduct.getId());
+                LikeModel likeModel3 = LikeModel.create(UserId.of("user3"), savedProduct.getId());
                 likeJpaRepository.save(likeModel1);
                 likeJpaRepository.save(likeModel2);
                 likeJpaRepository.save(likeModel3);

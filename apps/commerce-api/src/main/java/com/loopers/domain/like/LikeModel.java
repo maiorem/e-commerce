@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 
 @Entity
-@Table(name = "user_like")
+@Table(name = "likes")
 @Getter
 public class LikeModel extends BaseEntity {
 
@@ -21,18 +21,14 @@ public class LikeModel extends BaseEntity {
 
     protected LikeModel() {}
 
-    public static LikeModel of(UserId userId, Long productId) {
+    public static LikeModel create(UserId userId, Long productId) {
         LikeModel like = new LikeModel();
-        like.userId = userId;
-        like.productId = productId;
-        return like;
-    }
-
-    public static LikeModel create(String userId, Long productId) {
         if (userId == null || productId == null) {
             throw new CoreException(ErrorType.NOT_FOUND, "사용자 ID와 상품 ID는 필수입니다.");
         }
-        return LikeModel.of(UserId.of(userId), productId);
+        like.userId = userId;
+        like.productId = productId;
+        return like;
     }
 
 }

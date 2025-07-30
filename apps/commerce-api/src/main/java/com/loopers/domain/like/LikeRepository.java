@@ -13,10 +13,9 @@ public interface LikeRepository {
     int countByProductId(Long productId);
     
     List<LikeModel> findByUserId(UserId userId);
-    
-    List<LikeModel> findByProductId(Long productId);
-    
+
     void delete(LikeModel like);
     
     boolean existsByUserIdAndProductId(UserId userId, Long productId);
+
 } 
