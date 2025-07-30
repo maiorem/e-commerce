@@ -55,17 +55,6 @@ erDiagram
         DATETIME deletedAt "삭제 시간"
     }
 
-    PRODUCT_OPTION {
-        BIGINT id PK "옵션 ID"
-        BIGINT productId FK "상품 ID"
-        VARCHAR attributeName "속성명"
-        VARCHAR attributeValue "속성값"
-        INT optionStock "옵션_재고"
-        DATETIME createdAt "생성 시간"
-        DATETIME updatedAt "수정 시간"
-        DATETIME deletedAt "삭제 시간"
-    }
-
     CATEGORY {
         BIGINT id PK "카테고리 ID"
         VARCHAR name "카테고리 이름"
@@ -124,7 +113,6 @@ erDiagram
     BRAND ||--o{ PRODUCT : contains
     CATEGORY ||--o{ PRODUCT : classifies
 
-    PRODUCT ||--o{ PRODUCT_OPTION : has
     PRODUCT ||--o{ ORDER_ITEM : includes
     PRODUCT ||--o{ LIKE : liked_by
 

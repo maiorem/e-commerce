@@ -12,6 +12,8 @@ dependencies {
 
     // querydsl
     implementation("com.querydsl:querydsl-jpa::jakarta")
+    annotationProcessor("com.querydsl:querydsl-apt::jakarta")
+    annotationProcessor("org.springframework.boot:spring-boot-starter-data-jpa")
 
     // test-fixtures
     testImplementation(testFixtures(project(":modules:jpa")))

@@ -25,4 +25,9 @@ public class CategoryRepositoryImpl implements CategoryRepository {
         return categoryJpaRepository.findAll();
     }
 
+    @Override
+    public Optional<CategoryModel> findByName(String categoryName) {
+        return categoryJpaRepository.findByName(categoryName);
+    }
+
 }

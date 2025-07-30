@@ -8,5 +8,6 @@ public interface CategoryRepository {
     Optional<CategoryModel> findById(Long id);
     
     List<CategoryModel> findAll();
-    
+
+    Optional<CategoryModel> findByName(String categoryName);
 }
