@@ -24,4 +24,9 @@ public class BrandRepositoryImpl implements BrandRepository {
         return brandJpaRepository.findAll();
     }
 
+    @Override
+    public Optional<BrandModel> findByName(String brandName) {
+        return brandJpaRepository.findByName(brandName);
+    }
+
 }

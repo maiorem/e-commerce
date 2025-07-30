@@ -30,13 +30,14 @@ public class ProductModel extends BaseEntity {
     protected ProductModel() {}
 
     @Builder
-    public ProductModel(Long brandId, Long categoryId, String name, String description, int price, int stock) {
+    public ProductModel(Long brandId, Long categoryId, String name, String description, int price, int stock, int likesCount) {
         this.brandId = brandId;
         this.categoryId = categoryId;
         this.name = name;
         this.description = description;
         this.price = price;
         this.stock = stock;
+        this.likesCount = likesCount;
     }
 
     public void deductStock(int quantity) {
@@ -54,8 +55,9 @@ public class ProductModel extends BaseEntity {
     }
 
     public void decrementLikesCount() {
-        if (this.likesCount > 0) {
-            this.likesCount--;
+        if (this.likesCount <= 0) { // 현재 좋아요 수가 0이거나 그보다 작을 때 감소 시도
+            throw new CoreException(ErrorType.BAD_REQUEST, "좋아요 수는 0보다 작아질 수 없습니다.");
         }
+        this.likesCount--;
     }
 }
