@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Optional;
 
+
 @RequiredArgsConstructor
 @Component
 public class LikeRepositoryImpl implements LikeRepository {
@@ -36,15 +37,8 @@ public class LikeRepositoryImpl implements LikeRepository {
     }
 
     @Override
-    public List<LikeModel> findByProductId(Long productId) {
-        return likeJpaRepository.findAllByProductId(productId);
-    }
-
-
-
-    @Override
     public void delete(LikeModel like) {
-
+        likeJpaRepository.delete(like);
     }
 
     @Override

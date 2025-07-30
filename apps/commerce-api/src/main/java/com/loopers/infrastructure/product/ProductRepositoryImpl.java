@@ -63,4 +63,14 @@ public class ProductRepositoryImpl implements ProductRepository {
         return new PageImpl<>(list, pageable, total);
     }
 
+    @Override
+    public void save(ProductModel product) {
+        productJpaRepository.save(product);
+    }
+
+    @Override
+    public List<ProductModel> findAllByIds(List<Long> productIds) {
+        return productJpaRepository.findAllById(productIds);
+    }
+
 }

@@ -4,9 +4,10 @@ import com.loopers.domain.brand.BrandModel;
 import com.loopers.domain.brand.BrandRepository;
 import com.loopers.domain.category.CategoryModel;
 import com.loopers.domain.category.CategoryRepository;
-import com.loopers.domain.like.LikeRepository;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
+import com.loopers.domain.product.ProductLikeDomainService;
+import com.loopers.domain.product.ProductSearchDomainService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,8 @@ import java.util.List;
 public class ProductApplicationService {
 
     private final ProductRepository productRepository;
-    private final LikeRepository likeRepository;
+    private final ProductLikeDomainService productLikeDomainService;
+    private final ProductSearchDomainService productSearchDomainService;
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
 
@@ -31,14 +33,18 @@ public class ProductApplicationService {
      * 상품 목록 조회 (페이징 / 정렬 - 최신순(기본값), 좋아요순, 가격 낮은 순, 가격 높은 순)
      */
     public Page<ProductOutputInfo> getProductList(Pageable pageable, ProductQuery query) {
-        // 브랜드와 카테고리 이름으로 ID를 조회
+
+        productSearchDomainService.validateSearchCriteria(query);
+        
         BrandModel brand = brandRepository.findByName(query.getBrandName()).orElse(null);
         CategoryModel category = categoryRepository.findByName(query.getCategoryName()).orElse(null);
 
         Long brandId = (brand != null) ? brand.getId() : null;
         Long categoryId = (category != null) ? category.getId() : null;
 
-        // 상품 목록 조회
+        productSearchDomainService.validateFilterCriteria(brandId, categoryId);
+        productSearchDomainService.validateSortCriteria(query.getSortBy());
+
         Page<ProductModel> productPage = productRepository.findSearchProductList(
                 pageable,
                 query.getProductName(),
@@ -47,19 +53,16 @@ public class ProductApplicationService {
                 query.getSortBy()
         );
 
-        // 상품 목록을 ProductOutputInfo로 변환
         return convertToProductOutputInfoPage(productPage);
     }
 
-    public Page<ProductOutputInfo> convertToProductOutputInfoPage(Page<ProductModel> productPage) {
+    private Page<ProductOutputInfo> convertToProductOutputInfoPage(Page<ProductModel> productPage) {
         List<ProductOutputInfo> productOutputInfoList = new ArrayList<>();
 
-        // 각 상품에 대해 좋아요 수, 브랜드, 카테고리 정보를 조회하여 ProductOutputInfo로 변환
         for (ProductModel model : productPage) {
-            // 좋아요 수 조회
-            int likeCount = likeRepository.countByProductId(model.getId());
 
-            // 브랜드와 카테고리 정보 조회 (null 체크 추가)
+            int likeCount = productLikeDomainService.getLikeCount(model.getId());
+
             BrandModel brandModel = null;
             if (model.getBrandId() != null) {
                 brandModel = brandRepository.findById(model.getBrandId()).orElse(null);
@@ -85,7 +88,7 @@ public class ProductApplicationService {
         ProductModel productModel = productRepository.findById(id)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "해당 상품을 찾을 수 없습니다."));
 
-        int likeCount = likeRepository.countByProductId(productModel.getId());
+        int likeCount = productLikeDomainService.getLikeCount(productModel.getId());
 
         // 브랜드와 카테고리 정보 조회 (null 체크 추가)
         BrandModel brandModel = null;
