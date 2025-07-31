@@ -6,6 +6,7 @@ import com.loopers.domain.product.ProductSortBy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -61,22 +62,16 @@ public class FakeProductRepository implements ProductRepository {
     }
     
     @Override
-    public void save(ProductModel product) {
+    public ProductModel save(ProductModel product) {
         if (product.getId() == null) {
             // 새로운 상품인 경우 ID 할당
             Long newId = nextId++;
             // BaseEntity의 id 필드를 reflection으로 설정
-            try {
-                java.lang.reflect.Field idField = product.getClass().getSuperclass().getDeclaredField("id");
-                idField.setAccessible(true);
-                idField.set(product, newId);
-            } catch (Exception e) {
-                throw new RuntimeException("Failed to set ID", e);
-            }
+            ReflectionTestUtils.setField(product, "id", newId);
         }
         
         // ID가 있으면 업데이트, 없으면 새로 생성
-        products.put(product.getId(), product);
+        return products.put(product.getId(), product);
     }
     
     @Override
@@ -105,11 +100,6 @@ public class FakeProductRepository implements ProductRepository {
     }
     
     // 테스트용 메서드들
-    public void clear() {
-        products.clear();
-        nextId = 1L;
-    }
-    
     public int size() {
         return products.size();
     }

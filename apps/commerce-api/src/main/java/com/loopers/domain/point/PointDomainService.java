@@ -38,8 +38,7 @@ public class PointDomainService {
      */
     public PointModel usePoint(PointModel existingPoint, int amount) {
         validateUseAmount(amount);
-        validateSufficientBalance(existingPoint, amount);
-        
+
         PointModel updatedPoint = PointModel.of(existingPoint.getUserId(), existingPoint.getAmount());
         updatedPoint.use(amount);
         
