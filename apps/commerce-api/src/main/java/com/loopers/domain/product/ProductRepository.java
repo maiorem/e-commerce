@@ -16,7 +16,7 @@ public interface ProductRepository {
 
     Page<ProductModel> findSearchProductList(Pageable pageable, String productName, Long brandId, Long categoryId, ProductSortBy sortBy);
     
-    void save(ProductModel product);
+    ProductModel save(ProductModel product);
 
     List<ProductModel> findAllByIds(List<Long> productIds);
 }
