@@ -1,10 +1,10 @@
 package com.loopers.interfaces.api.point;
 
+import com.loopers.application.point.PointApplicationService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import org.springframework.web.bind.annotation.*;
 
-import com.loopers.application.point.PointFacade;
 import com.loopers.application.point.PointInfo;
 import com.loopers.interfaces.api.ApiResponse;
 import com.loopers.interfaces.api.point.PointV1Dto.PointRequest;
@@ -17,7 +17,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/v1/points")
 public class PointV1Controller implements PointV1ApiSpec{
     
-    private final PointFacade pointFacade;
+    private final PointApplicationService pointFacade;
 
     @PostMapping("/charge")
     @Override
