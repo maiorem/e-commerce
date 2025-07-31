@@ -1,6 +1,5 @@
 package com.loopers.application.point;
 
-import com.loopers.domain.point.*;
 import com.loopers.domain.user.*;
 import com.loopers.support.error.CoreException;
 import com.loopers.utils.DatabaseCleanUp;
@@ -49,10 +48,10 @@ public class PointApplicationServiceIntegrationTest {
             int amount = 1000;
 
             // when
-            PointModel pointModel = pointApplicationService.chargeMyPoint(user.getUserId().getValue(), amount);
+            PointInfo pointInfo = pointApplicationService.chargeMyPoint(user.getUserId().getValue(), amount);
 
             // then
-            assertThat(pointModel.getAmount()).isEqualTo(amount);
+            assertThat(pointInfo.totalAmount()).isEqualTo(amount);
         }
 
         @DisplayName("존재하지 않는 유저 ID 로 충전을 시도한 경우, 실패한다.")
@@ -86,11 +85,11 @@ public class PointApplicationServiceIntegrationTest {
             pointApplicationService.chargeMyPoint(user.getUserId().getValue(), initialAmount);
 
             // when
-            PointModel pointModel = pointApplicationService.getMyPoint(user.getUserId().getValue());
+            PointInfo info = pointApplicationService.getMyPoint(user.getUserId().getValue());
 
             // then
-            assertThat(pointModel.getUserId()).isEqualTo(user.getUserId());
-            assertThat(pointModel.getAmount()).isEqualTo(initialAmount);
+            assertThat(info.userId()).isEqualTo(user.getUserId().getValue());
+            assertThat(info.totalAmount()).isEqualTo(initialAmount);
 
         }
 
@@ -101,10 +100,10 @@ public class PointApplicationServiceIntegrationTest {
             String userId = "seyoung123";
 
             // when
-            PointModel pointModel = pointApplicationService.getMyPoint(userId);
+            PointInfo info = pointApplicationService.getMyPoint(userId);
 
             // then
-            assertThat(pointModel).isNull();
+            assertThat(info).isNull();
         }
     }
 

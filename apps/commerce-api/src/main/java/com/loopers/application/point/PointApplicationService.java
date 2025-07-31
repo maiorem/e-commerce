@@ -18,7 +18,7 @@ public class PointApplicationService {
     private final PointDomainService pointDomainService;
 
     @Transactional
-    public PointModel chargeMyPoint(String userId, int amount) {
+    public PointInfo chargeMyPoint(String userId, int amount) {
         // 사용자 존재 여부 확인
         if (!userRepository.existsByUserId(UserId.of(userId))) {
             throw new CoreException(ErrorType.BAD_REQUEST, "존재하지 않는 사용자입니다.");
@@ -43,11 +43,11 @@ public class PointApplicationService {
         );
         pointRepository.saveHistory(history);
         
-        return savedPoint;
+        return PointInfo.from(savedPoint);
     }
 
     @Transactional
-    public PointModel useMyPoint(String userId, int amount) {
+    public PointInfo useMyPoint(String userId, int amount) {
         // 사용자 존재 여부 확인
         if (!userRepository.existsByUserId(UserId.of(userId))) {
             throw new CoreException(ErrorType.BAD_REQUEST, "존재하지 않는 사용자입니다.");
@@ -72,7 +72,7 @@ public class PointApplicationService {
         );
         pointRepository.saveHistory(history);
         
-        return savedPoint;
+        return PointInfo.from(savedPoint);
     }
 
     @Transactional
@@ -105,18 +105,18 @@ public class PointApplicationService {
         return savedPoint;
     }
 
-    public PointModel getMyPoint(String userId) {
+    public PointInfo getMyPoint(String userId) {
 
         // 사용자 존재 여부 확인
         if (!userRepository.existsByUserId(UserId.of(userId))) {
             return null;
         }
         // 포인트 조회
-        return pointRepository.findByUserId(UserId.of(userId)).orElse(null);
+        PointModel pointModel = pointRepository.findByUserId(UserId.of(userId)).orElse(null);
+        if (pointModel == null) {
+            return PointInfo.from(PointModel.of(UserId.of(userId), 0));
+        }
+        return PointInfo.from(pointModel);
     }
 
-    public boolean hasSufficientPoint(String userId, int requiredAmount) {
-        PointModel point = getMyPoint(userId);
-        return pointDomainService.hasSufficientPoint(point, requiredAmount);
-    }
 } 

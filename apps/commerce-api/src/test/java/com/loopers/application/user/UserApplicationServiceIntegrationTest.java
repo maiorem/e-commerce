@@ -1,6 +1,10 @@
 package com.loopers.application.user;
 
-import com.loopers.domain.user.*;
+import com.loopers.domain.user.Gender;
+import com.loopers.domain.user.UserId;
+import com.loopers.domain.user.UserModel;
+import com.loopers.domain.user.UserRepository;
+import com.loopers.support.config.TestConfig;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
@@ -12,9 +16,6 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import com.loopers.support.config.TestConfig;
-
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -42,18 +43,6 @@ class UserApplicationServiceIntegrationTest {
         reset(userRepository);
     }
 
-    private UserId createValidUserId() {
-        return UserId.of(UUID.randomUUID().toString().substring(0, 8));
-    }
-
-    private Email createValidEmail() {
-        return Email.of("seyoung@loopers.com");
-    }
-
-    private BirthDate createValidBirthDate() {
-        return BirthDate.of("2000-01-01");
-    }
-
     @DisplayName("회원가입 시,")
     @Nested
     class CreateUser {
@@ -62,30 +51,30 @@ class UserApplicationServiceIntegrationTest {
         @Test
         void createUser_withValidInfo_success() {
             // given
-            UserId userId = createValidUserId();
-            Email email = createValidEmail();
-            Gender gender = Gender.MALE;
-            BirthDate birthDate = createValidBirthDate();
+            String userId = "seyoung";
+            String email = "seyoung@loopers.com";
+            String gender = "FEMALE";
+            String birthDate = "2000-01-01";
             ArgumentCaptor<UserModel> userModelArgumentCaptor = ArgumentCaptor.forClass(UserModel.class);
 
             // when
-            UserModel userModel = userApplicationService.createUser(userId, email, gender, birthDate);
+            UserInfo userInfo = userApplicationService.createUser(userId, email, gender, birthDate);
 
             // then
             assertAll(
-                    () -> assertThat(userModel).isNotNull(),
-                    () -> assertThat(userModel.getUserId()).isEqualTo(userId),
-                    () -> assertThat(userModel.getEmail()).isEqualTo(email),
-                    () -> assertThat(userModel.getGender()).isEqualTo(gender),
-                    () -> assertThat(userModel.getBirthDate()).isEqualTo(birthDate)
+                    () -> assertThat(userInfo).isNotNull(),
+                    () -> assertThat(userInfo.userId()).isEqualTo(userId),
+                    () -> assertThat(userInfo.email()).isEqualTo(email),
+                    () -> assertThat(userInfo.gender()).isEqualTo(gender),
+                    () -> assertThat(userInfo.birthDate()).isEqualTo(birthDate)
             );
-            assertThat(userRepository.existsByUserId(userId)).isTrue();
+            assertThat(userRepository.existsByUserId(UserId.of(userId))).isTrue();
 
             // 행위 검증
             verify(userRepository, times(1)).save(userModelArgumentCaptor.capture());
             UserModel capturedUser = userModelArgumentCaptor.getValue();
-            assertThat(capturedUser.getUserId()).isEqualTo(userId);
-            assertThat(capturedUser.getEmail()).isEqualTo(email);
+            assertThat(capturedUser.getUserId().getValue()).isEqualTo(userId);
+            assertThat(capturedUser.getEmail().getValue()).isEqualTo(email);
         }
 
         @DisplayName("이미 존재하는 아이디로 회원가입을 시도하면, 예외가 발생한다.")
@@ -93,17 +82,17 @@ class UserApplicationServiceIntegrationTest {
         void createUser_withExistingUserId_throwsException() {
 
             // given
-            UserId userId = createValidUserId();
-            Email email = createValidEmail();
-            Gender gender = Gender.MALE;
-            BirthDate birthDate = createValidBirthDate();
+            String userId = "seyoung";
+            String email = "seyoung@loopers.com";
+            String gender = "FEMALE";
+            String birthDate = "2000-01-01";
 
             // 첫 번째 회원가입 (성공)
             userApplicationService.createUser(userId, email, gender, birthDate);
 
             // when & then
             CoreException exception = assertThrows(CoreException.class, () ->
-                    userApplicationService.createUser(userId, Email.of("new@loopers.com"), Gender.MALE, BirthDate.of("2001-01-01"))
+                    userApplicationService.createUser(userId, "new@loopers.com", String.valueOf(Gender.MALE), "2001-01-01")
             );
 
             assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
@@ -119,33 +108,33 @@ class UserApplicationServiceIntegrationTest {
         @Test
         void getMyInfo_withExistingUserId_success() {
             // given
-            UserId userId = createValidUserId();
-            Email email = createValidEmail();
-            Gender gender = Gender.MALE;
-            BirthDate birthDate = createValidBirthDate();
+            String userId = "seyoung";
+            String email = "seyoung@loopers.com";
+            String gender = "FEMALE";
+            String birthDate = "2000-01-01";
 
             // 회원가입
             userApplicationService.createUser(userId, email, gender, birthDate);
 
             //when
-            UserModel userModel = userApplicationService.getUser(userId);
+            UserInfo userInfo = userApplicationService.getUser(userId);
 
             // then
             assertAll(
-                () -> assertThat(userModel).isNotNull(),
-                () -> assertThat(userModel.getUserId()).isEqualTo(userId),
-                () -> assertThat(userModel.getEmail()).isEqualTo(email)
+                () -> assertThat(userInfo).isNotNull(),
+                () -> assertThat(userInfo.userId()).isEqualTo(userId),
+                () -> assertThat(userInfo.email()).isEqualTo(email)
             );
         }
 
-        @DisplayName("존재하지 않는 유저의 아이디가 주어지면 null이 발생한다.")
+        @DisplayName("존재하지 않는 유저의 아이디가 주어지면 예외가 발생한다.")
         @Test
         void getMyInfo_withNonExistingUserId_null() {
             // given
-            UserId userId = createValidUserId();
+            String userId = "seyoung1";
 
             // when & then
-            assertThat(userApplicationService.getUser(userId)).isNull();
+            assertThrows(CoreException.class, () -> userApplicationService.getUser(userId));
         }
     
     }
