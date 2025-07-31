@@ -98,8 +98,8 @@ public class OrderApplicationService {
             productStockDomainService.deductStock(product, item.getQuantity());
         });
 
-        // 주문 저장 (올바른 순서)
-        orderRepository.save(order);                    // 1. 주문 먼저 저장 (ID 생성)
+        // 주문 저장 
+        orderRepository.save(order);        
         
         // 주문 아이템에 실제 주문 ID 설정 후 저장
         List<OrderItemModel> savedOrderItems = new ArrayList<>();
