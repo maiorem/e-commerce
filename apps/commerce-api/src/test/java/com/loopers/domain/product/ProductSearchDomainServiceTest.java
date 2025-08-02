@@ -94,8 +94,8 @@ class ProductSearchDomainServiceTest {
         void validateSearchCriteriaTooLargePageSize() {
             // given
             String productName ="a";
-            int page = 100;
-            int size = 0;
+            int page = 0;
+            int size = 101;
 
             // when & then
             assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
