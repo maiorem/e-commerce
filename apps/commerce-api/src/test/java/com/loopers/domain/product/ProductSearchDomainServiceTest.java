@@ -1,6 +1,5 @@
 package com.loopers.domain.product;
 
-import com.loopers.application.product.ProductQuery;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,24 +63,15 @@ class ProductSearchDomainServiceTest {
     class Validate_Search_Criteria {
 
         @Test
-        @DisplayName("정상적인 검색 조건은 검증을 통과한다.")
-        void validateSearchCriteriaSuccess() {
-            // given
-            ProductQuery query = ProductQuery.from("상품", "브랜드", "카테고리", ProductSortBy.LATEST, 0, 10);
-
-            // when & then
-            productSearchDomainService.validateSearchCriteria(query);
-            // 예외가 발생하지 않으면 성공
-        }
-
-        @Test
         @DisplayName("상품명이 2글자 미만이면 예외가 발생한다.")
         void validateSearchCriteriaShortProductName() {
             // given
-            ProductQuery query = ProductQuery.from("a", "브랜드", "카테고리", ProductSortBy.LATEST, 0, 10);
+            String productName ="a";
+            int page = 0;
+            int size = 10;
 
             // when & then
-            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(query))
+            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
                     .isInstanceOf(CoreException.class)
                     .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
         }
@@ -90,10 +80,11 @@ class ProductSearchDomainServiceTest {
         @DisplayName("페이지 크기가 0 이하면 예외가 발생한다.")
         void validateSearchCriteriaInvalidPageSize() {
             // given
-            ProductQuery query = ProductQuery.from("상품", "브랜드", "카테고리", ProductSortBy.LATEST, 0, 0);
-
+            String productName ="a";
+            int page = 0;
+            int size = 0;
             // when & then
-            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(query))
+            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
                     .isInstanceOf(CoreException.class)
                     .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
         }
@@ -102,10 +93,12 @@ class ProductSearchDomainServiceTest {
         @DisplayName("페이지 크기가 100을 초과하면 예외가 발생한다.")
         void validateSearchCriteriaTooLargePageSize() {
             // given
-            ProductQuery query = ProductQuery.from("상품", "브랜드", "카테고리", ProductSortBy.LATEST, 0, 101);
+            String productName ="a";
+            int page = 100;
+            int size = 0;
 
             // when & then
-            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(query))
+            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
                     .isInstanceOf(CoreException.class)
                     .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
         }
@@ -114,10 +107,12 @@ class ProductSearchDomainServiceTest {
         @DisplayName("페이지 번호가 음수이면 예외가 발생한다.")
         void validateSearchCriteriaNegativePage() {
             // given
-            ProductQuery query = ProductQuery.from("상품", "브랜드", "카테고리", ProductSortBy.LATEST, -1, 10);
+            String productName ="a";
+            int page = -1;
+            int size = 1;
 
             // when & then
-            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(query))
+            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
                     .isInstanceOf(CoreException.class)
                     .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
         }

@@ -34,7 +34,7 @@ public class ProductApplicationService {
      */
     public Page<ProductOutputInfo> getProductList(Pageable pageable, ProductQuery query) {
 
-        productSearchDomainService.validateSearchCriteria(query);
+        productSearchDomainService.validateSearchCriteria(query.getProductName(), pageable.getPageSize(), pageable.getPageNumber());
         
         BrandModel brand = brandRepository.findByName(query.getBrandName()).orElse(null);
         CategoryModel category = categoryRepository.findByName(query.getCategoryName()).orElse(null);
