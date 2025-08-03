@@ -87,8 +87,7 @@ classDiagram
         -Long id
         -String couponName
         -CouponType couponType
-        -int discountAmount
-        -int discountRate
+        -int discountValue
         -int minimumOrderAmount
         -int maximumDiscountAmount
         -CouponStatus couponStatus
@@ -169,7 +168,7 @@ classDiagram
     class CouponStatus {
         <<enumeration>>
         ACTIVE
-        USED
+        INACTIVE
         EXPIRED
     }
 

@@ -24,11 +24,11 @@ public class PaymentHistoryModel extends BaseEntity {
 
     protected PaymentHistoryModel() {}
 
-    public static PaymentHistoryModel of(Long orderId, PaymentMethod paymentMethod, int amount) {
+    public static PaymentHistoryModel complete(Long orderId, PaymentMethod paymentMethod, int amount) {
         PaymentHistoryModel payment = new PaymentHistoryModel();
         payment.orderId = orderId;
         payment.paymentMethod = paymentMethod;
-        payment.paymentStatus = PaymentStatus.PENDING;
+        payment.paymentStatus = PaymentStatus.SUCCESS;
         payment.amount = amount;
         payment.paymentDate = LocalDateTime.now();
         return payment;

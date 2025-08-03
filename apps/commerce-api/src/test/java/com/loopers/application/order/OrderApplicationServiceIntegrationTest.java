@@ -4,6 +4,7 @@ import com.loopers.domain.order.OrderItemModel;
 import com.loopers.domain.order.OrderItemRepository;
 import com.loopers.domain.order.OrderModel;
 import com.loopers.domain.order.OrderRepository;
+import com.loopers.domain.payment.PaymentMethod;
 import com.loopers.domain.point.PointModel;
 import com.loopers.domain.point.PointRepository;
 import com.loopers.domain.product.ProductModel;
@@ -90,7 +91,7 @@ class OrderApplicationServiceIntegrationTest {
             new OrderItemCommand(1L, products.get(1).getId(), 1, "Samsung Galaxy S23", 1200000)
         );
         
-        orderCommand = new OrderCommand(userId, 50000, orderItemCommands);
+        orderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD,50000, orderItemCommands);
 
         orderItems = List.of(
             new OrderItemModel(1L, products.get(0).getId(), 2, 1000000),
@@ -141,7 +142,7 @@ class OrderApplicationServiceIntegrationTest {
     @DisplayName("포인트가 없는 사용자의 주문 생성")
     void createOrderWithoutPoints() {
         // given
-        OrderCommand orderCommandWithoutPoints = new OrderCommand(userId, 0, orderItemCommands);
+        OrderCommand orderCommandWithoutPoints = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, 0, orderItemCommands);
 
         // when
         OrderInfo result = orderApplicationService.createOrder(orderCommandWithoutPoints);
@@ -161,7 +162,7 @@ class OrderApplicationServiceIntegrationTest {
     void createOrderWithNonExistentUser() {
         // given
         UserId nonExistentUserId = UserId.of("seyoung12");
-        OrderCommand invalidOrderCommand = new OrderCommand(nonExistentUserId, 0, orderItemCommands);
+        OrderCommand invalidOrderCommand = new OrderCommand(nonExistentUserId, PaymentMethod.CREDIT_CARD,0, orderItemCommands);
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(invalidOrderCommand))
@@ -186,7 +187,7 @@ class OrderApplicationServiceIntegrationTest {
             new OrderItemCommand(1L, outOfStockProduct.getId(), 1, "테스트상품", 50000)
         );
         
-        OrderCommand invalidOrderCommand = new OrderCommand(userId, 0, invalidOrderItemCommands);
+        OrderCommand invalidOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, 0, invalidOrderItemCommands);
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(invalidOrderCommand))
