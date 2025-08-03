@@ -2,7 +2,6 @@ package com.loopers.application.like;
 
 import com.loopers.domain.like.LikeModel;
 import com.loopers.domain.product.ProductModel;
-import com.loopers.domain.product.ProductLikeDomainService;
 import com.loopers.domain.user.UserId;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
@@ -24,7 +23,7 @@ import static org.mockito.Mockito.*;
 class LikeApplicationServiceWithFakeTest {
 
     @Mock
-    private ProductLikeDomainService productLikeDomainService;
+    private ProductLikeHandler productLikeHandler;
 
     private LikeApplicationService likeApplicationService;
     private FakeLikeRepository fakeLikeRepository;
@@ -41,7 +40,7 @@ class LikeApplicationServiceWithFakeTest {
         likeApplicationService = new LikeApplicationService(
                 fakeLikeRepository,
                 fakeProductRepository,
-                productLikeDomainService, // Mock 주입
+                productLikeHandler, // Mock 주입
                 null, // BrandRepository
                 null  // CategoryRepository
         );
@@ -60,13 +59,13 @@ class LikeApplicationServiceWithFakeTest {
             // given
             Long productId = product.getId();
             LikeModel like = LikeModel.create(userId, productId);
-            when(productLikeDomainService.addLike(any(ProductModel.class), eq(userId))).thenReturn(like);
+            when(productLikeHandler.addLike(any(ProductModel.class), eq(userId))).thenReturn(like);
 
             // when
             likeApplicationService.like(userId, productId);
 
             // then
-            verify(productLikeDomainService).addLike(any(ProductModel.class), eq(userId));
+            verify(productLikeHandler).addLike(any(ProductModel.class), eq(userId));
             assertThat(fakeLikeRepository.countByProductId(productId)).isEqualTo(1);
             assertThat(fakeLikeRepository.size()).isEqualTo(1);
         }
@@ -79,7 +78,7 @@ class LikeApplicationServiceWithFakeTest {
             LikeModel like = LikeModel.create(userId, productId);
             
             // 첫 번째 호출에서는 LikeModel 반환, 두 번째 호출에서는 null 반환 (이미 좋아요된 상태)
-            when(productLikeDomainService.addLike(any(ProductModel.class), eq(userId)))
+            when(productLikeHandler.addLike(any(ProductModel.class), eq(userId)))
                     .thenReturn(like)
                     .thenReturn(null);
 
@@ -87,14 +86,14 @@ class LikeApplicationServiceWithFakeTest {
             likeApplicationService.like(userId, productId);
 
             // then - 첫 번째 요청이 성공적으로 처리됨
-            verify(productLikeDomainService).addLike(any(ProductModel.class), eq(userId));
+            verify(productLikeHandler).addLike(any(ProductModel.class), eq(userId));
             assertThat(fakeLikeRepository.countByProductId(productId)).isEqualTo(1);
 
             // when - 두 번째 좋아요 요청 (중복)
             likeApplicationService.like(userId, productId);
 
             // then - 두 번째 요청은 무시됨 (상태 변화 없음)
-            verify(productLikeDomainService, times(2)).addLike(any(ProductModel.class), eq(userId));
+            verify(productLikeHandler, times(2)).addLike(any(ProductModel.class), eq(userId));
             assertThat(fakeLikeRepository.countByProductId(productId)).isEqualTo(1); // 여전히 1개
             assertThat(fakeLikeRepository.size()).isEqualTo(1); // 여전히 1개
         }
@@ -110,7 +109,7 @@ class LikeApplicationServiceWithFakeTest {
                     .isInstanceOf(CoreException.class)
                     .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND);
 
-            verify(productLikeDomainService, never()).addLike(any(ProductModel.class), any(UserId.class));
+            verify(productLikeHandler, never()).addLike(any(ProductModel.class), any(UserId.class));
             assertThat(fakeLikeRepository.isEmpty()).isTrue();
         }
     }
@@ -125,13 +124,13 @@ class LikeApplicationServiceWithFakeTest {
             // given
             Long productId = product.getId();
             LikeModel existingLike = LikeModel.create(userId, productId);
-            when(productLikeDomainService.removeLike(any(ProductModel.class), eq(userId))).thenReturn(existingLike);
+            when(productLikeHandler.removeLike(any(ProductModel.class), eq(userId))).thenReturn(existingLike);
 
             // when
             likeApplicationService.unlike(userId, productId);
 
             // then
-            verify(productLikeDomainService).removeLike(any(ProductModel.class), eq(userId));
+            verify(productLikeHandler).removeLike(any(ProductModel.class), eq(userId));
             assertThat(fakeLikeRepository.countByProductId(productId)).isEqualTo(0);
             assertThat(fakeLikeRepository.isEmpty()).isTrue();
         }
@@ -144,7 +143,7 @@ class LikeApplicationServiceWithFakeTest {
             LikeModel existingLike = LikeModel.create(userId, productId);
             
             // 첫 번째 호출에서는 LikeModel 반환, 두 번째 호출에서는 null 반환 (이미 취소된 상태)
-            when(productLikeDomainService.removeLike(any(ProductModel.class), eq(userId)))
+            when(productLikeHandler.removeLike(any(ProductModel.class), eq(userId)))
                     .thenReturn(existingLike)
                     .thenReturn(null);
 
@@ -152,14 +151,14 @@ class LikeApplicationServiceWithFakeTest {
             likeApplicationService.unlike(userId, productId);
 
             // then - 첫 번째 요청이 성공적으로 처리됨
-            verify(productLikeDomainService).removeLike(any(ProductModel.class), eq(userId));
+            verify(productLikeHandler).removeLike(any(ProductModel.class), eq(userId));
             assertThat(fakeLikeRepository.countByProductId(productId)).isEqualTo(0);
 
             // when - 두 번째 좋아요 취소 요청 (중복)
             likeApplicationService.unlike(userId, productId);
 
             // then - 두 번째 요청은 무시됨 (삭제 호출되지 않음)
-            verify(productLikeDomainService, times(2)).removeLike(any(ProductModel.class), eq(userId));
+            verify(productLikeHandler, times(2)).removeLike(any(ProductModel.class), eq(userId));
             assertThat(fakeLikeRepository.countByProductId(productId)).isEqualTo(0); // 여전히 0개
             assertThat(fakeLikeRepository.isEmpty()).isTrue(); // 여전히 비어있음
         }
@@ -175,7 +174,7 @@ class LikeApplicationServiceWithFakeTest {
                     .isInstanceOf(CoreException.class)
                     .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND);
 
-            verify(productLikeDomainService, never()).removeLike(any(ProductModel.class), any(UserId.class));
+            verify(productLikeHandler, never()).removeLike(any(ProductModel.class), any(UserId.class));
             assertThat(fakeLikeRepository.isEmpty()).isTrue();
         }
     }
@@ -189,14 +188,14 @@ class LikeApplicationServiceWithFakeTest {
         void isLikedTrue() {
             // given
             Long productId = product.getId();
-            when(productLikeDomainService.isLiked(productId, userId)).thenReturn(true);
+            when(productLikeHandler.isLiked(productId, userId)).thenReturn(true);
 
             // when
             boolean result = likeApplicationService.isLiked(userId, productId);
 
             // then
             assertThat(result).isTrue();
-            verify(productLikeDomainService).isLiked(productId, userId);
+            verify(productLikeHandler).isLiked(productId, userId);
         }
 
         @Test
@@ -204,14 +203,14 @@ class LikeApplicationServiceWithFakeTest {
         void isLikedFalse() {
             // given
             Long productId = product.getId();
-            when(productLikeDomainService.isLiked(productId, userId)).thenReturn(false);
+            when(productLikeHandler.isLiked(productId, userId)).thenReturn(false);
 
             // when
             boolean result = likeApplicationService.isLiked(userId, productId);
 
             // then
             assertThat(result).isFalse();
-            verify(productLikeDomainService).isLiked(productId, userId);
+            verify(productLikeHandler).isLiked(productId, userId);
         }
     }
 } 

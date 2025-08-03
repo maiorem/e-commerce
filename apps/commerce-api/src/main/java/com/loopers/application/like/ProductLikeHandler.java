@@ -1,7 +1,8 @@
-package com.loopers.domain.product;
+package com.loopers.application.like;
 
 import com.loopers.domain.like.LikeModel;
 import com.loopers.domain.like.LikeRepository;
+import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.user.UserId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -10,7 +11,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ProductLikeDomainService {
+public class ProductLikeHandler {
 
     private final LikeRepository likeRepository;
 

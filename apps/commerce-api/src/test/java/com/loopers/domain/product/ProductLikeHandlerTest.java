@@ -1,5 +1,6 @@
 package com.loopers.domain.product;
 
+import com.loopers.application.like.ProductLikeHandler;
 import com.loopers.domain.like.LikeModel;
 import com.loopers.domain.like.LikeRepository;
 import com.loopers.domain.user.UserId;
@@ -19,7 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ProductLikeDomainServiceTest {
+class ProductLikeHandlerTest {
 
     @Mock
     private LikeRepository likeRepository;
@@ -28,7 +29,7 @@ class ProductLikeDomainServiceTest {
     private ProductModel product;
 
     @InjectMocks
-    private ProductLikeDomainService productLikeDomainService;
+    private ProductLikeHandler productLikeHandler;
 
     private UserId userId;
     private Long productId;
@@ -51,7 +52,7 @@ class ProductLikeDomainServiceTest {
             when(likeRepository.existsByUserIdAndProductId(userId, productId)).thenReturn(false);
 
             // when
-            LikeModel result = productLikeDomainService.addLike(product, userId);
+            LikeModel result = productLikeHandler.addLike(product, userId);
 
             // then
             assertThat(result).isNotNull();
@@ -69,7 +70,7 @@ class ProductLikeDomainServiceTest {
             when(likeRepository.existsByUserIdAndProductId(userId, productId)).thenReturn(true);
 
             // when
-            LikeModel result = productLikeDomainService.addLike(product, userId);
+            LikeModel result = productLikeHandler.addLike(product, userId);
 
             // then
             assertThat(result).isNull();
@@ -93,7 +94,7 @@ class ProductLikeDomainServiceTest {
             when(likeRepository.findByUserIdAndProductId(userId, productId)).thenReturn(Optional.of(existingLike));
 
             // when
-            LikeModel result = productLikeDomainService.removeLike(product, userId);
+            LikeModel result = productLikeHandler.removeLike(product, userId);
 
             // then
             assertThat(result).isNotNull();
@@ -112,7 +113,7 @@ class ProductLikeDomainServiceTest {
             when(likeRepository.existsByUserIdAndProductId(userId, productId)).thenReturn(false);
 
             // when
-            LikeModel result = productLikeDomainService.removeLike(product, userId);
+            LikeModel result = productLikeHandler.removeLike(product, userId);
 
             // then
             assertThat(result).isNull();
@@ -133,7 +134,7 @@ class ProductLikeDomainServiceTest {
             when(likeRepository.existsByUserIdAndProductId(userId, productId)).thenReturn(true);
 
             // when
-            boolean result = productLikeDomainService.isLiked(productId, userId);
+            boolean result = productLikeHandler.isLiked(productId, userId);
 
             // then
             assertThat(result).isTrue();
@@ -147,7 +148,7 @@ class ProductLikeDomainServiceTest {
             when(likeRepository.existsByUserIdAndProductId(userId, productId)).thenReturn(false);
 
             // when
-            boolean result = productLikeDomainService.isLiked(productId, userId);
+            boolean result = productLikeHandler.isLiked(productId, userId);
 
             // then
             assertThat(result).isFalse();
@@ -167,7 +168,7 @@ class ProductLikeDomainServiceTest {
             when(likeRepository.countByProductId(productId)).thenReturn(expectedCount);
 
             // when
-            int result = productLikeDomainService.getLikeCount(productId);
+            int result = productLikeHandler.getLikeCount(productId);
 
             // then
             assertThat(result).isEqualTo(expectedCount);
@@ -191,7 +192,7 @@ class ProductLikeDomainServiceTest {
             when(likeRepository.findByUserId(userId)).thenReturn(likes);
 
             // when
-            List<Long> result = productLikeDomainService.getLikedProductIds(userId);
+            List<Long> result = productLikeHandler.getLikedProductIds(userId);
 
             // then
             assertThat(result).hasSize(3);
@@ -206,7 +207,7 @@ class ProductLikeDomainServiceTest {
             when(likeRepository.findByUserId(userId)).thenReturn(List.of());
 
             // when
-            List<Long> result = productLikeDomainService.getLikedProductIds(userId);
+            List<Long> result = productLikeHandler.getLikedProductIds(userId);
 
             // then
             assertThat(result).isEmpty();

@@ -6,7 +6,7 @@ import com.loopers.domain.category.CategoryModel;
 import com.loopers.domain.category.CategoryRepository;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
-import com.loopers.domain.product.ProductLikeDomainService;
+import com.loopers.application.like.ProductLikeHandler;
 import com.loopers.domain.product.ProductSearchDomainService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
@@ -24,10 +24,10 @@ import java.util.List;
 public class ProductApplicationService {
 
     private final ProductRepository productRepository;
-    private final ProductLikeDomainService productLikeDomainService;
-    private final ProductSearchDomainService productSearchDomainService;
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductLikeHandler productLikeHandler;
+    private final ProductSearchDomainService productSearchDomainService;
 
     /**
      * 상품 목록 조회 (페이징 / 정렬 - 최신순(기본값), 좋아요순, 가격 낮은 순, 가격 높은 순)
@@ -61,7 +61,7 @@ public class ProductApplicationService {
 
         for (ProductModel model : productPage) {
 
-            int likeCount = productLikeDomainService.getLikeCount(model.getId());
+            int likeCount = productLikeHandler.getLikeCount(model.getId());
 
             BrandModel brandModel = null;
             if (model.getBrandId() != null) {
@@ -88,7 +88,7 @@ public class ProductApplicationService {
         ProductModel productModel = productRepository.findById(id)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "해당 상품을 찾을 수 없습니다."));
 
-        int likeCount = productLikeDomainService.getLikeCount(productModel.getId());
+        int likeCount = productLikeHandler.getLikeCount(productModel.getId());
 
         // 브랜드와 카테고리 정보 조회 (null 체크 추가)
         BrandModel brandModel = null;

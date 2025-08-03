@@ -7,7 +7,6 @@ import com.loopers.domain.category.CategoryModel;
 import com.loopers.domain.category.CategoryRepository;
 import com.loopers.domain.like.LikeModel;
 import com.loopers.domain.like.LikeRepository;
-import com.loopers.domain.product.ProductLikeDomainService;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.UserId;
@@ -27,7 +26,7 @@ public class LikeApplicationService {
 
     private final LikeRepository likeRepository;
     private final ProductRepository productRepository;
-    private final ProductLikeDomainService productLikeDomainService;
+    private final ProductLikeHandler productLikeHandler;
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
 
@@ -39,7 +38,7 @@ public class LikeApplicationService {
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "상품이 존재하지 않습니다."));
         
         // 도메인 서비스를 통한 좋아요 추가
-        LikeModel like = productLikeDomainService.addLike(product, userId);
+        LikeModel like = productLikeHandler.addLike(product, userId);
         
         // null이 반환되면 이미 좋아요가 되어 있는 상태이므로 아무 동작도 하지 않음
         if (like != null) {
@@ -56,7 +55,7 @@ public class LikeApplicationService {
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "상품이 존재하지 않습니다."));
         
         // 도메인 서비스를 통한 좋아요 제거
-        LikeModel like = productLikeDomainService.removeLike(product, userId);
+        LikeModel like = productLikeHandler.removeLike(product, userId);
         
         // null이 반환되면 이미 좋아요가 취소되어 있는 상태이므로 아무 동작도 하지 않음
         if (like != null) {
@@ -69,7 +68,7 @@ public class LikeApplicationService {
      * 사용자가 상품을 좋아요 했는지 확인
      */
     public boolean isLiked(UserId userId, Long productId) {
-        return productLikeDomainService.isLiked(productId, userId);
+        return productLikeHandler.isLiked(productId, userId);
     }
 
     /**
@@ -78,7 +77,7 @@ public class LikeApplicationService {
     public List<ProductOutputInfo> getLikedProducts(UserId userId) {
 
         // 좋아요한 상품 ID 목록 조회
-        List<Long> productIds = productLikeDomainService.getLikedProductIds(userId);
+        List<Long> productIds = productLikeHandler.getLikedProductIds(userId);
 
         if (productIds.isEmpty()) {
             return new ArrayList<>();
