@@ -48,13 +48,6 @@ classDiagram
         +void decrementLikesCount()
     }
 
-    class ProductOption {
-        -Long id
-        -String attributeName
-        -String attributeValue
-        -int optionStock
-    }
-
     class Category {
         -Long id
         -String name
@@ -148,8 +141,6 @@ classDiagram
 
     Brand "1" --> "N" Product : contains
     Category "1" --> "N" Product : classifies
-
-    Product "1" --> "N" ProductOption : has
 
     Order "1" --> "N" OrderItem : contains
     OrderItem "N" --> "1" Product : refers_to

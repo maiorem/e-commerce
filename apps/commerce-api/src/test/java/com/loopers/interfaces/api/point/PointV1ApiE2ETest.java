@@ -62,12 +62,12 @@ class PointV1ApiE2ETest {
         @Test
         void chargePoint_withExistingUser_returnsChargedTotalAmount() {
             // given
-            UserModel user = userRepository.create(UserModel.builder()
-                    .userId(UserId.of("seyoung"))
-                    .email(Email.of("seyoung@loopers.com"))
-                    .gender(Gender.MALE)
-                    .birthDate(BirthDate.of("2000-01-01"))
-                    .build());
+            UserModel user = userRepository.save(UserModel.of(
+                    UserId.of("seyoung"),
+                    Email.of("seyoung@loopers.com"),
+                    Gender.MALE,
+                    BirthDate.of("2000-01-01")
+            ));
 
             // when
             int amount = 1000;
@@ -93,12 +93,12 @@ class PointV1ApiE2ETest {
         @Test
         void chargePoint_withExistingUser_addsToTotalAmount() {
             // given
-            UserModel user = userRepository.create(UserModel.builder()
-                    .userId(UserId.of("testuser2"))
-                    .email(Email.of("testuser2@loopers.com"))
-                    .gender(Gender.FEMALE)
-                    .birthDate(BirthDate.of("1995-05-05"))
-                    .build());
+            UserModel user = userRepository.save(UserModel.of(
+                    UserId.of("testuser2"),
+                    Email.of("testuser2@loopers.com"),
+                    Gender.FEMALE,
+                    BirthDate.of("1995-05-05")
+            ));
 
             // 첫 번째 충전
             int initialAmount = 1000;
@@ -158,14 +158,14 @@ class PointV1ApiE2ETest {
         @Test
         void getPoint_withExistingUser_returnsUserPoints() {
             // given
-            UserModel user = userRepository.create(UserModel.builder()
-                    .userId(UserId.of("seyoung"))
-                    .email(Email.of("seyoung@loopers.com"))
-                    .gender(Gender.MALE)
-                    .birthDate(BirthDate.of("2000-01-01"))
-                    .build());
+            UserModel user = userRepository.save(UserModel.of(
+                    UserId.of("seyoung"),
+                    Email.of("seyoung@loopers.com"),
+                    Gender.MALE,
+                    BirthDate.of("2000-01-01")
+            ));
             int initialAmount = 1000;
-            pointRepository.create(PointModel.of(user.getUserId(), initialAmount));
+            pointRepository.save(PointModel.of(user.getUserId(), initialAmount));
 
             HttpHeaders headers = new HttpHeaders();
             headers.set("X-USER-ID", user.getUserId().getValue());

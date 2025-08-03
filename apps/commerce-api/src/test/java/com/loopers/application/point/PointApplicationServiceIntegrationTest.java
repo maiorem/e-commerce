@@ -1,4 +1,4 @@
-package com.loopers.domain.point;
+package com.loopers.application.point;
 
 import com.loopers.domain.user.*;
 import com.loopers.support.error.CoreException;
@@ -14,10 +14,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
-public class PointServiceIntegrationTest {
+public class PointApplicationServiceIntegrationTest {
 
     @Autowired
-    private PointService pointService;
+    private PointApplicationService pointApplicationService;
 
     @Autowired
     private UserRepository userRepository;
@@ -38,20 +38,20 @@ public class PointServiceIntegrationTest {
         @Test
         void chargeMyPointSuccess() {
             // given
-            UserModel user = userRepository.create(UserModel.builder()
-                    .userId(UserId.of("seyoung"))
-                    .email(Email.of("seyoung@loopers.com"))
-                    .gender(Gender.MALE)
-                    .birthDate(BirthDate.of("2000-01-01"))
-                    .build());
+            UserModel user = userRepository.save(UserModel.of(
+                    UserId.of("seyoung"),
+                    Email.of("seyoung@loopers.com"),
+                    Gender.MALE,
+                    BirthDate.of("2000-01-01")
+            ));
 
             int amount = 1000;
 
             // when
-            PointModel pointModel = pointService.chargeMyPoint(user.getUserId().getValue(), amount);
+            PointInfo pointInfo = pointApplicationService.chargeMyPoint(user.getUserId().getValue(), amount);
 
             // then
-            assertThat(pointModel.getAmount()).isEqualTo(amount);
+            assertThat(pointInfo.totalAmount()).isEqualTo(amount);
         }
 
         @DisplayName("존재하지 않는 유저 ID 로 충전을 시도한 경우, 실패한다.")
@@ -62,7 +62,7 @@ public class PointServiceIntegrationTest {
             int amount = 1000;
 
             // when & then
-            assertThatThrownBy(() -> pointService.chargeMyPoint(userId, amount))
+            assertThatThrownBy(() -> pointApplicationService.chargeMyPoint(userId, amount))
                     .isInstanceOf(CoreException.class);
         }
     }
@@ -75,21 +75,21 @@ public class PointServiceIntegrationTest {
         @Test
         void getMyPointSuccess() {
             // given
-            UserModel user = userRepository.create(UserModel.builder()
-                    .userId(UserId.of("seyoung"))
-                    .email(Email.of("seyoung@loopers.com"))
-                    .gender(Gender.MALE)
-                    .birthDate(BirthDate.of("2000-01-01"))
-                    .build());
+            UserModel user = userRepository.save(UserModel.of(
+                    UserId.of("seyoung"),
+                    Email.of("seyoung@loopers.com"),
+                    Gender.MALE,
+                    BirthDate.of("2000-01-01")
+            ));
             int initialAmount = 500;
-            pointService.chargeMyPoint(user.getUserId().getValue(), initialAmount);
+            pointApplicationService.chargeMyPoint(user.getUserId().getValue(), initialAmount);
 
             // when
-            PointModel pointModel = pointService.getMyPoint(user.getUserId().getValue());
+            PointInfo info = pointApplicationService.getMyPoint(user.getUserId().getValue());
 
             // then
-            assertThat(pointModel.getUserId()).isEqualTo(user.getUserId());
-            assertThat(pointModel.getAmount()).isEqualTo(initialAmount);
+            assertThat(info.userId()).isEqualTo(user.getUserId().getValue());
+            assertThat(info.totalAmount()).isEqualTo(initialAmount);
 
         }
 
@@ -100,12 +100,12 @@ public class PointServiceIntegrationTest {
             String userId = "seyoung123";
 
             // when
-            PointModel pointModel = pointService.getMyPoint(userId);
+            PointInfo info = pointApplicationService.getMyPoint(userId);
 
             // then
-            assertThat(pointModel).isNull();
+            assertThat(info).isNull();
         }
     }
 
 
-}
+} 

@@ -4,33 +4,36 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import lombok.Getter;
+
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.time.format.ResolverStyle;
 import java.util.Objects;
 
 @Embeddable
+@Getter
 public class BirthDate {
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd")
-            .withResolverStyle(ResolverStyle.STRICT);
-
-    @Column(name = "birth_date", nullable = false)
+    @Column(name = "birth_date")
     private LocalDate value;
 
     protected BirthDate() {}
 
     public static BirthDate of(String value) {
-        if (value == null || value.isBlank()) {
+        if (value == null || value.trim().isEmpty()) {
             throw new CoreException(ErrorType.BAD_REQUEST, "생년월일은 비어있을 수 없습니다.");
         }
+        
         try {
-            BirthDate birthDate = new BirthDate();
-            birthDate.value = LocalDate.parse(value, FORMATTER);
-            return birthDate;
-        } catch (DateTimeParseException e) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "생년월일 형식이 올바르지 않습니다. (yyyy-MM-dd)");
+            LocalDate birthDate = LocalDate.parse(value);
+            if (birthDate.isAfter(LocalDate.now())) {
+                throw new CoreException(ErrorType.BAD_REQUEST, "생년월일은 미래일 수 없습니다.");
+            }
+            
+            BirthDate birth = new BirthDate();
+            birth.value = birthDate;
+            return birth;
+        } catch (Exception e) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "올바른 날짜 형식이 아닙니다.");
         }
     }
 
