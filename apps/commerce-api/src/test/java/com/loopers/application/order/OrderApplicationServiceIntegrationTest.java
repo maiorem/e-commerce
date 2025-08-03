@@ -98,7 +98,7 @@ class OrderApplicationServiceIntegrationTest {
         );
 
         availablePoint = pointRepository.save(PointModel.of(userId, 100000));
-        order = OrderModel.of(userId, 3150000); // (1000000 * 2 + 1200000 * 1) - 50000
+        order = OrderModel.create(userId, 3150000); // (1000000 * 2 + 1200000 * 1) - 50000
     }
 
     @AfterEach
