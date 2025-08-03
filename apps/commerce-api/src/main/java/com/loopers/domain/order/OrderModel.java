@@ -32,7 +32,7 @@ public class OrderModel extends BaseEntity {
 
     protected OrderModel() {}
 
-    public static OrderModel of(UserId userId, int totalAmount) {
+    public static OrderModel create(UserId userId, int totalAmount) {
         OrderModel order = new OrderModel();
         order.userId = userId;
         order.orderNumber = OrderNumberGenerator.generateOrderNumber();
