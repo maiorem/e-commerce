@@ -47,10 +47,4 @@ public class OrderCreationDomainService {
                 .sum();
     }
 
-    /**
-     * 최종 결제 금액 계산
-     */
-    public int calculateFinalTotalPrice(int orderPrice, int usedPoints) {
-        return orderPrice - usedPoints;
-    }
 }

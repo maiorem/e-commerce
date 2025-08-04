@@ -8,7 +8,8 @@ import java.util.List;
 public record OrderCommand(
         UserId userId,
         PaymentMethod paymentMethod,
-        int usePoints,
+        String couponCode,
+        int requestPoint,
         List<OrderItemCommand> items
         ) {
 }

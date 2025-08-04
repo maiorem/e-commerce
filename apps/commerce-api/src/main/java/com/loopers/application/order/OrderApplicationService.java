@@ -1,5 +1,6 @@
 package com.loopers.application.order;
 
+import com.loopers.application.coupon.CouponProcessor;
 import com.loopers.application.payment.PaymentProcessor;
 import com.loopers.application.point.PointProcessor;
 import com.loopers.application.product.StockDeductionProcessor;
@@ -31,6 +32,8 @@ public class OrderApplicationService {
 
     private final OrderPersistenceHandler orderPersistenceHandler;
 
+    private final CouponProcessor couponProcessor;
+
     private final OrderCreationDomainService orderCreationDomainService;
 
     /**
@@ -49,11 +52,15 @@ public class OrderApplicationService {
         // 3. 총액 계산
         int orderPrice = orderCreationDomainService.calculateOrderPrice(orderItems);
 
-        // 4. 사용 요청한 포인트 처리
-        int usedPoints = pointProcessor.processPointUsage(command.userId(), orderPrice, command.usePoints());
+        // -- 쿠폰 할인 적용 --
+        int currentProcessingAmount = couponProcessor.applyCouponDiscount(command.userId(), orderPrice, command.couponCode());
 
-        // 5. 최종 결제 금액 계산 (주문 총액 - 사용 포인트)
-        int finalTotalPrice = orderCreationDomainService.calculateFinalTotalPrice(orderPrice, usedPoints);
+        // 4. 사용 요청한 포인트 처리
+        int usedPoints = pointProcessor.processPointUsage(command.userId(), currentProcessingAmount, command.requestPoint());
+        currentProcessingAmount -= usedPoints;
+
+        // 5. 최종 결제 금액 계산 (주문 총액 - 쿠폰 할인 처리 - 사용 포인트)
+        int finalTotalPrice = currentProcessingAmount;
 
         // 6. 재고 차감
         stockDeductionProcessor.deductProductStocks(orderItems, products);
@@ -67,6 +74,9 @@ public class OrderApplicationService {
 
         // 9. 주문 완료 처리 (COMPLETED)
         order.complete();
+
+        // -- 쿠폰 사용 처리 --
+        couponProcessor.useCoupon(command.userId(), command.couponCode());
 
         // 10. 주문 정보 및 주문 아이템 저장
         List<OrderItemModel> savedOrderItems = orderPersistenceHandler.saveOrderItemAndPaymentHistory(order, orderItems, paymentHistory);

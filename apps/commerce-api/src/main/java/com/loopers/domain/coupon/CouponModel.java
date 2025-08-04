@@ -3,8 +3,8 @@ package com.loopers.domain.coupon;
 import com.loopers.domain.BaseEntity;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import jdk.jfr.Enabled;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -13,12 +13,13 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 @Getter
-@Enabled
+@Entity
 @Table(name = "coupon")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CouponModel extends BaseEntity {
 
     private String name;
+    private String couponCode;
     private CouponType type;
     private CouponStatus status;
     private int discountValue;
@@ -35,6 +36,7 @@ public class CouponModel extends BaseEntity {
             throw new CoreException(ErrorType.BAD_REQUEST, "쿠폰 정보가 올바르지 않습니다.");
         }
         this.name = name;
+        this.couponCode = CouponCodeGenerator.generateCouponCode();
         this.type = type;
         this.status = CouponStatus.ACTIVE;
         this.discountValue = discountValue;
@@ -59,15 +61,15 @@ public class CouponModel extends BaseEntity {
     }
     public boolean isValid(int orderPrice, LocalDate orderDate){
         if (status != CouponStatus.ACTIVE) {
-            return false; // 쿠폰이 활성화 상태가 아닐 경우
+            return false;
         }
         if (orderPrice < minimumOrderAmount) {
-            return false; // 최소 주문 금액 미달 시
+            return false;
         }
         if (validUntil != null && orderDate.isAfter(validUntil)) {
-            return false; // 유효 기간이 지난 경우
+            return false;
         }
-        return true; // 모든 조건을 만족하면 유효한 쿠폰
+        return true;
 
     }
 

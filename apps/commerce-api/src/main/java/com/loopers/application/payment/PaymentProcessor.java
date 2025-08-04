@@ -1,13 +1,14 @@
 package com.loopers.application.payment;
 
 import com.loopers.domain.order.OrderModel;
-import com.loopers.domain.payment.*;
+import com.loopers.domain.payment.ExternalPaymentGatewayService;
+import com.loopers.domain.payment.PaymentHistoryModel;
+import com.loopers.domain.payment.PaymentMethod;
+import com.loopers.domain.payment.PaymentRepository;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Component
@@ -16,7 +17,6 @@ public class PaymentProcessor {
     private final PaymentRepository paymentRepository;
     private final ExternalPaymentGatewayService externalPaymentGatewayService;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public PaymentHistoryModel pay(OrderModel order, PaymentMethod method, int finalPaymentAmount) {
         boolean externalPaymentSuccess = externalPaymentGatewayService.processPayment(order, finalPaymentAmount);
         if (!externalPaymentSuccess) {

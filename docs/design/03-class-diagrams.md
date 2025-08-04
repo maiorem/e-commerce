@@ -102,9 +102,7 @@ classDiagram
         -String userId
         -Long couponId 
         -boolean isUsed
-        -DateTime issuedAt
         -DateTime usedAt
-        +void markAsUsed(DateTime usedAt)
         +boolean useCoupon(int orderPriceDateTime now)
     }
     
