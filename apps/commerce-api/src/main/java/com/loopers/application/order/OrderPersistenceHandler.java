@@ -20,11 +20,12 @@ public class OrderPersistenceHandler {
     private final OrderItemRepository orderItemRepository;
     private final PaymentRepository paymentRepository;
 
-    public List<OrderItemModel> saveOrderAndItems(OrderModel order, List<OrderItemModel> orderItems, PaymentHistoryModel paymentHistory) {
-        // 주문 정보 저장
-        orderRepository.save(order);
+    public OrderModel saveOrder(OrderModel order) {
+       return orderRepository.save(order);
+    }
 
-        // 주문 아이템에 실제 주문 ID 설정 후 저장
+    public List<OrderItemModel> saveOrderItemAndPaymentHistory(OrderModel order, List<OrderItemModel> orderItems, PaymentHistoryModel paymentHistory) {
+
         List<OrderItemModel> savedOrderItems = new ArrayList<>();
         orderItems.forEach(item -> {
             OrderItemModel orderItemWithOrderId = OrderItemModel.builder()
@@ -37,7 +38,6 @@ public class OrderPersistenceHandler {
 
             savedOrderItems.add(savedItem);
         });
-
 
         // 결제 내역 저장
         paymentRepository.save(paymentHistory);

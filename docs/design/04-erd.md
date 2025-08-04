@@ -103,10 +103,38 @@ erDiagram
         DATETIME createdAt "생성 시간"
         DATETIME deletedAt "삭제 시간"
     }
+    
+    COUPON {
+        BIGINT id PK "쿠폰 ID"
+        VARCHAR userId FK "회원 ID"
+        VARCHAR couponType "쿠폰 종류 (정액/정률)"
+        INT discountAmount "할인 금액 (정액 쿠폰)"
+        FLOAT discountRate "할인 비율 (정률 쿠폰)"
+        DATETIME validFrom "유효 시작일"
+        DATETIME validTo "유효 종료일"
+        BOOLEAN isUsed "사용 여부"
+        DATETIME createdAt "생성 시간"
+        DATETIME updatedAt "수정 시간"
+        DATETIME deletedAt "삭제 시간"
+    }
+    
+    USER_COUPON {
+        BIGINT id PK "사용자 쿠폰 ID"
+        VARCHAR userId FK "회원 ID"
+        BIGINT couponId FK "쿠폰 ID"
+        BOOLEAN isUsed "사용 여부"
+        DATETIME createdAt "생성 시간"
+        DATETIME updatedAt "수정 시간"
+        DATETIME deletedAt "삭제 시간"
+    }
 
     USER ||--o{ POINT : has
     USER ||--o{ ORDER : creates
     USER ||--|{ LIKE : likes
+    USER ||--o{ USER_COUPON : owns
+    
+    COUPON ||--o{ USER_COUPON : issued_to
+    COUPON ||--o{ ORDER : applied_to
 
     POINT ||--o{ POINT_HISTORY : records
 

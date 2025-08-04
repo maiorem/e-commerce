@@ -1,12 +1,13 @@
 package com.loopers.application.order;
 
+import com.loopers.application.coupon.CouponProcessor;
+import com.loopers.application.payment.PaymentProcessor;
 import com.loopers.application.point.PointProcessor;
 import com.loopers.application.product.StockDeductionProcessor;
 import com.loopers.application.user.UserValidator;
 import com.loopers.domain.order.OrderCreationDomainService;
 import com.loopers.domain.order.OrderItemModel;
 import com.loopers.domain.order.OrderModel;
-import com.loopers.domain.payment.ExternalPaymentGatewayService;
 import com.loopers.domain.payment.PaymentHistoryModel;
 import com.loopers.domain.product.ProductModel;
 import lombok.RequiredArgsConstructor;
@@ -27,17 +28,19 @@ public class OrderApplicationService {
 
     private final StockDeductionProcessor stockDeductionProcessor;
 
+    private final PaymentProcessor paymentProcessor;
+
     private final OrderPersistenceHandler orderPersistenceHandler;
 
-    private final OrderCreationDomainService orderCreationDomainService;
+    private final CouponProcessor couponProcessor;
 
-    private final ExternalPaymentGatewayService externalPaymentGatewayService;
+    private final OrderCreationDomainService orderCreationDomainService;
 
     /**
      * 주문 생성
      */
     @Transactional
-    public OrderInfo createOrder(OrderCommand command) { // OrderCommand는 Application Layer DTO
+    public OrderInfo createOrder(OrderCommand command) {
 
         // 1. 사용자 존재 여부 확인
         userValidator.validateUserExists(command.userId());
@@ -49,25 +52,36 @@ public class OrderApplicationService {
         // 3. 총액 계산
         int orderPrice = orderCreationDomainService.calculateOrderPrice(orderItems);
 
+        // -- 쿠폰 할인 적용 --
+        int currentProcessingAmount = couponProcessor.applyCouponDiscount(command.userId(), orderPrice, command.couponCode());
+
         // 4. 사용 요청한 포인트 처리
-        int usedPoints = pointProcessor.processPointUsage(command.userId(), orderPrice, command.usePoints());
+        int usedPoints = pointProcessor.processPointUsage(command.userId(), currentProcessingAmount, command.requestPoint());
+        currentProcessingAmount -= usedPoints;
 
-        // 5. 최종 결제 금액 계산 (주문 총액 - 사용 포인트)
-        int finalTotalPrice = orderCreationDomainService.calculateFinalTotalPrice(orderPrice, usedPoints);
+        // 5. 최종 결제 금액 계산 (주문 총액 - 쿠폰 할인 처리 - 사용 포인트)
+        int finalTotalPrice = currentProcessingAmount;
 
-        // 6. 주문 엔티티 생성
-        OrderModel order = OrderModel.create(command.userId(), finalTotalPrice);
-
-        // 7. 결제 처리 및 이력 저장
-        PaymentHistoryModel paymentHistory = externalPaymentGatewayService.processPayment(order);
-
-        // 8. 재고 차감
+        // 6. 재고 차감
         stockDeductionProcessor.deductProductStocks(orderItems, products);
 
-        // 9. 주문 정보 및 주문 아이템 저장
-        List<OrderItemModel> savedOrderItems = orderPersistenceHandler.saveOrderAndItems(order, orderItems, paymentHistory);
+        // 7. 주문 생성 저장 (PENDING)
+        OrderModel order = OrderModel.create(command.userId(), finalTotalPrice);
+        orderPersistenceHandler.saveOrder(order);
 
-        // 10. 최종 응답 DTO 변환 및 반환
+        // 8. 외부 결제 연동 처리
+        PaymentHistoryModel paymentHistory = paymentProcessor.pay(order, command.paymentMethod(), finalTotalPrice);
+
+        // 9. 주문 완료 처리 (COMPLETED)
+        order.complete();
+
+        // -- 쿠폰 사용 처리 --
+        couponProcessor.useCoupon(command.userId(), command.couponCode());
+
+        // 10. 주문 정보 및 주문 아이템 저장
+        List<OrderItemModel> savedOrderItems = orderPersistenceHandler.saveOrderItemAndPaymentHistory(order, orderItems, paymentHistory);
+
+        // 11. 최종 응답 DTO 변환 및 반환
         List<OrderItemInfo> orderItemInfos = OrderItemInfo.createOrderItemInfos(savedOrderItems, products);
         return OrderInfo.from(order, orderItemInfos);
     }
