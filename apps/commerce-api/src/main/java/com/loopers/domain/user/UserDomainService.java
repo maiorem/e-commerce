@@ -1,11 +1,15 @@
 package com.loopers.domain.user;
 
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import org.springframework.stereotype.Component;
 
 @Component
 public class UserDomainService {
+
+    private final UserRepository userRepository;
+
+    public UserDomainService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     /**
      * 회원 가입
@@ -30,13 +34,13 @@ public class UserDomainService {
      */
     private void validateUserCreation(UserId userId, Email email, BirthDate birthDate) {
         if (userId == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "사용자 ID는 필수입니다.");
+            throw new IllegalArgumentException("사용자 ID는 필수입니다.");
         }
         if (email == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "이메일은 필수입니다.");
+            throw new IllegalArgumentException("이메일은 필수입니다.");
         }
         if (birthDate == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "생년월일은 필수입니다.");
+            throw new IllegalArgumentException("생년월일은 필수입니다.");
         }
     }
 
@@ -45,13 +49,13 @@ public class UserDomainService {
      */
     private void validateUserUpdate(UserModel existingUser, Email newEmail, BirthDate newBirthDate) {
         if (existingUser == null) {
-            throw new CoreException(ErrorType.NOT_FOUND, "수정할 사용자가 존재하지 않습니다.");
+            throw new IllegalArgumentException("수정할 사용자가 존재하지 않습니다.");
         }
         if (newEmail == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "이메일은 필수입니다.");
+            throw new IllegalArgumentException("이메일은 필수입니다.");
         }
         if (newBirthDate == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "생년월일은 필수입니다.");
+            throw new IllegalArgumentException("생년월일은 필수입니다.");
         }
     }
 

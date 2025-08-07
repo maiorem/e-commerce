@@ -1,7 +1,6 @@
 package com.loopers.domain.coupon;
 
 import com.loopers.domain.BaseEntity;
-import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -28,12 +27,11 @@ public class CouponModel extends BaseEntity {
     private LocalDate issuedAt;
     private LocalDate validUntil;
 
-
     @Builder
     public CouponModel(String name, CouponType type, int discountValue, int minimumOrderAmount,
                                      int maximumDiscountAmount, LocalDate issuedAt, LocalDate validUntil) {
         if (name == null || type == null || discountValue < 0 || minimumOrderAmount < 0 || maximumDiscountAmount < 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "쿠폰 정보가 올바르지 않습니다.");
+            throw new IllegalArgumentException("쿠폰 정보가 올바르지 않습니다.");
         }
         this.name = name;
         this.couponCode = CouponCodeGenerator.generateCouponCode();

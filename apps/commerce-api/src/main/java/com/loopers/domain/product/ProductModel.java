@@ -1,10 +1,8 @@
 package com.loopers.domain.product;
 
 import com.loopers.domain.BaseEntity;
-import com.loopers.support.error.CoreException;
-
-import com.loopers.support.error.ErrorType;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,13 +16,13 @@ public class ProductModel extends BaseEntity {
     private Long categoryId;
 
     private String name;
-    
+
     private String description;
     
     private int price;
-    
+
     private int stock;
-    
+
     private int likesCount;
 
     protected ProductModel() {}
@@ -42,10 +40,10 @@ public class ProductModel extends BaseEntity {
 
     public void deductStock(int quantity) {
         if (quantity <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "수량은 0보다 커야 합니다.");
+            throw new IllegalArgumentException("수량은 0보다 커야 합니다.");
         }
         if (this.stock < quantity) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "재고가 부족합니다.");
+            throw new IllegalArgumentException("재고가 부족합니다.");
         }
         this.stock -= quantity;
     }
@@ -56,7 +54,7 @@ public class ProductModel extends BaseEntity {
 
     public void decrementLikesCount() {
         if (this.likesCount <= 0) { // 현재 좋아요 수가 0이거나 그보다 작을 때 감소 시도
-            throw new CoreException(ErrorType.BAD_REQUEST, "좋아요 수는 0보다 작아질 수 없습니다.");
+            throw new IllegalArgumentException("좋아요 수는 0보다 작아질 수 없습니다.");
         }
         this.likesCount--;
     }

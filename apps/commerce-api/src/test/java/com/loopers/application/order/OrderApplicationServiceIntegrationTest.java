@@ -15,8 +15,6 @@ import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.*;
 import com.loopers.infrastructure.coupon.CouponJpaRepository;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -199,8 +197,7 @@ class OrderApplicationServiceIntegrationTest {
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(invalidOrderCommand))
-            .isInstanceOf(CoreException.class)
-            .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -227,8 +224,7 @@ class OrderApplicationServiceIntegrationTest {
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(invalidOrderCommand))
-            .isInstanceOf(CoreException.class)
-            .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -284,8 +280,7 @@ class OrderApplicationServiceIntegrationTest {
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(expiredOrderCommand))
-            .isInstanceOf(CoreException.class)
-            .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -297,8 +292,7 @@ class OrderApplicationServiceIntegrationTest {
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(orderCommand))
-            .isInstanceOf(CoreException.class)
-            .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -323,8 +317,7 @@ class OrderApplicationServiceIntegrationTest {
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(highMinimumOrderCommand))
-            .isInstanceOf(CoreException.class)
-            .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -335,8 +328,7 @@ class OrderApplicationServiceIntegrationTest {
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(nonExistentCouponCommand))
-            .isInstanceOf(CoreException.class)
-            .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

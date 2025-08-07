@@ -25,7 +25,13 @@ public class PointV1Controller implements PointV1ApiSpec{
         @RequestHeader("X-USER-ID") String userId, 
         @RequestBody PointRequest request
     ) {
+        if (userId == null || userId.isBlank()) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "X-USER-ID 헤더가 필요합니다.");
+        }
         PointInfo info = pointFacade.chargeMyPoint(userId, request.amount());
+        if (info == null) {
+            throw new CoreException(ErrorType.BAD_REQUEST, "유효하지 않은 요청입니다.");
+        }
 
         PointV1Dto.PointResponse response = PointV1Dto.PointResponse.from(info);
         return ApiResponse.success(response);

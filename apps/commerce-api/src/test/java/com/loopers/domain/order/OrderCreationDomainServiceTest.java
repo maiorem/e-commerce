@@ -1,8 +1,6 @@
 package com.loopers.domain.order;
 
 import com.loopers.domain.product.ProductModel;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -70,8 +68,7 @@ class OrderCreationDomainServiceTest {
 
             // when & then
             assertThatThrownBy(() -> orderCreationDomainService.validateOrderItems(orderItems, products))
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND);
+                .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -87,8 +84,7 @@ class OrderCreationDomainServiceTest {
 
             // when & then
             assertThatThrownBy(() -> orderCreationDomainService.validateOrderItems(orderItems, products))
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -104,8 +100,7 @@ class OrderCreationDomainServiceTest {
 
             // when & then
             assertThatThrownBy(() -> orderCreationDomainService.validateOrderItems(orderItems, products))
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                .isInstanceOf(IllegalArgumentException.class);
         }
     }
 

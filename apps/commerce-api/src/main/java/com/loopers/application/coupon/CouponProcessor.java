@@ -2,8 +2,6 @@ package com.loopers.application.coupon;
 
 import com.loopers.domain.coupon.*;
 import com.loopers.domain.user.UserId;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,17 +19,19 @@ public class CouponProcessor {
         if (couponCode == null || couponCode.isEmpty()) {
             return orderPrice;
         }
+
         CouponModel coupon = couponRepository.findByCouponCode(couponCode)
-                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "유효하지 않은 쿠폰입니다."));
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠폰입니다."));
+
         UserCouponModel userCoupon = userCouponRepository.findByUserIdAndCouponCode(userId, couponCode)
-                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "사용자에게 해당 쿠폰이 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("사용자에게 해당 쿠폰이 없습니다."));
 
         couponValidationDomainService.validateCouponUsage(userCoupon, coupon, orderPrice, LocalDate.now());
 
         int couponDiscountAmount = coupon.calculateDiscount(orderPrice);
 
         if (couponDiscountAmount > orderPrice) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "쿠폰 할인 금액이 주문 총액을 초과할 수 없습니다.");
+            throw new IllegalArgumentException("쿠폰 할인 금액이 주문 총액을 초과할 수 없습니다.");
         }
 
         orderPrice -= couponDiscountAmount;
@@ -44,7 +44,7 @@ public class CouponProcessor {
         }
 
         UserCouponModel userCoupon = userCouponRepository.findByUserIdAndCouponCode(userId, couponCode)
-                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "사용자에게 해당 쿠폰이 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("사용자에게 해당 쿠폰이 없습니다."));
         userCoupon.useCoupon(LocalDate.now());
         userCouponRepository.save(userCoupon);
     }

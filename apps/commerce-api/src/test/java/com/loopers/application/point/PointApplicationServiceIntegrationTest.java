@@ -1,7 +1,6 @@
 package com.loopers.application.point;
 
 import com.loopers.domain.user.*;
-import com.loopers.support.error.CoreException;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -63,7 +62,7 @@ public class PointApplicationServiceIntegrationTest {
 
             // when & then
             assertThatThrownBy(() -> pointApplicationService.chargeMyPoint(userId, amount))
-                    .isInstanceOf(CoreException.class);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
