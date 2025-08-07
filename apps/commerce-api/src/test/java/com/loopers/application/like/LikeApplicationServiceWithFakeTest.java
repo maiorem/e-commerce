@@ -1,6 +1,7 @@
 package com.loopers.application.like;
 
 import com.loopers.domain.like.LikeModel;
+import com.loopers.domain.like.ProductLikeDomainService;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.user.UserId;
 import com.loopers.support.error.CoreException;
@@ -23,7 +24,7 @@ import static org.mockito.Mockito.*;
 class LikeApplicationServiceWithFakeTest {
 
     @Mock
-    private ProductLikeHandler productLikeHandler;
+    private ProductLikeDomainService productLikeHandler;
 
     private LikeApplicationService likeApplicationService;
     private FakeLikeRepository fakeLikeRepository;

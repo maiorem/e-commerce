@@ -3,7 +3,12 @@ package com.loopers.application.point;
 import com.loopers.domain.order.OrderUsePointDomainService;
 import com.loopers.domain.point.*;
 import com.loopers.domain.user.UserId;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.StaleObjectStateException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 
 @RequiredArgsConstructor
@@ -14,6 +19,8 @@ public class PointProcessor {
     private final OrderUsePointDomainService orderUsePointDomainService;
     private final PointDomainService pointDomainService;
 
+    @Retryable(retryFor = {OptimisticLockException.class, StaleObjectStateException.class,
+            ObjectOptimisticLockingFailureException.class}, maxAttempts = 10, backoff = @Backoff(delay = 100))
     public int processPointUsage(UserId userId, int orderPrice, int requestPoint) {
 
         PointModel availablePoint = pointRepository.findByUserId(userId).orElse(null);

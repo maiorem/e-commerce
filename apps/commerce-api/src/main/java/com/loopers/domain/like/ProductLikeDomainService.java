@@ -1,7 +1,5 @@
-package com.loopers.application.like;
+package com.loopers.domain.like;
 
-import com.loopers.domain.like.LikeModel;
-import com.loopers.domain.like.LikeRepository;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.user.UserId;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +9,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ProductLikeHandler {
+public class ProductLikeDomainService {
 
     private final LikeRepository likeRepository;
 

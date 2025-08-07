@@ -7,13 +7,20 @@ import com.loopers.domain.category.CategoryModel;
 import com.loopers.domain.category.CategoryRepository;
 import com.loopers.domain.like.LikeModel;
 import com.loopers.domain.like.LikeRepository;
+import com.loopers.domain.like.ProductLikeDomainService;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.UserId;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.StaleObjectStateException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,19 +33,22 @@ public class LikeApplicationService {
 
     private final LikeRepository likeRepository;
     private final ProductRepository productRepository;
-    private final ProductLikeHandler productLikeHandler;
+    private final ProductLikeDomainService productLikeDomainService;
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
 
     /**
      * 사용자가 상품을 좋아요 추가
      */
+    @Retryable(retryFor = {OptimisticLockException.class, StaleObjectStateException.class,
+            ObjectOptimisticLockingFailureException.class}, maxAttempts = 10, backoff = @Backoff(delay = 100))
+    @Transactional
     public void like(UserId userId, Long productId) {
         ProductModel product = productRepository.findById(productId)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "상품이 존재하지 않습니다."));
         
         // 도메인 서비스를 통한 좋아요 추가
-        LikeModel like = productLikeHandler.addLike(product, userId);
+        LikeModel like = productLikeDomainService.addLike(product, userId);
         
         // null이 반환되면 이미 좋아요가 되어 있는 상태이므로 아무 동작도 하지 않음
         if (like != null) {
@@ -50,12 +60,15 @@ public class LikeApplicationService {
     /**
      * 사용자가 상품을 좋아요 제거
      */
+    @Retryable(retryFor = {OptimisticLockException.class, StaleObjectStateException.class,
+            ObjectOptimisticLockingFailureException.class}, maxAttempts = 10, backoff = @Backoff(delay = 100))
+    @Transactional
     public void unlike(UserId userId, Long productId) {
         ProductModel product = productRepository.findById(productId)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "상품이 존재하지 않습니다."));
         
         // 도메인 서비스를 통한 좋아요 제거
-        LikeModel like = productLikeHandler.removeLike(product, userId);
+        LikeModel like = productLikeDomainService.removeLike(product, userId);
         
         // null이 반환되면 이미 좋아요가 취소되어 있는 상태이므로 아무 동작도 하지 않음
         if (like != null) {
@@ -68,7 +81,7 @@ public class LikeApplicationService {
      * 사용자가 상품을 좋아요 했는지 확인
      */
     public boolean isLiked(UserId userId, Long productId) {
-        return productLikeHandler.isLiked(productId, userId);
+        return productLikeDomainService.isLiked(productId, userId);
     }
 
     /**
@@ -77,7 +90,7 @@ public class LikeApplicationService {
     public List<ProductOutputInfo> getLikedProducts(UserId userId) {
 
         // 좋아요한 상품 ID 목록 조회
-        List<Long> productIds = productLikeHandler.getLikedProductIds(userId);
+        List<Long> productIds = productLikeDomainService.getLikedProductIds(userId);
 
         if (productIds.isEmpty()) {
             return new ArrayList<>();
