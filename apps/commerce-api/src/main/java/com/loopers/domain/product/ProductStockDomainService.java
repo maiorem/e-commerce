@@ -1,7 +1,5 @@
 package com.loopers.domain.product;
 
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,12 +12,11 @@ public class ProductStockDomainService {
      */
     public void validateStockDeduction(ProductModel product, int quantity) {
         if (quantity <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "차감할 수량은 0보다 커야 합니다.");
+            throw new IllegalArgumentException("차감할 수량은 0보다 커야 합니다.");
         }
 
         if (product.getStock() < quantity) {
-            throw new CoreException(ErrorType.BAD_REQUEST, 
-                String.format("재고가 부족합니다. 현재 재고: %d, 요청 수량: %d", product.getStock(), quantity));
+            throw new IllegalArgumentException(String.format("재고가 부족합니다. 현재 재고: %d, 요청 수량: %d", product.getStock(), quantity));
         }
     }
 

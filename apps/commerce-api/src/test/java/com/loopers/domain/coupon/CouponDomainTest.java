@@ -1,6 +1,5 @@
 package com.loopers.domain.coupon;
 
-import com.loopers.support.error.CoreException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -54,7 +53,7 @@ class CouponDomainTest {
                 .issuedAt(today)
                 .validUntil(tomorrow)
                 .build())
-                .isInstanceOf(CoreException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -70,7 +69,7 @@ class CouponDomainTest {
                 .issuedAt(today)
                 .validUntil(tomorrow)
                 .build())
-                .isInstanceOf(CoreException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -86,7 +85,7 @@ class CouponDomainTest {
                 .issuedAt(today)
                 .validUntil(tomorrow)
                 .build())
-                .isInstanceOf(CoreException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -102,7 +101,7 @@ class CouponDomainTest {
                 .issuedAt(today)
                 .validUntil(tomorrow)
                 .build())
-                .isInstanceOf(CoreException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -118,7 +117,7 @@ class CouponDomainTest {
                 .issuedAt(today)
                 .validUntil(tomorrow)
                 .build())
-                .isInstanceOf(CoreException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

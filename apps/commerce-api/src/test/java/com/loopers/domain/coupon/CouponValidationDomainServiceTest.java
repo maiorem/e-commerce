@@ -64,7 +64,7 @@ class CouponValidationDomainServiceTest {
 
         // when & then
         assertThatThrownBy(() -> couponValidationDomainService.validateCouponUsage(userCoupon, coupon, 15000, today))
-                .isInstanceOf(CoreException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -85,7 +85,7 @@ class CouponValidationDomainServiceTest {
 
         // when & then
         assertThatThrownBy(() -> couponValidationDomainService.validateCouponUsage(userCoupon, coupon, 5000, today))
-                .isInstanceOf(CoreException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -107,7 +107,7 @@ class CouponValidationDomainServiceTest {
 
         // when & then
         assertThatThrownBy(() -> couponValidationDomainService.validateCouponUsage(userCoupon, coupon, 15000, today))
-                .isInstanceOf(CoreException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

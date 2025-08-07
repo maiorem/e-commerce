@@ -2,12 +2,10 @@ package com.loopers.domain.point;
 
 import com.loopers.domain.BaseEntity;
 import com.loopers.domain.user.UserId;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
-import jakarta.persistence.Column;
 
 import java.time.LocalDateTime;
 
@@ -27,11 +25,12 @@ public class PointModel extends BaseEntity {
 
     public static PointModel of(UserId userId, int amount) {
         if (userId == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "사용자 ID는 비어있을 수 없습니다.");
+            throw new IllegalArgumentException("사용자 ID는 비어있을 수 없습니다.");
         }
         if (amount < 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "포인트는 음수가 될 수 없습니다.");
+            throw new IllegalArgumentException("포인트는 음수가 될 수 없습니다.");
         }
+
         PointModel point = new PointModel();
         point.userId = userId;
         point.amount = amount;
@@ -41,14 +40,15 @@ public class PointModel extends BaseEntity {
 
     public static PointModel of(UserId userId, int amount, LocalDateTime expiredAt) {
         if (userId == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "사용자 ID는 비어있을 수 없습니다.");
+            throw new IllegalArgumentException("사용자 ID는 비어있을 수 없습니다.");
         }
         if (amount < 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "포인트는 음수가 될 수 없습니다.");
+            throw new IllegalArgumentException("포인트는 음수가 될 수 없습니다.");
         }
         if (expiredAt == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "만료일은 필수입니다.");
+            throw new IllegalArgumentException("만료일은 필수입니다.");
         }
+
         PointModel point = new PointModel();
         point.userId = userId;
         point.amount = amount;
@@ -70,7 +70,7 @@ public class PointModel extends BaseEntity {
 
     public int charge(int point) {
         if (point <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "추가할 포인트는 0보다 커야 합니다.");
+            throw new IllegalArgumentException("추가할 포인트는 0보다 커야 합니다.");
         }
         this.amount += point;
         return this.amount;
@@ -78,10 +78,10 @@ public class PointModel extends BaseEntity {
 
     public int use(int point) {
         if (point <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "차감할 포인트는 0보다 커야 합니다.");
+            throw new IllegalArgumentException("차감할 포인트는 0보다 커야 합니다.");
         }
         if (this.amount < point) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "잔여 포인트가 부족합니다.");
+            throw new IllegalArgumentException("잔여 포인트가 부족합니다.");
         }
         this.amount -= point;
         return this.amount;

@@ -1,7 +1,5 @@
 package com.loopers.domain.user;
 
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.Getter;
@@ -19,28 +17,24 @@ public class Email {
 
     public static Email of(String value) {
         if (value == null || value.trim().isEmpty()) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "이메일은 비어있을 수 없습니다.");
+            throw new IllegalArgumentException("이메일은 비어있을 수 없습니다.");
         }
-        
+
         String trimmedValue = value.trim();
         
         // 기본적인 이메일 형식 검증
         if (!trimmedValue.contains("@")) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "올바른 이메일 형식이 아닙니다.");
+            throw new IllegalArgumentException("올바른 이메일 형식이 아닙니다.");
         }
-        
+
         // @ 앞뒤로 문자가 있어야 함
         String[] parts = trimmedValue.split("@");
         if (parts.length != 2 || parts[0].isEmpty() || parts[1].isEmpty()) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "올바른 이메일 형식이 아닙니다.");
+            throw new IllegalArgumentException("올바른 이메일 형식이 아닙니다.");
         }
         Email email = new Email();
         email.value = trimmedValue;
         return email;
-    }
-
-    public String getValue() {
-        return value;
     }
 
     @Override

@@ -3,6 +3,8 @@ package com.loopers.interfaces.api.user;
 import com.loopers.application.user.UserApplicationService;
 import com.loopers.application.user.UserInfo;
 import com.loopers.interfaces.api.ApiResponse;
+import com.loopers.support.error.CoreException;
+import com.loopers.support.error.ErrorType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -34,7 +36,13 @@ public class UserV1Controller implements UserV1ApiSpec {
     public ApiResponse<UserV1Dto.UserResponse> getMyInfo(
         @RequestHeader("X-USER-ID") String userId
     ) {
+        if (userId == null || userId.isBlank()) {
+            throw new CoreException(ErrorType.NOT_FOUND, "X-USER-ID 헤더가 비어있습니다.");
+        }
         UserInfo info = userFacade.getUser(userId);
+        if (info == null) {
+            throw new CoreException(ErrorType.NOT_FOUND, "사용자를 찾을 수 없습니다.");
+        }
         UserV1Dto.UserResponse response = UserV1Dto.UserResponse.from(info);
         return ApiResponse.success(response);
     }

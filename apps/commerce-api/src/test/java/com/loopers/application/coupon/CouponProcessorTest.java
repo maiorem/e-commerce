@@ -126,8 +126,7 @@ class CouponProcessorTest {
 
         // when & then
         assertThatThrownBy(() -> couponProcessor.applyCouponDiscount(userId, orderPrice, couponCode))
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -140,9 +139,7 @@ class CouponProcessorTest {
 
         // when & then
         assertThatThrownBy(() -> couponProcessor.applyCouponDiscount(userId, orderPrice, couponCode))
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND)
-                .hasMessage("사용자에게 해당 쿠폰이 없습니다.");
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -167,8 +164,7 @@ class CouponProcessorTest {
 
         // when & then
         assertThatThrownBy(() -> couponProcessor.applyCouponDiscount(userId, orderPrice, couponCode))
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -217,8 +213,7 @@ class CouponProcessorTest {
 
         // when & then
         assertThatThrownBy(() -> couponProcessor.useCoupon(userId, couponCode))
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -227,13 +222,12 @@ class CouponProcessorTest {
         // given
         UserCouponModel mockUserCoupon = mock(UserCouponModel.class);
         when(userCouponRepository.findByUserIdAndCouponCode(userId, couponCode)).thenReturn(Optional.of(mockUserCoupon));
-        doThrow(new CoreException(ErrorType.BAD_REQUEST, "이미 사용된 쿠폰입니다."))
+        doThrow(new IllegalArgumentException("이미 사용된 쿠폰입니다."))
                 .when(mockUserCoupon).useCoupon(any(LocalDate.class));
 
         // when & then
         assertThatThrownBy(() -> couponProcessor.useCoupon(userId, couponCode))
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -243,12 +237,11 @@ class CouponProcessorTest {
         int orderPrice = 15000;
         when(couponRepository.findByCouponCode(couponCode)).thenReturn(Optional.of(coupon));
         when(userCouponRepository.findByUserIdAndCouponCode(userId, couponCode)).thenReturn(Optional.of(userCoupon));
-        doThrow(new CoreException(ErrorType.BAD_REQUEST, "쿠폰이 유효하지 않습니다."))
+        doThrow(new IllegalArgumentException("쿠폰이 유효하지 않습니다."))
                 .when(couponValidationDomainService).validateCouponUsage(any(), any(), anyInt(), any());
 
         // when & then
         assertThatThrownBy(() -> couponProcessor.applyCouponDiscount(userId, orderPrice, couponCode))
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

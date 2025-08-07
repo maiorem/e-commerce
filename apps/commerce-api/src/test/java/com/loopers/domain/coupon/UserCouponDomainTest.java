@@ -34,7 +34,7 @@ class UserCouponDomainTest {
     void createUserCoupon_WithNullUserId_ThrowsException() {
         // given & when & then
         assertThatThrownBy(() -> UserCouponModel.create(null, "COUPON123"))
-                .isInstanceOf(CoreException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -42,7 +42,7 @@ class UserCouponDomainTest {
     void createUserCoupon_WithNullCouponCode_ThrowsException() {
         // given & when & then
         assertThatThrownBy(() -> UserCouponModel.create(UserId.of("seyoung"), null))
-                .isInstanceOf(CoreException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -50,7 +50,7 @@ class UserCouponDomainTest {
     void createUserCoupon_WithEmptyCouponCode_ThrowsException() {
         // given & when & then
         assertThatThrownBy(() -> UserCouponModel.create(UserId.of("seyoung"), ""))
-                .isInstanceOf(CoreException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -77,7 +77,7 @@ class UserCouponDomainTest {
 
         // when & then
         assertThatThrownBy(() -> userCoupon.useCoupon(tomorrow))
-                .isInstanceOf(CoreException.class);
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

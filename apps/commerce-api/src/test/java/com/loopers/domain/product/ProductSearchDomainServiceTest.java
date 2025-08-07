@@ -72,8 +72,7 @@ class ProductSearchDomainServiceTest {
 
             // when & then
             assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -85,8 +84,7 @@ class ProductSearchDomainServiceTest {
             int size = 0;
             // when & then
             assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -99,8 +97,7 @@ class ProductSearchDomainServiceTest {
 
             // when & then
             assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -113,8 +110,7 @@ class ProductSearchDomainServiceTest {
 
             // when & then
             assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -127,8 +123,7 @@ class ProductSearchDomainServiceTest {
         void validateFilterCriteriaNegativeBrandId() {
             // when & then
             assertThatThrownBy(() -> productSearchDomainService.validateFilterCriteria(-1L, 1L))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -136,8 +131,7 @@ class ProductSearchDomainServiceTest {
         void validateFilterCriteriaNegativeCategoryId() {
             // when & then
             assertThatThrownBy(() -> productSearchDomainService.validateFilterCriteria(1L, -1L))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", com.loopers.support.error.ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 

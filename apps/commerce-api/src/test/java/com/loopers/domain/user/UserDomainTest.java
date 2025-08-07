@@ -1,7 +1,5 @@
 package com.loopers.domain.user;
 
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -50,8 +48,7 @@ class UserDomainTest {
             void createUserId_withTooShortUserId_throwsException(String invalidUserId) {
                 // when & then
                 assertThatThrownBy(() -> UserId.of(invalidUserId))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
 
             @DisplayName("11자 이상의 사용자 ID로 요청 시 예외가 발생한다.")
@@ -60,8 +57,7 @@ class UserDomainTest {
             void createUserId_withTooLongUserId_throwsException(String invalidUserId) {
                 // when & then
                 assertThatThrownBy(() -> UserId.of(invalidUserId))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
 
             @DisplayName("특수문자가 포함된 사용자 ID로 요청 시 예외가 발생한다.")
@@ -70,8 +66,7 @@ class UserDomainTest {
             void createUserId_withSpecialCharacters_throwsException(String invalidUserId) {
                 // when & then
                 assertThatThrownBy(() -> UserId.of(invalidUserId))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
         }
     }
@@ -106,8 +101,7 @@ class UserDomainTest {
             void createEmail_withInvalidEmail_throwsException(String invalidEmail) {
                 // when & then
                 assertThatThrownBy(() -> Email.of(invalidEmail))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
 
             @DisplayName("빈 이메일로 요청 시 예외가 발생한다.")
@@ -115,8 +109,7 @@ class UserDomainTest {
             void createEmail_withEmptyEmail_throwsException() {
                 // when & then
                 assertThatThrownBy(() -> Email.of(""))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
 
             @DisplayName("null 이메일로 요청 시 예외가 발생한다.")
@@ -124,8 +117,7 @@ class UserDomainTest {
             void createEmail_withNullEmail_throwsException() {
                 // when & then
                 assertThatThrownBy(() -> Email.of(null))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
         }
     }
@@ -162,8 +154,7 @@ class UserDomainTest {
 
                 // when & then
                 assertThatThrownBy(() -> BirthDate.of(futureDate))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
 
             @DisplayName("잘못된 날짜 형식으로 요청 시 예외가 발생한다.")
@@ -172,8 +163,7 @@ class UserDomainTest {
             void createBirthDate_withInvalidFormat_throwsException(String invalidBirthDate) {
                 // when & then
                 assertThatThrownBy(() -> BirthDate.of(invalidBirthDate))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
 
             @DisplayName("빈 생년월일로 요청 시 예외가 발생한다.")
@@ -181,8 +171,7 @@ class UserDomainTest {
             void createBirthDate_withEmptyBirthDate_throwsException() {
                 // when & then
                 assertThatThrownBy(() -> BirthDate.of(""))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
 
             @DisplayName("null 생년월일로 요청 시 예외가 발생한다.")
@@ -190,8 +179,7 @@ class UserDomainTest {
             void createBirthDate_withNullBirthDate_throwsException() {
                 // when & then
                 assertThatThrownBy(() -> BirthDate.of(null))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
         }
     }
@@ -267,8 +255,7 @@ class UserDomainTest {
 
                 // when & then
                 assertThatThrownBy(() -> userDomainService.createUser(null, email, gender, birthDate))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
 
             @DisplayName("null Email로 요청 시 예외가 발생한다.")
@@ -281,8 +268,7 @@ class UserDomainTest {
 
                 // when & then
                 assertThatThrownBy(() -> userDomainService.createUser(userId, null, gender, birthDate))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
 
             @DisplayName("null BirthDate로 요청 시 예외가 발생한다.")
@@ -295,8 +281,7 @@ class UserDomainTest {
 
                 // when & then
                 assertThatThrownBy(() -> userDomainService.createUser(userId, email, gender, null))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
         }
     }
@@ -348,8 +333,7 @@ class UserDomainTest {
 
                 // when & then
                 assertThatThrownBy(() -> userDomainService.updateUserInfo(null, newEmail, newGender, newBirthDate))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
 
             @DisplayName("null 새 이메일로 요청 시 예외가 발생한다.")
@@ -367,8 +351,7 @@ class UserDomainTest {
 
                 // when & then
                 assertThatThrownBy(() -> userDomainService.updateUserInfo(existingUser, null, newGender, newBirthDate))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
 
             @DisplayName("null 새 생년월일로 요청 시 예외가 발생한다.")
@@ -386,8 +369,7 @@ class UserDomainTest {
 
                 // when & then
                 assertThatThrownBy(() -> userDomainService.updateUserInfo(existingUser, newEmail, newGender, null))
-                        .isInstanceOf(CoreException.class)
-                        .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                        .isInstanceOf(IllegalArgumentException.class);
             }
         }
     }
