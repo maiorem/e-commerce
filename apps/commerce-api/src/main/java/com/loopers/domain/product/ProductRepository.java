@@ -10,7 +10,7 @@ public interface ProductRepository {
     
     Optional<ProductModel> findById(Long id);
 
-    Optional<ProductModel> findByIdWithPessimisticLock(Long id);
+    Optional<ProductModel> findByIdForUpdate(Long id);
     
     List<ProductModel> findByBrandId(Long brandId);
     

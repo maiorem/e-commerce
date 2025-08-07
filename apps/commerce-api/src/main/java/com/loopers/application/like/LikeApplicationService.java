@@ -53,7 +53,6 @@ public class LikeApplicationService {
         // null이 반환되면 이미 좋아요가 되어 있는 상태이므로 아무 동작도 하지 않음
         if (like != null) {
             likeRepository.save(like);
-            productRepository.save(product);
         }
     }
 
@@ -73,7 +72,6 @@ public class LikeApplicationService {
         // null이 반환되면 이미 좋아요가 취소되어 있는 상태이므로 아무 동작도 하지 않음
         if (like != null) {
             likeRepository.delete(like);
-            productRepository.save(product);
         }
     }
 

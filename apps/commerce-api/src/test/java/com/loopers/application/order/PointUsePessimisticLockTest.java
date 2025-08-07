@@ -98,7 +98,7 @@ public class PointUsePessimisticLockTest {
 
         // 트랜잭션 내에서 비관적 락으로 조회
         Optional<PointModel> updatedPoint = transactionTemplate.execute(status ->
-            pointRepository.findByUserId(user.getUserId())
+            pointRepository.findByUserIdForUpdate(user.getUserId())
         );
         assertThat(updatedPoint).isPresent();
         // 최종 포인트 잔액 확인 (10000 - 6000 = 4000)
@@ -140,7 +140,7 @@ public class PointUsePessimisticLockTest {
         assertThat(failureCount.get()).isEqualTo(0);
 
         Optional<PointModel> updatedPoint = transactionTemplate.execute(status ->
-            pointRepository.findByUserId(user.getUserId())
+            pointRepository.findByUserIdForUpdate(user.getUserId())
         );
         assertThat(updatedPoint).isPresent();
         // 최종 포인트 잔액 0
@@ -191,7 +191,7 @@ public class PointUsePessimisticLockTest {
         assertThat(failureCount.get()).isEqualTo(0);
 
         Optional<PointModel> updatedPoint = transactionTemplate.execute(status ->
-            pointRepository.findByUserId(noPointUser.getUserId())
+            pointRepository.findByUserIdForUpdate(noPointUser.getUserId())
         );
         // 포인트 잔액 0으로 유지
         assertThat(updatedPoint).isEmpty();

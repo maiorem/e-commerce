@@ -23,6 +23,11 @@ public class FakeProductRepository implements ProductRepository {
     }
     
     @Override
+    public Optional<ProductModel> findByIdForUpdate(Long id) {
+        return Optional.ofNullable(products.get(id));
+    }
+    
+    @Override
     public List<ProductModel> findByBrandId(Long brandId) {
         return products.values().stream()
                 .filter(product -> Objects.equals(product.getBrandId(), brandId))

@@ -25,7 +25,7 @@ public class PointApplicationService {
         }
 
         // 기존 포인트 조회 또는 새로 생성
-        PointModel existingPoint = pointRepository.findByUserId(UserId.of(userId))
+        PointModel existingPoint = pointRepository.findByUserIdForUpdate(UserId.of(userId))
                 .orElseGet(() -> PointModel.of(UserId.of(userId), 0));
 
         // 포인트 충전
@@ -54,7 +54,7 @@ public class PointApplicationService {
         }
 
         // 기존 포인트 조회
-        PointModel existingPoint = pointRepository.findByUserId(UserId.of(userId))
+        PointModel existingPoint = pointRepository.findByUserIdForUpdate(UserId.of(userId))
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "포인트 정보가 없습니다."));
 
         // 포인트 사용
@@ -84,7 +84,7 @@ public class PointApplicationService {
         }
 
         // 기존 포인트 조회
-        PointModel existingPoint = pointRepository.findByUserId(UserId.of(userId))
+        PointModel existingPoint = pointRepository.findByUserIdForUpdate(UserId.of(userId))
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "포인트 정보가 없습니다."));
 
         // 포인트 환불
@@ -105,14 +105,15 @@ public class PointApplicationService {
         return savedPoint;
     }
 
+    @Transactional(readOnly = true)
     public PointInfo getMyPoint(String userId) {
 
         // 사용자 존재 여부 확인
         if (!userRepository.existsByUserId(UserId.of(userId))) {
             return null;
         }
-        // 포인트 조회
-        PointModel pointModel = pointRepository.findByUserId(UserId.of(userId)).orElse(null);
+        // 포인트 조회 (일반 조회 메서드 사용)
+        PointModel pointModel = pointRepository.findByUserIdForRead(UserId.of(userId)).orElse(null);
         if (pointModel == null) {
             return PointInfo.from(PointModel.of(UserId.of(userId), 0));
         }

@@ -103,7 +103,7 @@ public class StockDeductionPessimisticLockTest {
         assertThat(failureCount.get()).isEqualTo(0);
 
         Optional<ProductModel> updatedProduct = transactionTemplate.execute(status ->
-            productRepository.findByIdWithPessimisticLock(product.getId())
+            productRepository.findByIdForUpdate(product.getId())
         );
         assertThat(updatedProduct).isPresent();
         // 3개의 주문(150개 차감)이 성공했으므로 재고는 50이 되어야 함
@@ -165,7 +165,7 @@ public class StockDeductionPessimisticLockTest {
 
         // 최종 재고가 음수가 되지 않아야 함
         Optional<ProductModel> updatedProduct = transactionTemplate.execute(status -> 
-            productRepository.findByIdWithPessimisticLock(lowStockProduct.getId())
+            productRepository.findByIdForUpdate(lowStockProduct.getId())
         );
         assertThat(updatedProduct).isPresent();
         assertThat(updatedProduct.get().getStock()).isGreaterThanOrEqualTo(0);
@@ -226,7 +226,7 @@ public class StockDeductionPessimisticLockTest {
 
         // 최종 재고가 0이 되어야 함
         Optional<ProductModel> updatedProduct = transactionTemplate.execute(status -> 
-            productRepository.findByIdWithPessimisticLock(exactStockProduct.getId())
+            productRepository.findByIdForUpdate(exactStockProduct.getId())
         );
         assertThat(updatedProduct).isPresent();
         assertThat(updatedProduct.get().getStock()).isEqualTo(0);
