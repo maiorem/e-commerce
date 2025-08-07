@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface ProductRepository {
     
     Optional<ProductModel> findById(Long id);
+
+    Optional<ProductModel> findByIdWithPessimisticLock(Long id);
     
     List<ProductModel> findByBrandId(Long brandId);
     
