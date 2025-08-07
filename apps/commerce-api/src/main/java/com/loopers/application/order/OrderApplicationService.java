@@ -63,7 +63,7 @@ public class OrderApplicationService {
         int finalTotalPrice = currentProcessingAmount;
 
         // 6. 재고 차감
-        stockDeductionProcessor.deductProductStocks(orderItems, products);
+        stockDeductionProcessor.deductProductStocks(orderItems);
 
         // 7. 주문 생성 저장 (PENDING)
         OrderModel order = OrderModel.create(command.userId(), finalTotalPrice);

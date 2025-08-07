@@ -5,6 +5,7 @@ import com.loopers.domain.point.*;
 import com.loopers.domain.user.UserId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Component
@@ -14,9 +15,10 @@ public class PointProcessor {
     private final OrderUsePointDomainService orderUsePointDomainService;
     private final PointDomainService pointDomainService;
 
+    @Transactional
     public int processPointUsage(UserId userId, int orderPrice, int requestPoint) {
 
-        PointModel availablePoint = pointRepository.findByUserId(userId).orElse(null);
+        PointModel availablePoint = pointRepository.findByUserIdForUpdate(userId).orElse(null);
 
         // 주문에서 사용하기로 한 포인트 검증
         int usedPoints = orderUsePointDomainService.calculateUsePoint(availablePoint, orderPrice, requestPoint);

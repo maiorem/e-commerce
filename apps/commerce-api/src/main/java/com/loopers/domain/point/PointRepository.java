@@ -8,7 +8,9 @@ public interface PointRepository {
     
     PointModel save(PointModel point);
     
-    Optional<PointModel> findByUserId(UserId userId);
+    Optional<PointModel> findByUserIdForUpdate(UserId userId);
+    
+    Optional<PointModel> findByUserIdForRead(UserId userId);
     
     List<PointHistoryModel> findHistoryByUserId(UserId userId);
     

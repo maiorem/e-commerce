@@ -157,7 +157,7 @@ class OrderApplicationServiceIntegrationTest {
         assertThat(savedOrderItems).hasSize(2);
         
         // 포인트 차감 확인
-        Optional<PointModel> updatedPoint = pointRepository.findByUserId(userId);
+        Optional<PointModel> updatedPoint = pointRepository.findByUserIdForUpdate(userId);
         assertThat(updatedPoint).isPresent();
         assertThat(updatedPoint.get().getAmount()).isEqualTo(50000); // 100000 - 50000
         
@@ -185,7 +185,7 @@ class OrderApplicationServiceIntegrationTest {
         assertThat(result.totalPrice()).isEqualTo(3195000); // (1000000 * 2 + 1200000 * 1) - 5000(쿠폰할인)
         
         // 포인트가 차감되지 않았는지 확인
-        Optional<PointModel> updatedPoint = pointRepository.findByUserId(userId);
+        Optional<PointModel> updatedPoint = pointRepository.findByUserIdForUpdate(userId);
         assertThat(updatedPoint).isPresent();
         assertThat(updatedPoint.get().getAmount()).isEqualTo(100000); // 변화 없음
     }
