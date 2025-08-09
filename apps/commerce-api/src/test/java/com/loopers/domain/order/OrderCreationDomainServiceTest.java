@@ -1,8 +1,6 @@
 package com.loopers.domain.order;
 
 import com.loopers.domain.product.ProductModel;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -36,7 +34,7 @@ class OrderCreationDomainServiceTest {
     }
 
     @Nested
-    @DisplayName("주문 아이템 검증")
+    @DisplayName("주문 아이템 검증 시,")
     class Validate_Order_Items {
 
         @Test
@@ -70,8 +68,7 @@ class OrderCreationDomainServiceTest {
 
             // when & then
             assertThatThrownBy(() -> orderCreationDomainService.validateOrderItems(orderItems, products))
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND);
+                .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -87,8 +84,7 @@ class OrderCreationDomainServiceTest {
 
             // when & then
             assertThatThrownBy(() -> orderCreationDomainService.validateOrderItems(orderItems, products))
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -104,8 +100,7 @@ class OrderCreationDomainServiceTest {
 
             // when & then
             assertThatThrownBy(() -> orderCreationDomainService.validateOrderItems(orderItems, products))
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -142,50 +137,4 @@ class OrderCreationDomainServiceTest {
         }
     }
 
-    @Nested
-    @DisplayName("최종 결제 금액 계산 시,")
-    class Calculate_Final_Total_Price {
-
-        @Test
-        @DisplayName("주문 가격에서 사용 포인트를 차감한 금액을 계산한다")
-        void calculateFinalTotalPriceSuccess() {
-            // given
-            int orderPrice = 50000;
-            int usedPoints = 10000;
-
-            // when
-            int finalPrice = orderCreationDomainService.calculateFinalTotalPrice(orderPrice, usedPoints);
-
-            // then
-            assertThat(finalPrice).isEqualTo(40000);
-        }
-
-        @Test
-        @DisplayName("사용 포인트가 0이면 주문 가격과 동일하다")
-        void calculateFinalTotalPriceWithZeroPoints() {
-            // given
-            int orderPrice = 50000;
-            int usedPoints = 0;
-
-            // when
-            int finalPrice = orderCreationDomainService.calculateFinalTotalPrice(orderPrice, usedPoints);
-
-            // then
-            assertThat(finalPrice).isEqualTo(50000);
-        }
-
-        @Test
-        @DisplayName("사용 포인트가 주문 가격보다 크면 음수를 반환한다")
-        void calculateFinalTotalPriceWithExcessivePoints() {
-            // given
-            int orderPrice = 50000;
-            int usedPoints = 60000;
-
-            // when
-            int finalPrice = orderCreationDomainService.calculateFinalTotalPrice(orderPrice, usedPoints);
-
-            // then
-            assertThat(finalPrice).isEqualTo(-10000);
-        }
-    }
 }

@@ -1,8 +1,6 @@
 package com.loopers.domain.point;
 
 import com.loopers.domain.user.UserId;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -65,8 +63,7 @@ class PointDomainTest {
         void createPointModel_withNullUserId_throwsException() {
             // when & then
             assertThatThrownBy(() -> PointModel.of(null, 1000))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -77,8 +74,7 @@ class PointDomainTest {
 
             // when & then
             assertThatThrownBy(() -> PointModel.of(userId, -100))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -89,8 +85,7 @@ class PointDomainTest {
 
             // when & then
             assertThatThrownBy(() -> PointModel.of(userId, 1000, null))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -120,13 +115,10 @@ class PointDomainTest {
 
             // when & then
             assertThatThrownBy(() -> point.charge(0))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
 
             assertThatThrownBy(() -> point.charge(-100))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
-        }
+                    .isInstanceOf(IllegalArgumentException.class);       }
     }
 
     @Nested
@@ -155,12 +147,10 @@ class PointDomainTest {
 
             // when & then
             assertThatThrownBy(() -> point.use(0))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
 
             assertThatThrownBy(() -> point.use(-100))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -171,8 +161,7 @@ class PointDomainTest {
 
             // when & then
             assertThatThrownBy(() -> point.use(1500))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -250,8 +239,7 @@ class PointDomainTest {
         void chargePoint_withInvalidAmount_throwsException(int invalidAmount) {
             // when & then
             assertThatThrownBy(() -> pointDomainService.chargePoint(UserId.of("testuser"), invalidAmount))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -259,8 +247,7 @@ class PointDomainTest {
         void chargePoint_withExcessiveAmount_throwsException() {
             // when & then
             assertThatThrownBy(() -> pointDomainService.chargePoint(UserId.of("testuser"), 1000001))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -291,8 +278,7 @@ class PointDomainTest {
 
             // when & then
             assertThatThrownBy(() -> pointDomainService.usePoint(existingPoint, invalidAmount))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -304,8 +290,7 @@ class PointDomainTest {
 
             // when & then
             assertThatThrownBy(() -> pointDomainService.usePoint(existingPoint, amount))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -336,8 +321,7 @@ class PointDomainTest {
 
             // when & then
             assertThatThrownBy(() -> pointDomainService.refundPoint(existingPoint, invalidAmount))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -426,8 +410,7 @@ class PointDomainTest {
         void expirePoint_withNullPoint_throwsException() {
             // when & then
             assertThatThrownBy(() -> pointDomainService.expirePoint(null))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -459,8 +442,7 @@ class PointDomainTest {
         void createPointHistory_withNullUserId_throwsException() {
             // when & then
             assertThatThrownBy(() -> pointDomainService.createPointHistory(null, 1000, 1500, PointChangeReason.PROMOTION))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -468,8 +450,7 @@ class PointDomainTest {
         void createPointHistory_withNullReason_throwsException() {
             // when & then
             assertThatThrownBy(() -> pointDomainService.createPointHistory(UserId.of("testuser"), 1000, 1500, null))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -477,8 +458,7 @@ class PointDomainTest {
         void createPointHistory_withNegativeCurrentAmount_throwsException() {
             // when & then
             assertThatThrownBy(() -> pointDomainService.createPointHistory(UserId.of("testuser"), 1000, -100, PointChangeReason.PROMOTION))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 

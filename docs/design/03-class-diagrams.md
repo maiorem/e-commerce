@@ -82,6 +82,30 @@ classDiagram
         -int amount
         -DateTime paymentDate
     }
+    
+    class Coupon {
+        -Long id
+        -String couponName
+        -CouponType couponType
+        -int discountValue
+        -int minimumOrderAmount
+        -int maximumDiscountAmount
+        -CouponStatus couponStatus
+        -DateTime validFrom
+        -DateTime validUntil
+        +int calculateDiscount(int orderPrice)
+        +boolean isValid(int orderPrice, DateTime orderDate)
+    }
+    
+    class UserCoupon {
+        -Long id
+        -String userId
+        -Long couponId 
+        -boolean isUsed
+        -DateTime usedAt
+        +boolean useCoupon(int orderPriceDateTime now)
+    }
+    
 
     %% --- Value Objects ---
     class UserIdVo {
@@ -132,6 +156,19 @@ classDiagram
         PAYPAL
         BANK_TRANSFER
     }
+    
+    class CouponType {
+        <<enumeration>>
+        FIXED_AMOUNT
+        PERCENTAGE
+    }
+    
+    class CouponStatus {
+        <<enumeration>>
+        ACTIVE
+        INACTIVE
+        EXPIRED
+    }
 
     User "1" --> "1" Point : associated_with
     User "1" --> "N" Order : places
@@ -155,4 +192,12 @@ classDiagram
     User *-- EmailVo
     User *-- BirthDateVo
     Order *-- OrderDateVo
+    
+    Product *-- Category
+    Product *-- Brand
+
+    User "1" --> "N" UserCoupon : has   
+    UserCoupon "N" --> "1" Coupon : refers_to    
+
+
 ```

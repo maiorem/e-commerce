@@ -1,9 +1,8 @@
 package com.loopers.domain.user;
 
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -22,10 +21,10 @@ public class UserId {
 
     public static UserId of(String value) {
         if (value == null || value.isBlank()) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "아이디는 비어있을 수 없습니다.");
+            throw new IllegalArgumentException("아이디는 비어있을 수 없습니다.");
         }
         if (!USER_ID_PATTERN.matcher(value).matches()) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "아이디는 10자 이하의 영문 소문자와 숫자로만 구성되어야 합니다.");
+            throw new IllegalArgumentException("아이디는 10자 이하의 영문 소문자와 숫자로만 구성되어야 합니다.");
         }
         UserId userId = new UserId();
         userId.value = value;

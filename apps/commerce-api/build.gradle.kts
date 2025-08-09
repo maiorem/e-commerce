@@ -17,4 +17,10 @@ dependencies {
 
     // test-fixtures
     testImplementation(testFixtures(project(":modules:jpa")))
+
+    // retry
+    implementation("org.springframework.retry:spring-retry")
+
+    // aspects
+    implementation("org.springframework:spring-aspects")
 }

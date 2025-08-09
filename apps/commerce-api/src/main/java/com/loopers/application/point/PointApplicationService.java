@@ -3,8 +3,6 @@ package com.loopers.application.point;
 import com.loopers.domain.point.*;
 import com.loopers.domain.user.UserId;
 import com.loopers.domain.user.UserRepository;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,11 +19,11 @@ public class PointApplicationService {
     public PointInfo chargeMyPoint(String userId, int amount) {
         // 사용자 존재 여부 확인
         if (!userRepository.existsByUserId(UserId.of(userId))) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "존재하지 않는 사용자입니다.");
+            return null;
         }
 
         // 기존 포인트 조회 또는 새로 생성
-        PointModel existingPoint = pointRepository.findByUserId(UserId.of(userId))
+        PointModel existingPoint = pointRepository.findByUserIdForUpdate(UserId.of(userId))
                 .orElseGet(() -> PointModel.of(UserId.of(userId), 0));
 
         // 포인트 충전
@@ -50,12 +48,12 @@ public class PointApplicationService {
     public PointInfo useMyPoint(String userId, int amount) {
         // 사용자 존재 여부 확인
         if (!userRepository.existsByUserId(UserId.of(userId))) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "존재하지 않는 사용자입니다.");
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
         }
 
         // 기존 포인트 조회
-        PointModel existingPoint = pointRepository.findByUserId(UserId.of(userId))
-                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "포인트 정보가 없습니다."));
+        PointModel existingPoint = pointRepository.findByUserIdForUpdate(UserId.of(userId))
+                .orElseThrow(() -> new IllegalArgumentException("포인트 정보가 없습니다."));
 
         // 포인트 사용
         PointModel updatedPoint = pointDomainService.usePoint(existingPoint, amount);
@@ -80,12 +78,12 @@ public class PointApplicationService {
 
         // 사용자 존재 여부 확인
         if (!userRepository.existsByUserId(UserId.of(userId))) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "존재하지 않는 사용자입니다.");
+            throw new IllegalArgumentException("존재하지 않는 사용자입니다.");
         }
 
         // 기존 포인트 조회
-        PointModel existingPoint = pointRepository.findByUserId(UserId.of(userId))
-                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "포인트 정보가 없습니다."));
+        PointModel existingPoint = pointRepository.findByUserIdForUpdate(UserId.of(userId))
+                .orElseThrow(() -> new IllegalArgumentException("포인트 정보가 없습니다."));
 
         // 포인트 환불
         PointModel updatedPoint = pointDomainService.refundPoint(existingPoint, amount);
@@ -105,14 +103,15 @@ public class PointApplicationService {
         return savedPoint;
     }
 
+    @Transactional(readOnly = true)
     public PointInfo getMyPoint(String userId) {
 
         // 사용자 존재 여부 확인
         if (!userRepository.existsByUserId(UserId.of(userId))) {
             return null;
         }
-        // 포인트 조회
-        PointModel pointModel = pointRepository.findByUserId(UserId.of(userId)).orElse(null);
+        // 포인트 조회 (일반 조회 메서드 사용)
+        PointModel pointModel = pointRepository.findByUserIdForRead(UserId.of(userId)).orElse(null);
         if (pointModel == null) {
             return PointInfo.from(PointModel.of(UserId.of(userId), 0));
         }

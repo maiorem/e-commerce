@@ -1,5 +1,6 @@
 package com.loopers.domain.product;
 
+import com.loopers.domain.like.ProductLikeDomainService;
 import com.loopers.domain.like.LikeModel;
 import com.loopers.domain.like.LikeRepository;
 import com.loopers.domain.user.UserId;

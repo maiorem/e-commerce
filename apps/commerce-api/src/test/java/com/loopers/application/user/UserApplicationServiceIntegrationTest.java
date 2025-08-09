@@ -5,8 +5,6 @@ import com.loopers.domain.user.UserId;
 import com.loopers.domain.user.UserModel;
 import com.loopers.domain.user.UserRepository;
 import com.loopers.support.config.TestConfig;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -91,11 +89,10 @@ class UserApplicationServiceIntegrationTest {
             userApplicationService.createUser(userId, email, gender, birthDate);
 
             // when & then
-            CoreException exception = assertThrows(CoreException.class, () ->
+            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                     userApplicationService.createUser(userId, "new@loopers.com", String.valueOf(Gender.MALE), "2001-01-01")
             );
 
-            assertThat(exception.getErrorType()).isEqualTo(ErrorType.BAD_REQUEST);
         }
     }
 
@@ -127,14 +124,14 @@ class UserApplicationServiceIntegrationTest {
             );
         }
 
-        @DisplayName("존재하지 않는 유저의 아이디가 주어지면 예외가 발생한다.")
+        @DisplayName("존재하지 않는 유저의 아이디가 주어지면 null을 반환한다.")
         @Test
         void getMyInfo_withNonExistingUserId_null() {
             // given
             String userId = "seyoung1";
 
             // when & then
-            assertThrows(CoreException.class, () -> userApplicationService.getUser(userId));
+            assertThat(userApplicationService.getUser(userId)).isNull();
         }
     
     }

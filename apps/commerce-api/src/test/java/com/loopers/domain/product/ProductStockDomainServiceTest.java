@@ -43,8 +43,7 @@ class ProductStockDomainServiceTest {
         void validateStockDeductionZeroQuantity() {
             // when & then
             assertThatThrownBy(() -> productStockDomainService.validateStockDeduction(product, 0))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -52,8 +51,7 @@ class ProductStockDomainServiceTest {
         void validateStockDeductionNegativeQuantity() {
             // when & then
             assertThatThrownBy(() -> productStockDomainService.validateStockDeduction(product, -10))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
@@ -61,8 +59,7 @@ class ProductStockDomainServiceTest {
         void validateStockDeductionInsufficientStock() {
             // when & then
             assertThatThrownBy(() -> productStockDomainService.validateStockDeduction(product, 150))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 
@@ -89,8 +86,7 @@ class ProductStockDomainServiceTest {
         void deductStockValidation() {
             // when & then
             assertThatThrownBy(() -> productStockDomainService.deductStock(product, 150))
-                    .isInstanceOf(CoreException.class)
-                    .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                    .isInstanceOf(IllegalArgumentException.class);
         }
     }
 }

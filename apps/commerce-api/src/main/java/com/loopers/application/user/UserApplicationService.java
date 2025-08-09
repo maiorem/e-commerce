@@ -1,7 +1,6 @@
 package com.loopers.application.user;
 
 import com.loopers.domain.user.*;
-import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,7 +21,7 @@ public class UserApplicationService {
         BirthDate regBirthDate = BirthDate.of(birthDate);
         // 중복 사용자 검증
         if (userRepository.existsByUserId(regUserId)) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "이미 존재하는 사용자 ID입니다.");
+            throw new IllegalArgumentException("이미 존재하는 사용자 ID입니다.");
         }
 
         UserModel user = userDomainService.createUser(regUserId, regEmail, regGender, regBirthDate);
@@ -34,7 +33,7 @@ public class UserApplicationService {
         UserId myUserId = UserId.of(userId);
         return userRepository.findByUserId(myUserId)
                 .map(UserInfo::from)
-                .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 사용자입니다."));
+                .orElse(null);
 
     }
 
@@ -42,7 +41,7 @@ public class UserApplicationService {
     public UserModel updateUserInfo(UserId userId, Email newEmail, Gender newGender, BirthDate newBirthDate) {
         // 기존 사용자 조회
         UserModel existingUser = userRepository.findByUserId(userId).orElseThrow(
-            () -> new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 사용자입니다.")
+            () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
         );
 
         UserModel updatedUser = userDomainService.updateUserInfo(existingUser, newEmail, newGender, newBirthDate);
@@ -53,7 +52,7 @@ public class UserApplicationService {
     @Transactional
     public void withdrawUser(UserId userId) {
         UserModel user = userRepository.findByUserId(userId).orElseThrow(
-                () -> new CoreException(ErrorType.NOT_FOUND, "존재하지 않는 사용자입니다.")
+                () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
         );
         userRepository.delete(user);
     }

@@ -1,8 +1,6 @@
 package com.loopers.domain.point;
 
 import com.loopers.domain.user.UserId;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -70,10 +68,10 @@ public class PointDomainService {
      */
     private void validateChargeAmount(int amount) {
         if (amount <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "충전 금액은 0보다 커야 합니다.");
+            throw new IllegalArgumentException("충전 금액은 0보다 커야 합니다.");
         }
         if (amount > 1000000) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "충전 금액은 1,000,000원을 초과할 수 없습니다.");
+            throw new IllegalArgumentException("충전 금액은 1,000,000원을 초과할 수 없습니다.");
         }
     }
 
@@ -82,7 +80,7 @@ public class PointDomainService {
      */
     private void validateUseAmount(int amount) {
         if (amount <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "사용할 포인트는 0보다 커야 합니다.");
+            throw new IllegalArgumentException("사용할 포인트는 0보다 커야 합니다.");
         }
     }
 
@@ -91,10 +89,10 @@ public class PointDomainService {
      */
     private void validateSufficientBalance(PointModel point, int amount) {
         if (point == null) {
-            throw new CoreException(ErrorType.NOT_FOUND, "포인트 정보가 없습니다.");
+            throw new IllegalArgumentException("포인트 정보가 없습니다.");
         }
         if (point.getAmount() < amount) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "잔여 포인트가 부족합니다.");
+            throw new IllegalArgumentException("잔여 포인트가 부족합니다.");
         }
     }
 
@@ -103,7 +101,7 @@ public class PointDomainService {
      */
     private void validateRefundAmount(int amount) {
         if (amount <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "환불 금액은 0보다 커야 합니다.");
+            throw new IllegalArgumentException("환불 금액은 0보다 커야 합니다.");
         }
     }
 
@@ -112,13 +110,13 @@ public class PointDomainService {
      */
     private void validatePointHistory(UserId userId, int changedAmount, int currentAmount, PointChangeReason reason) {
         if (userId == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "사용자 ID는 필수입니다.");
+            throw new IllegalArgumentException("사용자 ID는 필수입니다.");
         }
         if (reason == null) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "포인트 변동 사유는 필수입니다.");
+            throw new IllegalArgumentException("포인트 변동 사유는 필수입니다.");
         }
         if (currentAmount < 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "포인트 잔액은 음수가 될 수 없습니다.");
+            throw new IllegalArgumentException("포인트 잔액은 음수가 될 수 없습니다.");
         }
     }
 
@@ -144,7 +142,7 @@ public class PointDomainService {
      */
     public PointModel expirePoint(PointModel point) {
         if (point == null) {
-            throw new CoreException(ErrorType.NOT_FOUND, "포인트 정보가 없습니다.");
+            throw new IllegalArgumentException("포인트 정보가 없습니다.");
         }
         
         if (point.isExpired()) {

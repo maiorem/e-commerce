@@ -1,7 +1,5 @@
 package com.loopers.domain.user;
 
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import lombok.Getter;
@@ -20,25 +18,21 @@ public class BirthDate {
 
     public static BirthDate of(String value) {
         if (value == null || value.trim().isEmpty()) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "생년월일은 비어있을 수 없습니다.");
+            throw new IllegalArgumentException("생년월일은 비어있을 수 없습니다.");
         }
-        
+
         try {
             LocalDate birthDate = LocalDate.parse(value);
             if (birthDate.isAfter(LocalDate.now())) {
-                throw new CoreException(ErrorType.BAD_REQUEST, "생년월일은 미래일 수 없습니다.");
+                throw new IllegalArgumentException("생년월일은 미래일 수 없습니다.");
             }
-            
+
             BirthDate birth = new BirthDate();
             birth.value = birthDate;
             return birth;
         } catch (Exception e) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "올바른 날짜 형식이 아닙니다.");
+            throw new IllegalArgumentException("올바른 날짜 형식이 아닙니다.");
         }
-    }
-
-    public LocalDate getValue() {
-        return value;
     }
 
     @Override

@@ -6,7 +6,7 @@ import com.loopers.domain.category.CategoryModel;
 import com.loopers.domain.category.CategoryRepository;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
-import com.loopers.domain.product.ProductLikeDomainService;
+import com.loopers.domain.like.ProductLikeDomainService;
 import com.loopers.domain.product.ProductSearchDomainService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
@@ -24,10 +24,10 @@ import java.util.List;
 public class ProductApplicationService {
 
     private final ProductRepository productRepository;
-    private final ProductLikeDomainService productLikeDomainService;
-    private final ProductSearchDomainService productSearchDomainService;
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
+    private final ProductLikeDomainService productLikeDomainService;
+    private final ProductSearchDomainService productSearchDomainService;
 
     /**
      * 상품 목록 조회 (페이징 / 정렬 - 최신순(기본값), 좋아요순, 가격 낮은 순, 가격 높은 순)

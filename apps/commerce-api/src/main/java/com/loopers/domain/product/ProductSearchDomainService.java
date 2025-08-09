@@ -1,6 +1,5 @@
 package com.loopers.domain.product;
 
-import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,13 +15,13 @@ public class ProductSearchDomainService {
      */
     public void validateSearchCriteria(String productName, int size, int page) {
         if (productName != null && productName.trim().length() < 2) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "상품명 검색은 2글자 이상 입력해주세요.");
+            throw new IllegalArgumentException("상품명 검색은 2글자 이상 입력해주세요.");
         }
         if (size <= 0 || size > 100) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "페이지 크기는 1~100 사이여야 합니다.");
+            throw new IllegalArgumentException("페이지 크기는 1~100 사이여야 합니다.");
         }
         if (page < 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "페이지 번호는 0 이상이어야 합니다.");
+            throw new IllegalArgumentException("페이지 번호는 0 이상이어야 합니다.");
         }
     }
 
@@ -37,7 +36,7 @@ public class ProductSearchDomainService {
         try {
             ProductSortBy.valueOf(sortBy.name());
         } catch (IllegalArgumentException e) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "지원하지 않는 정렬 기준입니다: " + sortBy);
+            throw new IllegalArgumentException("지원하지 않는 정렬 기준입니다: " + sortBy);
         }
     }
 
@@ -46,11 +45,11 @@ public class ProductSearchDomainService {
      */
     public void validateFilterCriteria(Long brandId, Long categoryId) {
         if (brandId != null && brandId <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "브랜드 ID는 양수여야 합니다.");
+            throw new IllegalArgumentException("브랜드 ID는 양수여야 합니다.");
         }
 
         if (categoryId != null && categoryId <= 0) {
-            throw new CoreException(ErrorType.BAD_REQUEST, "카테고리 ID는 양수여야 합니다.");
+            throw new IllegalArgumentException("카테고리 ID는 양수여야 합니다.");
         }
     }
 

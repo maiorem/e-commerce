@@ -80,8 +80,7 @@ public class ProductDomainTest {
 
             // when & then
             assertThatThrownBy(product::decrementLikesCount)
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                .isInstanceOf(IllegalArgumentException.class);
         }
 
     }
@@ -126,8 +125,7 @@ public class ProductDomainTest {
 
             // when & then
             assertThatThrownBy(() -> product.deductStock(10))
-                .isInstanceOf(CoreException.class)
-                .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+                .isInstanceOf(IllegalArgumentException.class);
         }
     }
 

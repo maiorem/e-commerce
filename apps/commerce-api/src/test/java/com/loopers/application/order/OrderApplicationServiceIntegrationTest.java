@@ -1,16 +1,20 @@
 package com.loopers.application.order;
 
+import com.loopers.domain.coupon.CouponModel;
+import com.loopers.domain.coupon.CouponType;
+import com.loopers.domain.coupon.UserCouponModel;
+import com.loopers.domain.coupon.UserCouponRepository;
 import com.loopers.domain.order.OrderItemModel;
 import com.loopers.domain.order.OrderItemRepository;
 import com.loopers.domain.order.OrderModel;
 import com.loopers.domain.order.OrderRepository;
+import com.loopers.domain.payment.PaymentMethod;
 import com.loopers.domain.point.PointModel;
 import com.loopers.domain.point.PointRepository;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.*;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
+import com.loopers.infrastructure.coupon.CouponJpaRepository;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,6 +54,12 @@ class OrderApplicationServiceIntegrationTest {
     private UserRepository userRepository;
 
     @Autowired
+    private UserCouponRepository userCouponRepository;
+
+    @Autowired
+    private CouponJpaRepository couponRepository;
+
+    @Autowired
     private DatabaseCleanUp databaseCleanUp;
 
     private UserId userId;
@@ -58,47 +69,68 @@ class OrderApplicationServiceIntegrationTest {
     private List<OrderItemModel> orderItems;
     private PointModel availablePoint;
     private OrderModel order;
+    private CouponModel coupon;
+    private UserCouponModel userCoupon;
 
     @BeforeEach
     void setUp() {
         userId = UserId.of("seyoung");
+        coupon = CouponModel.builder()
+            .name("TEST_COUPON")
+            .type(CouponType.FIXED_AMOUNT)
+            .discountValue(5000)
+            .minimumOrderAmount(30000)
+            .maximumDiscountAmount(5000)
+            .issuedAt(LocalDate.now())
+            .validUntil(LocalDate.now().plusDays(30))
+            .build();
+
+        userCoupon = UserCouponModel.create(userId, coupon.getCouponCode());
+        couponRepository.save(coupon);
+        userCouponRepository.save(userCoupon);
 
         UserModel user = UserModel.of(userId, Email.of("seyoung@loopers.com"), Gender.FEMALE, BirthDate.of("2000-01-01"));
         userRepository.save(user);
 
         // 테스트 데이터 저장
         ProductModel product1 = ProductModel.builder()
+            .brandId(1L)
+            .categoryId(1L)
             .name("Apple iPhone 14")
             .price(1000000)
             .stock(10)
             .description("Apple iPhone 14")
+            .likesCount(0)
             .build();
         productRepository.save(product1);
             
         ProductModel product2 = ProductModel.builder()
+            .brandId(1L)
+            .categoryId(1L)
             .name("Samsung Galaxy S23")
             .price(1200000)
             .stock(5)
             .description("Samsung Galaxy S23")
+            .likesCount(0)
             .build();
         productRepository.save(product2);
             
         products = List.of(product1, product2);
 
         orderItemCommands = List.of(
-            new OrderItemCommand(1L, products.get(0).getId(), 2, "Apple iPhone 14", 1000000),
-            new OrderItemCommand(1L, products.get(1).getId(), 1, "Samsung Galaxy S23", 1200000)
+            new OrderItemCommand(null, products.get(0).getId(), 2, "Apple iPhone 14", 1000000),
+            new OrderItemCommand(null, products.get(1).getId(), 1, "Samsung Galaxy S23", 1200000)
         );
         
-        orderCommand = new OrderCommand(userId, 50000, orderItemCommands);
+        orderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, coupon.getCouponCode(), 50000, orderItemCommands);
 
         orderItems = List.of(
-            new OrderItemModel(1L, products.get(0).getId(), 2, 1000000),
-            new OrderItemModel(1L, products.get(1).getId(), 1, 1200000)
+            OrderItemModel.builder().productId(products.get(0).getId()).quantity(2).priceAtOrder(1000000).build(),
+            OrderItemModel.builder().productId(products.get(1).getId()).quantity(1).priceAtOrder(1200000).build()
         );
 
         availablePoint = pointRepository.save(PointModel.of(userId, 100000));
-        order = OrderModel.of(userId, 3150000); // (1000000 * 2 + 1200000 * 1) - 50000
+        order = OrderModel.create(userId, 3150000); // (1000000 * 2 + 1200000 * 1) - 50000
     }
 
     @AfterEach
@@ -114,7 +146,7 @@ class OrderApplicationServiceIntegrationTest {
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.totalPrice()).isEqualTo(3150000); // (1000000 * 2 + 1200000 * 1) - 50000
+        assertThat(result.totalPrice()).isEqualTo(3145000); // (1000000 * 2 + 1200000 * 1) - 50000 - 5000(쿠폰할인)
         assertThat(result.quantity()).isEqualTo(3); // 2 + 1
 
         // DB 저장 확인
@@ -123,7 +155,7 @@ class OrderApplicationServiceIntegrationTest {
         assertThat(savedOrderItems).hasSize(2);
         
         // 포인트 차감 확인
-        Optional<PointModel> updatedPoint = pointRepository.findByUserId(userId);
+        Optional<PointModel> updatedPoint = pointRepository.findByUserIdForUpdate(userId);
         assertThat(updatedPoint).isPresent();
         assertThat(updatedPoint.get().getAmount()).isEqualTo(50000); // 100000 - 50000
         
@@ -141,17 +173,17 @@ class OrderApplicationServiceIntegrationTest {
     @DisplayName("포인트가 없는 사용자의 주문 생성")
     void createOrderWithoutPoints() {
         // given
-        OrderCommand orderCommandWithoutPoints = new OrderCommand(userId, 0, orderItemCommands);
+        OrderCommand orderCommandWithoutPoints = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, coupon.getCouponCode(),0, orderItemCommands);
 
         // when
         OrderInfo result = orderApplicationService.createOrder(orderCommandWithoutPoints);
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.totalPrice()).isEqualTo(3200000); // 포인트 차감 없음
+        assertThat(result.totalPrice()).isEqualTo(3195000); // (1000000 * 2 + 1200000 * 1) - 5000(쿠폰할인)
         
         // 포인트가 차감되지 않았는지 확인
-        Optional<PointModel> updatedPoint = pointRepository.findByUserId(userId);
+        Optional<PointModel> updatedPoint = pointRepository.findByUserIdForUpdate(userId);
         assertThat(updatedPoint).isPresent();
         assertThat(updatedPoint.get().getAmount()).isEqualTo(100000); // 변화 없음
     }
@@ -161,12 +193,11 @@ class OrderApplicationServiceIntegrationTest {
     void createOrderWithNonExistentUser() {
         // given
         UserId nonExistentUserId = UserId.of("seyoung12");
-        OrderCommand invalidOrderCommand = new OrderCommand(nonExistentUserId, 0, orderItemCommands);
+        OrderCommand invalidOrderCommand = new OrderCommand(nonExistentUserId, PaymentMethod.CREDIT_CARD, coupon.getCouponCode(),0, orderItemCommands);
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(invalidOrderCommand))
-            .isInstanceOf(CoreException.class)
-            .hasFieldOrPropertyWithValue("errorType", ErrorType.NOT_FOUND);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -175,24 +206,157 @@ class OrderApplicationServiceIntegrationTest {
         // given
         // 재고가 0인 상품 생성
         ProductModel outOfStockProduct = ProductModel.builder()
+            .brandId(1L)
+            .categoryId(1L)
             .name("테스트상품")
             .price(50000)
             .stock(0)
             .description("테스트상품")
+            .likesCount(0)
             .build();
         productRepository.save(outOfStockProduct);
 
         List<OrderItemCommand> invalidOrderItemCommands = List.of(
-            new OrderItemCommand(1L, outOfStockProduct.getId(), 1, "테스트상품", 50000)
+            new OrderItemCommand(null, outOfStockProduct.getId(), 1, "테스트상품", 50000)
         );
         
-        OrderCommand invalidOrderCommand = new OrderCommand(userId, 0, invalidOrderItemCommands);
+        OrderCommand invalidOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, coupon.getCouponCode(),0, invalidOrderItemCommands);
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(invalidOrderCommand))
-            .isInstanceOf(CoreException.class)
-            .hasFieldOrPropertyWithValue("errorType", ErrorType.BAD_REQUEST);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    @DisplayName("정률 할인 쿠폰 사용 테스트")
+    void createOrderWithPercentageCoupon() {
+        // given
+        CouponModel percentageCoupon = CouponModel.builder()
+            .name("PERCENTAGE_COUPON")
+            .type(CouponType.PERCENTAGE)
+            .discountValue(10) // 10% 할인
+            .minimumOrderAmount(30000)
+            .maximumDiscountAmount(100000)
+            .issuedAt(LocalDate.now())
+            .validUntil(LocalDate.now().plusDays(30))
+            .build();
+        couponRepository.save(percentageCoupon);
 
+        UserCouponModel percentageUserCoupon = UserCouponModel.create(userId, percentageCoupon.getCouponCode());
+        userCouponRepository.save(percentageUserCoupon);
+
+        OrderCommand percentageOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, percentageCoupon.getCouponCode(), 0, orderItemCommands);
+
+        // when
+        OrderInfo result = orderApplicationService.createOrder(percentageOrderCommand);
+
+        // then
+        assertThat(result).isNotNull();
+        // 주문 금액: (1000000 * 2 + 1200000 * 1) = 3200000
+        // 10% 할인: 3200000 * 0.1 = 320000, 최대 할인 금액 100000 적용
+        // 최종 금액: 3200000 - 100000 = 3100000
+        assertThat(result.totalPrice()).isEqualTo(3100000);
+    }
+
+    @Test
+    @DisplayName("만료된 쿠폰 사용 시도")
+    void createOrderWithExpiredCoupon() {
+        // given
+        CouponModel expiredCoupon = CouponModel.builder()
+            .name("EXPIRED_COUPON")
+            .type(CouponType.FIXED_AMOUNT)
+            .discountValue(5000)
+            .minimumOrderAmount(30000)
+            .maximumDiscountAmount(5000)
+            .issuedAt(LocalDate.now().minusDays(60))
+            .validUntil(LocalDate.now().minusDays(1)) // 어제 만료
+            .build();
+        couponRepository.save(expiredCoupon);
+
+        UserCouponModel expiredUserCoupon = UserCouponModel.create(userId, expiredCoupon.getCouponCode());
+        userCouponRepository.save(expiredUserCoupon);
+
+        OrderCommand expiredOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, expiredCoupon.getCouponCode(), 0, orderItemCommands);
+
+        // when & then
+        assertThatThrownBy(() -> orderApplicationService.createOrder(expiredOrderCommand))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("이미 사용된 쿠폰 사용 시도")
+    void createOrderWithUsedCoupon() {
+        // given
+        userCoupon.useCoupon(LocalDate.now());
+        userCouponRepository.save(userCoupon);
+
+        // when & then
+        assertThatThrownBy(() -> orderApplicationService.createOrder(orderCommand))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("최소 주문 금액 미달로 쿠폰 사용 실패")
+    void createOrderWithCouponBelowMinimumAmount() {
+        // given
+        CouponModel highMinimumCoupon = CouponModel.builder()
+            .name("HIGH_MINIMUM_COUPON")
+            .type(CouponType.FIXED_AMOUNT)
+            .discountValue(5000)
+            .minimumOrderAmount(5000000)
+            .maximumDiscountAmount(5000)
+            .issuedAt(LocalDate.now())
+            .validUntil(LocalDate.now().plusDays(30))
+            .build();
+        couponRepository.save(highMinimumCoupon);
+
+        UserCouponModel highMinimumUserCoupon = UserCouponModel.create(userId, highMinimumCoupon.getCouponCode());
+        userCouponRepository.save(highMinimumUserCoupon);
+
+        OrderCommand highMinimumOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, highMinimumCoupon.getCouponCode(), 0, orderItemCommands);
+
+        // when & then
+        assertThatThrownBy(() -> orderApplicationService.createOrder(highMinimumOrderCommand))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 쿠폰 사용 시도")
+    void createOrderWithNonExistentCoupon() {
+        // given
+        OrderCommand nonExistentCouponCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, "NON_EXISTENT_COUPON", 0, orderItemCommands);
+
+        // when & then
+        assertThatThrownBy(() -> orderApplicationService.createOrder(nonExistentCouponCommand))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("쿠폰 없이 주문 생성")
+    void createOrderWithoutCoupon() {
+        // given
+        OrderCommand noCouponCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, null, 0, orderItemCommands);
+
+        // when
+        OrderInfo result = orderApplicationService.createOrder(noCouponCommand);
+
+        // then
+        assertThat(result).isNotNull();
+        assertThat(result.totalPrice()).isEqualTo(3200000); // (1000000 * 2 + 1200000 * 1) - 할인 없음
+    }
+
+    @Test
+    @DisplayName("쿠폰 사용 후 상태 변경 확인")
+    void verifyCouponUsageStatusAfterOrder() {
+        // when
+        OrderInfo result = orderApplicationService.createOrder(orderCommand);
+
+        // then
+        assertThat(result).isNotNull();
+        
+        Optional<UserCouponModel> usedUserCoupon = userCouponRepository.findByUserIdAndCouponCode(userId, coupon.getCouponCode());
+        assertThat(usedUserCoupon).isPresent();
+        assertThat(usedUserCoupon.get().isUsed()).isTrue();
+        assertThat(usedUserCoupon.get().getUsedAt()).isNotNull();
+    }
 }

@@ -1,7 +1,6 @@
-package com.loopers.domain.product;
+package com.loopers.domain.like;
 
-import com.loopers.domain.like.LikeModel;
-import com.loopers.domain.like.LikeRepository;
+import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.user.UserId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

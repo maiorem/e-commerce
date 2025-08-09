@@ -131,7 +131,7 @@ class PointV1ApiE2ETest {
         @Test
         void chargePoint_withNonExistingUser_returns400BadRequest() {
             // given
-            String nonExistingUserId = "nonExistingUser";
+            String nonExistingUserId = "seyoung123";
             HttpHeaders headers = new HttpHeaders();
             headers.set("X-USER-ID", nonExistingUserId);
             PointV1Dto.PointRequest request = new PointV1Dto.PointRequest(1000);
