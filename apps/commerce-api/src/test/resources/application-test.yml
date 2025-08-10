@@ -1,0 +1,25 @@
+spring:
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+
+  datasource:
+    mysql-jpa:
+      main:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: ${datasource.mysql-jpa.main.jdbc-url}
+        username: ${datasource.mysql-jpa.main.username}
+        password: ${datasource.mysql-jpa.main.password}
+        maximum-pool-size: 10
+        minimum-idle: 5
+
+logging:
+  level:
+    com.loopers: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE 
