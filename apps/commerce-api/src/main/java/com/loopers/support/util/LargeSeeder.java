@@ -310,7 +310,7 @@ public class LargeSeeder {
     }
 
     private static void insertOrdersRange(Supplier<Connection> cs, int start, int end, int userCount) {
-        final String sql = "INSERT INTO orders (user_id, total_amount, order_date, created_at, updated_at) VALUES (?,?,?,?,?)";
+        final String sql = "INSERT INTO orders (user_id, total_amount, order_date, order_number, created_at, updated_at) VALUES (?,?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
@@ -319,11 +319,12 @@ public class LargeSeeder {
                 int userId = ThreadLocalRandom.current().nextInt(1, userCount + 1);
                 ps.setString(1, "user" + String.format("%06d", userId));
                 ps.setInt(2, sampleOrderAmount());
+                ps.setString(4, "ORDER" + String.format("%08d", i)); // order_number 추가
 
                 ZonedDateTime[] ts = recentSkewed(365, 1.8);
                 ps.setTimestamp(3, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(4, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(5, Timestamp.from(ts[1].toInstant()));
+                ps.setTimestamp(5, Timestamp.from(ts[0].toInstant()));
+                ps.setTimestamp(6, Timestamp.from(ts[1].toInstant()));
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
@@ -374,7 +375,7 @@ public class LargeSeeder {
 
     // ---------- PAYMENT (single-thread) ----------
     public static void seedPayments(Supplier<Connection> cs, int count, int orderCount) {
-        final String sql = "INSERT INTO payment_history (order_id, method, amount, created_at, updated_at) VALUES (?,?,?,?,?)";
+        final String sql = "INSERT INTO payment_history (order_id, payment_method, payment_status, amount, payment_date, created_at, updated_at) VALUES (?,?,?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
@@ -383,11 +384,13 @@ public class LargeSeeder {
                 int orderId = ThreadLocalRandom.current().nextInt(1, orderCount + 1);
                 ps.setLong(1, orderId);
                 ps.setString(2, samplePaymentMethod());
-                ps.setInt(3, samplePaymentAmount());
+                ps.setString(3, "SUCCESS"); // 기본적으로 성공 상태
+                ps.setInt(4, samplePaymentAmount());
 
                 ZonedDateTime[] ts = recentSkewed(365, 1.8);
-                ps.setTimestamp(4, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(5, Timestamp.from(ts[1].toInstant()));
+                ps.setTimestamp(5, Timestamp.from(ts[0].toInstant()));
+                ps.setTimestamp(6, Timestamp.from(ts[0].toInstant()));
+                ps.setTimestamp(7, Timestamp.from(ts[1].toInstant()));
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
@@ -518,7 +521,7 @@ public class LargeSeeder {
     }
 
     private static String samplePaymentMethod() {
-        String[] methods = {"CREDIT_CARD", "DEBIT_CARD", "BANK_TRANSFER", "MOBILE_PAYMENT"};
+        String[] methods = {"CREDIT_CARD", "DEBIT_CARD", "BANK_TRANSFER", "PAYPAL"};
         return methods[ThreadLocalRandom.current().nextInt(methods.length)];
     }
 
@@ -560,18 +563,39 @@ public class LargeSeeder {
     }
 
     public static void main(String[] args) throws SQLException {
-        // Spring Boot 애플리케이션에서 실행할 때는 드라이버 로딩을 건너뛰고 바로 실행
-        String url = "jdbc:mysql://localhost:3306/loopers?rewriteBatchedStatements=true";
-        String user = "application";
-        String pass = "application";
+        // MySQL 드라이버 로드
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            System.out.println("✅ MySQL Driver loaded successfully");
+        } catch (ClassNotFoundException e) {
+            System.err.println("❌ MySQL Driver not found: " + e.getMessage());
+            return;
+        }
 
-        try (Connection conn = DriverManager.getConnection(url, user, pass)) {
-            System.out.println("✅ Connected to DB");
+        // 환경변수에서 설정 가져오기
+        final String host = System.getenv("MYSQL_HOST") != null ? System.getenv("MYSQL_HOST") : "localhost";
+        final String port = System.getenv("MYSQL_PORT") != null ? System.getenv("MYSQL_PORT") : "3306";
+        final String user = System.getenv("MYSQL_USER") != null ? System.getenv("MYSQL_USER") : "application";
+        final String password = System.getenv("MYSQL_PASSWORD") != null ? System.getenv("MYSQL_PASSWORD") : "application";
+        final String database = System.getenv("MYSQL_DATABASE") != null ? System.getenv("MYSQL_DATABASE") : "loopers";
+
+        final String url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?rewriteBatchedStatements=true&useSSL=false&allowPublicKeyRetrieval=true";
+
+        try (Connection conn = DriverManager.getConnection(url, user, password)) {
+            System.out.println("✅ Connected to DB: " + url);
+            System.out.println("🚀 Starting LargeSeeder...");
+            System.out.println("📊 Target counts:");
+            System.out.println("   - Users: " + USER_COUNT);
+            System.out.println("   - Brands: " + BRAND_COUNT);
+            System.out.println("   - Categories: " + CATEGORY_COUNT);
+            System.out.println("   - Products: " + PRODUCT_COUNT);
+            System.out.println("   - Likes: " + LIKE_COUNT);
+            System.out.println("   - Orders: " + ORDER_COUNT);
         }
 
         LargeSeeder.seedAll(() -> {
             try {
-                return DriverManager.getConnection(url, user, pass);
+                return DriverManager.getConnection(url, user, password);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

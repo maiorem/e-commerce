@@ -26,3 +26,25 @@ dependencies {
     // aspects
     implementation("org.springframework:spring-aspects")
 }
+
+// LargeSeeder 실행을 위한 태스크
+tasks.register("runLargeSeeder", JavaExec::class) {
+    group = "application"
+    description = "Run LargeSeeder to generate test data"
+    
+    mainClass.set("com.loopers.support.util.LargeSeeder")
+    classpath = sourceSets["main"].runtimeClasspath
+    
+    // JVM 옵션 설정
+    jvmArgs = listOf(
+        "-Xmx4g",  // 최대 힙 메모리 4GB
+        "-Xms2g"   // 초기 힙 메모리 2GB
+    )
+    
+    // 환경변수 설정
+    environment("MYSQL_HOST", "localhost")
+    environment("MYSQL_PORT", "3306")
+    environment("MYSQL_USER", "application")
+    environment("MYSQL_PASSWORD", "application")
+    environment("MYSQL_DATABASE", "loopers")
+}
