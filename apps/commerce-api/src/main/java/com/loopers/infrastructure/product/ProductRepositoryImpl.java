@@ -60,12 +60,14 @@ public class ProductRepositoryImpl implements ProductRepository {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        long total = jpaQueryFactory
-                .selectFrom(productModel)
+        Long total = jpaQueryFactory
+                .select(productModel.count())
+                .from(productModel)
                 .where(filterBuilder)
-                .fetch().size();
+                .fetchOne();
 
-        return new PageImpl<>(list, pageable, total);
+        long totalCount = total == null ? 0L : total;
+        return new PageImpl<>(list, pageable, totalCount);
     }
 
     @Override
