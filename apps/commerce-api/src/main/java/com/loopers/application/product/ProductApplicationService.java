@@ -4,20 +4,17 @@ import com.loopers.domain.brand.BrandModel;
 import com.loopers.domain.brand.BrandRepository;
 import com.loopers.domain.category.CategoryModel;
 import com.loopers.domain.category.CategoryRepository;
+import com.loopers.domain.like.ProductLikeDomainService;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
-import com.loopers.domain.like.ProductLikeDomainService;
 import com.loopers.domain.product.ProductSearchDomainService;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -32,52 +29,57 @@ public class ProductApplicationService {
     /**
      * 상품 목록 조회 (페이징 / 정렬 - 최신순(기본값), 좋아요순, 가격 낮은 순, 가격 높은 순)
      */
-    public Page<ProductOutputInfo> getProductList(Pageable pageable, ProductQuery query) {
+    public List<ProductOutputInfo> getProductList(ProductQuery query) {
 
-        productSearchDomainService.validateSearchCriteria(query.getProductName(), pageable.getPageSize(), pageable.getPageNumber());
-        
-        BrandModel brand = brandRepository.findByName(query.getBrandName()).orElse(null);
-        CategoryModel category = categoryRepository.findByName(query.getCategoryName()).orElse(null);
+        productSearchDomainService.validateSearchCriteria(query.getProductName(), query.getSize());
 
-        Long brandId = (brand != null) ? brand.getId() : null;
-        Long categoryId = (category != null) ? category.getId() : null;
-
-        productSearchDomainService.validateFilterCriteria(brandId, categoryId);
+        productSearchDomainService.validateFilterCriteria(query.getBrandId(), query.getCategoryId());
         productSearchDomainService.validateSortCriteria(query.getSortBy());
 
-        Page<ProductModel> productPage = productRepository.findSearchProductList(
-                pageable,
+        List<ProductModel> products = productRepository.findSearchProductList(
+                query.getSize(),
                 query.getProductName(),
-                brandId,
-                categoryId,
-                query.getSortBy()
+                query.getBrandId(),
+                query.getCategoryId(),
+                query.getSortBy(),
+                query.getLastId(),
+                query.getLastLikesCount(),
+                query.getLastPrice(),
+                query.getLastCreatedAt()
         );
 
-        return convertToProductOutputInfoPage(productPage);
+        return convertToProductOutputInfoList(products);
     }
 
-    private Page<ProductOutputInfo> convertToProductOutputInfoPage(Page<ProductModel> productPage) {
+    private List<ProductOutputInfo> convertToProductOutputInfoList(List<ProductModel> productModels) {
+        // 모든 브랜드 ID와 카테고리 ID를 수집
+        Set<Long> brandIds = productModels.stream()
+                .map(ProductModel::getBrandId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Set<Long> categoryIds = productModels.stream()
+                .map(ProductModel::getCategoryId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // 모든 브랜드/카테고리 정보 조회
+        Map<Long, BrandModel> brandMap = brandRepository.findAllById(brandIds).stream()
+                .collect(Collectors.toMap(BrandModel::getId, brand -> brand));
+        Map<Long, CategoryModel> categoryMap = categoryRepository.findAllById(categoryIds).stream()
+                .collect(Collectors.toMap(CategoryModel::getId, category -> category));
+
         List<ProductOutputInfo> productOutputInfoList = new ArrayList<>();
 
-        for (ProductModel model : productPage) {
+        for (ProductModel model : productModels) {
 
-            int likeCount = productLikeDomainService.getLikeCount(model.getId());
+            BrandModel brandModel = brandMap.get(model.getBrandId());
+            CategoryModel categoryModel = categoryMap.get(model.getCategoryId());
 
-            BrandModel brandModel = null;
-            if (model.getBrandId() != null) {
-                brandModel = brandRepository.findById(model.getBrandId()).orElse(null);
-            }
-            
-            CategoryModel categoryModel = null;
-            if (model.getCategoryId() != null) {
-                categoryModel = categoryRepository.findById(model.getCategoryId()).orElse(null);
-            }
-
-            ProductOutputInfo outputInfo = ProductOutputInfo.convertToInfo(model, brandModel, categoryModel, likeCount);
+            ProductOutputInfo outputInfo = ProductOutputInfo.convertToInfo(model, brandModel, categoryModel);
             productOutputInfoList.add(outputInfo);
         }
 
-        return new PageImpl<>(productOutputInfoList, productPage.getPageable(), productPage.getTotalElements());
+        return productOutputInfoList;
     }
 
     /**
@@ -88,19 +90,17 @@ public class ProductApplicationService {
         ProductModel productModel = productRepository.findById(id)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "해당 상품을 찾을 수 없습니다."));
 
-        int likeCount = productLikeDomainService.getLikeCount(productModel.getId());
-
         // 브랜드와 카테고리 정보 조회 (null 체크 추가)
         BrandModel brandModel = null;
         if (productModel.getBrandId() != null) {
             brandModel = brandRepository.findById(productModel.getBrandId()).orElse(null);
         }
-        
+
         CategoryModel categoryModel = null;
         if (productModel.getCategoryId() != null) {
             categoryModel = categoryRepository.findById(productModel.getCategoryId()).orElse(null);
         }
 
-        return ProductOutputInfo.convertToInfo(productModel, brandModel, categoryModel, likeCount);
+        return ProductOutputInfo.convertToInfo(productModel, brandModel, categoryModel);
     }
 }

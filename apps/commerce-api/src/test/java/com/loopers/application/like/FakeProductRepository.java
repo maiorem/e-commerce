@@ -3,11 +3,9 @@ package com.loopers.application.like;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.product.ProductSortBy;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -42,7 +40,7 @@ public class FakeProductRepository implements ProductRepository {
     }
     
     @Override
-    public Page<ProductModel> findSearchProductList(Pageable pageable, String productName, Long brandId, Long categoryId, ProductSortBy sortBy) {
+    public List<ProductModel> findSearchProductList(int size, String productName, Long brandId, Long categoryId, ProductSortBy sortBy, Long lastId, Integer lastLikesCount, Integer lastPrice, ZonedDateTime lastCreatedAt) {
         List<ProductModel> filteredProducts = products.values().stream()
                 .filter(product -> productName == null || product.getName().contains(productName))
                 .filter(product -> brandId == null || Objects.equals(product.getBrandId(), brandId))
@@ -54,16 +52,52 @@ public class FakeProductRepository implements ProductRepository {
             filteredProducts = sortProducts(filteredProducts, sortBy);
         }
         
-        // 페이징 적용
-        int start = (int) pageable.getOffset();
-        int end = Math.min((start + pageable.getPageSize()), filteredProducts.size());
-        
-        if (start > filteredProducts.size()) {
-            return new PageImpl<>(new ArrayList<>(), pageable, filteredProducts.size());
+        // 커서 기반 필터링 적용
+        if (lastId != null) {
+            filteredProducts = applyCursorFilter(filteredProducts, sortBy, lastId, lastLikesCount, lastPrice, lastCreatedAt);
         }
         
-        List<ProductModel> pageContent = filteredProducts.subList(start, end);
-        return new PageImpl<>(pageContent, pageable, filteredProducts.size());
+        // 페이지 사이즈만큼 제한
+        return filteredProducts.stream()
+                .limit(size)
+                .collect(Collectors.toList());
+    }
+
+    private List<ProductModel> applyCursorFilter(List<ProductModel> products, ProductSortBy sortBy, Long lastId, Integer lastLikesCount, Integer lastPrice, ZonedDateTime lastCreatedAt) {
+        return products.stream()
+                .filter(product -> {
+                    if (sortBy == null || sortBy == ProductSortBy.LIKES) {
+                        // 좋아요순 정렬일 때: 좋아요 수가 적거나, 같으면 ID가 작은 것
+                        if (product.getLikesCount() > lastLikesCount) return true;
+                        if (product.getLikesCount() == lastLikesCount) {
+                            return product.getId() < lastId;
+                        }
+                        return false;
+                    } else if (sortBy == ProductSortBy.LATEST) {
+                        // 최신순 정렬일 때: 생성일이 늦거나, 같으면 ID가 작은 것
+                        if (product.getCreatedAt().isAfter(lastCreatedAt)) return true;
+                        if (product.getCreatedAt().equals(lastCreatedAt)) {
+                            return product.getId() < lastId;
+                        }
+                        return false;
+                    } else if (sortBy == ProductSortBy.PRICE_ASC) {
+                        // 가격 오름차순 정렬일 때: 가격이 높거나, 같으면 ID가 큰 것
+                        if (product.getPrice() > lastPrice) return true;
+                        if (product.getPrice() == lastPrice) {
+                            return product.getId() > lastId;
+                        }
+                        return false;
+                    } else if (sortBy == ProductSortBy.PRICE_DESC) {
+                        // 가격 내림차순 정렬일 때: 가격이 낮거나, 같으면 ID가 작은 것
+                        if (product.getPrice() < lastPrice) return true;
+                        if (product.getPrice() == lastPrice) {
+                            return product.getId() < lastId;
+                        }
+                        return false;
+                    }
+                    return true;
+                })
+                .collect(Collectors.toList());
     }
     
     @Override

@@ -10,15 +10,12 @@ public class ProductSearchDomainService {
     /**
      * 상품 검색 조건 유효성 검증
      */
-    public void validateSearchCriteria(String productName, int size, int page) {
+    public void validateSearchCriteria(String productName, int size) {
         if (productName != null && productName.trim().length() < 2) {
             throw new IllegalArgumentException("상품명 검색은 2글자 이상 입력해주세요.");
         }
         if (size <= 0 || size > 100) {
             throw new IllegalArgumentException("페이지 크기는 1~100 사이여야 합니다.");
-        }
-        if (page < 0) {
-            throw new IllegalArgumentException("페이지 번호는 0 이상이어야 합니다.");
         }
     }
 

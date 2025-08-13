@@ -1,8 +1,6 @@
 package com.loopers.domain.product;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,7 +14,8 @@ public interface ProductRepository {
     
     List<ProductModel> findByCategoryId(Long categoryId);
 
-    Page<ProductModel> findSearchProductList(Pageable pageable, String productName, Long brandId, Long categoryId, ProductSortBy sortBy);
+    List<ProductModel> findSearchProductList(int size, String productName, Long brandId, Long categoryId,
+    ProductSortBy sortBy, Long lastId, Integer lastLikesCount, Integer lastPrice, ZonedDateTime lastCreatedAt);
     
     ProductModel save(ProductModel product);
 
