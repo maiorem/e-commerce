@@ -3,10 +3,8 @@ package com.loopers.application.product;
 
 import com.loopers.domain.brand.BrandModel;
 import com.loopers.domain.category.CategoryModel;
-import com.loopers.domain.like.LikeModel;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductSortBy;
-import com.loopers.domain.user.UserId;
 import com.loopers.infrastructure.brand.BrandJpaRepository;
 import com.loopers.infrastructure.category.CategoryJpaRepository;
 import com.loopers.infrastructure.like.LikeJpaRepository;
@@ -19,9 +17,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -62,15 +61,15 @@ public class ProductApplicationServiceIntegrationTest {
         class Existing_ProductList {
 
             @Test
-            @DisplayName("목록이 존재한다면 최신 등록순으로 목록을 조회할 수 있다.")
+            @DisplayName("목록이 존재한다면 인기순으로 목록을 조회할 수 있다.")
             void getProductList() {
                 // given
-                ProductModel product1 = ProductModel.builder().brandId(1L).categoryId(1L).name("Nike Air").description("스포츠 신발").price(100000).stock(100).build();
-                ProductModel product2 = ProductModel.builder().brandId(2L).categoryId(2L).name("Samsung Galaxy S23").description("스마트폰").price(100000).stock(100).build();
-                ProductModel product3 = ProductModel.builder().brandId(3L).categoryId(1L).name("Adidas Superstar").description("스포츠 신발").price(100000).stock(100).build();
-                ProductModel product4 = ProductModel.builder().brandId(4L).categoryId(2L).name("Apple iPhone 15").description("스마트폰").price(100000).stock(100).build();
-                ProductModel product5 = ProductModel.builder().brandId(5L).categoryId(3L).name("Dyson").description("청소기").price(100000).stock(100).build();
-                ProductModel product6 = ProductModel.builder().brandId(6L).categoryId(2L).name("LG OLED TV").description("고급 TV").price(2000000).stock(50).build();
+                ProductModel product1 = ProductModel.builder().brandId(1L).categoryId(1L).name("Nike Air").description("스포츠 신발").price(100000).stock(100).likesCount(1000).build();
+                ProductModel product2 = ProductModel.builder().brandId(2L).categoryId(2L).name("Samsung Galaxy S23").description("스마트폰").price(100000).stock(100).likesCount(500).build();
+                ProductModel product3 = ProductModel.builder().brandId(3L).categoryId(1L).name("Adidas Superstar").description("스포츠 신발").price(100000).stock(100).likesCount(1).build();
+                ProductModel product4 = ProductModel.builder().brandId(4L).categoryId(2L).name("Apple iPhone 15").description("스마트폰").price(100000).stock(100).likesCount(1500).build();
+                ProductModel product5 = ProductModel.builder().brandId(5L).categoryId(3L).name("Dyson").description("청소기").price(100000).stock(100).likesCount(25).build();
+                ProductModel product6 = ProductModel.builder().brandId(6L).categoryId(2L).name("LG OLED TV").description("고급 TV").price(2000000).stock(50).likesCount(590).build();
                 productJpaRepository.save(product1);
                 productJpaRepository.save(product2);
                 productJpaRepository.save(product3);
@@ -78,14 +77,15 @@ public class ProductApplicationServiceIntegrationTest {
                 productJpaRepository.save(product5);
                 productJpaRepository.save(product6);
 
-                Pageable pageable = PageRequest.of(0, 10);
-                ProductQuery query = ProductQuery.from(null, null, null, null, pageable.getPageNumber(), pageable.getPageSize());
+                ProductQuery query = ProductQuery.from(null, null, null, null, 20, null, null, null, null);
                 // when
-                Page<ProductOutputInfo> productList = productApplicationService.getProductList(pageable, query);
+                List<ProductOutputInfo> productList = productApplicationService.getProductList(query);
 
                 // then
                 assertThat(productList).isNotNull();
-                assertThat(productList.getContent()).hasSize(6);
+                assertThat(productList).hasSize(6);
+                assertThat(productList.get(0).name()).isEqualTo("Apple iPhone 15");
+                assertThat(productList.get(1).name()).isEqualTo("Nike Air");
             }
 
             @Test
@@ -105,15 +105,14 @@ public class ProductApplicationServiceIntegrationTest {
                 productJpaRepository.save(product5);
                 productJpaRepository.save(product6);
 
-                Pageable pageable = PageRequest.of(0, 10);
-                ProductQuery query = ProductQuery.from(null, null, null, ProductSortBy.PRICE_ASC, pageable.getPageNumber(), pageable.getPageSize());
+                ProductQuery query = ProductQuery.from(null, null, null, ProductSortBy.PRICE_ASC, 20, null, null, null, null);
                 // when
-                Page<ProductOutputInfo> productList = productApplicationService.getProductList(pageable, query);
+                List<ProductOutputInfo> productList = productApplicationService.getProductList(query);
 
                 // then
                 assertThat(productList).isNotNull();
-                assertThat(productList.getContent()).hasSize(6);
-                assertThat(productList.getContent().get(0).price()).isEqualTo(50000);
+                assertThat(productList).hasSize(6);
+                assertThat(productList.get(0).name()).isEqualTo("Nike Air");
             }
 
             @Test
@@ -134,15 +133,14 @@ public class ProductApplicationServiceIntegrationTest {
                 productJpaRepository.save(product5);
                 productJpaRepository.save(product6);
 
-                Pageable pageable = PageRequest.of(0, 10);
-                ProductQuery query = ProductQuery.from(null, null, null, ProductSortBy.PRICE_DESC, pageable.getPageNumber(), pageable.getPageSize());
+                ProductQuery query = ProductQuery.from(null, null, null, ProductSortBy.PRICE_DESC, 20, null, null, null, null);
                 // when
-                Page<ProductOutputInfo> productList = productApplicationService.getProductList(pageable, query);
+                List<ProductOutputInfo> productList = productApplicationService.getProductList(query);
 
                 // then
                 assertThat(productList).isNotNull();
-                assertThat(productList.getContent()).hasSize(6);
-                assertThat(productList.getContent().get(0).price()).isEqualTo(2000000);
+                assertThat(productList).hasSize(6);
+                assertThat(productList.get(0).name()).isEqualTo("LG OLED TV");
 
             }
 
@@ -165,16 +163,14 @@ public class ProductApplicationServiceIntegrationTest {
                 productJpaRepository.save(product5);
                 productJpaRepository.save(product6);
 
-                Pageable pageable = PageRequest.of(0, 10);
-                ProductQuery query = ProductQuery.from(null, null, "스포츠", ProductSortBy.PRICE_ASC, pageable.getPageNumber(), pageable.getPageSize());
+                ProductQuery query = ProductQuery.from(null, null, saved.getId(), null, 20, null, null, null, null);
                 // when
-                Page<ProductOutputInfo> productList = productApplicationService.getProductList(pageable, query);
+                List<ProductOutputInfo> productList = productApplicationService.getProductList(query);
 
                 // then
                 assertThat(productList).isNotNull();
-                assertThat(productList.getContent()).hasSize(2);
-                assertThat(productList.getContent().get(0).name()).isEqualTo("Nike Air");
-                assertThat(productList.getContent().get(1).name()).isEqualTo("Adidas Superstar");
+                assertThat(productList).hasSize(2);
+                assertThat(productList.get(0).categoryName()).isEqualTo("스포츠");
             }
 
             @Test
@@ -197,15 +193,14 @@ public class ProductApplicationServiceIntegrationTest {
                 productJpaRepository.save(product5);
                 productJpaRepository.save(product6);
 
-                Pageable pageable = PageRequest.of(0, 10);
-                ProductQuery query = ProductQuery.from(null, "Apple", null, null, pageable.getPageNumber(), pageable.getPageSize());
+                ProductQuery query = ProductQuery.from(null, saved.getId(), null, null, 20, null, null, null, null);
                 // when
-                Page<ProductOutputInfo> productList = productApplicationService.getProductList(pageable, query);
+                List<ProductOutputInfo> productList = productApplicationService.getProductList(query);
 
                 // then
                 assertThat(productList).isNotNull();
-                assertThat(productList.getContent()).hasSize(2);
-                assertThat(productList.getContent().get(0).brandId()).isEqualTo(product3.getBrandId());
+                assertThat(productList).hasSize(2);
+                assertThat(productList.get(0).brandName()).isEqualTo("Apple");
             }
 
             @Test
@@ -226,14 +221,14 @@ public class ProductApplicationServiceIntegrationTest {
                 productJpaRepository.save(product6);
 
                 Pageable pageable = PageRequest.of(0, 10);
-                ProductQuery query = ProductQuery.from("OLED", null, null, null, pageable.getPageNumber(), pageable.getPageSize());
+                ProductQuery query = ProductQuery.from("Nike", null, null, null, 20, null, null, null, null);
                 // when
-                Page<ProductOutputInfo> productList = productApplicationService.getProductList(pageable, query);
+                List<ProductOutputInfo> productList = productApplicationService.getProductList( query);
 
                 // then
                 assertThat(productList).isNotNull();
-                assertThat(productList.getContent()).hasSize(1);
-                assertThat(productList.getContent().get(0).name()).isEqualTo("LG OLED TV");
+                assertThat(productList).hasSize(1);
+                assertThat(productList.get(0).name()).isEqualTo("Nike Air");
             }
 
             @Test
@@ -241,10 +236,10 @@ public class ProductApplicationServiceIntegrationTest {
             void getEmptyProductList() {
                 // given
                 Pageable pageable = PageRequest.of(0, 10);
-                ProductQuery query = ProductQuery.from(null, null, null, null, pageable.getPageNumber(), pageable.getPageSize());
+                ProductQuery query = ProductQuery.from(null, null, null, null, 20, null, null, null, null);
 
                 // when
-                Page<ProductOutputInfo> productList = productApplicationService.getProductList(pageable, query);
+                List<ProductOutputInfo> productList = productApplicationService.getProductList(query);
 
                 // then
                 assertThat(productList).isEmpty();
@@ -330,15 +325,9 @@ public class ProductApplicationServiceIntegrationTest {
                         .description("스포츠 신발")
                         .price(100000)
                         .stock(100)
-                        .likesCount(0) // 좋아요 수를 3으로 설정
+                        .likesCount(3)
                         .build();
                 ProductModel savedProduct = productJpaRepository.save(product);
-                LikeModel likeModel1 = LikeModel.create(UserId.of("user1"), savedProduct.getId());
-                LikeModel likeModel2 = LikeModel.create(UserId.of("user2"), savedProduct.getId());
-                LikeModel likeModel3 = LikeModel.create(UserId.of("user3"), savedProduct.getId());
-                likeJpaRepository.save(likeModel1);
-                likeJpaRepository.save(likeModel2);
-                likeJpaRepository.save(likeModel3);
 
                 // when
                 ProductOutputInfo productDetail = productApplicationService.getProductDetail(savedProduct.getId());

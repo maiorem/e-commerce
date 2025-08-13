@@ -4,6 +4,8 @@ import com.loopers.domain.brand.BrandModel;
 import com.loopers.domain.category.CategoryModel;
 import com.loopers.domain.product.ProductModel;
 
+import java.time.ZonedDateTime;
+
 public record ProductOutputInfo(
         Long id,
         String name,
@@ -18,13 +20,14 @@ public record ProductOutputInfo(
 
         Long categoryId,
         String categoryName,
-        String categoryDescription
+        String categoryDescription,
+
+        ZonedDateTime lastCreatedAt
 ) {
     public static ProductOutputInfo convertToInfo(
             ProductModel productModel,
             BrandModel brandModel,
-            CategoryModel categoryModel,
-            int likeCount
+            CategoryModel categoryModel
     ) {
         return new ProductOutputInfo(
                 productModel.getId(),
@@ -32,13 +35,14 @@ public record ProductOutputInfo(
                 productModel.getDescription(),
                 productModel.getPrice(),
                 productModel.getStock(),
-                likeCount,
+                productModel.getLikesCount(),
                 (brandModel != null) ? brandModel.getId() : null,
                 (brandModel != null) ? brandModel.getName() : null,
                 (brandModel != null) ? brandModel.getDescription() : null,
                 (categoryModel != null) ? categoryModel.getId() : null,
                 (categoryModel != null) ? categoryModel.getName() : null,
-                (categoryModel != null) ? categoryModel.getDescription() : null
+                (categoryModel != null) ? categoryModel.getDescription() : null,
+                productModel.getCreatedAt()
         );
     }
 }

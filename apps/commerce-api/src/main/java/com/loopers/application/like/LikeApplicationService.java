@@ -46,10 +46,10 @@ public class LikeApplicationService {
     public void like(UserId userId, Long productId) {
         ProductModel product = productRepository.findById(productId)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "상품이 존재하지 않습니다."));
-        
+
         // 도메인 서비스를 통한 좋아요 추가
         LikeModel like = productLikeDomainService.addLike(product, userId);
-        
+
         // null이 반환되면 이미 좋아요가 되어 있는 상태이므로 아무 동작도 하지 않음
         if (like != null) {
             likeRepository.save(like);
@@ -65,10 +65,10 @@ public class LikeApplicationService {
     public void unlike(UserId userId, Long productId) {
         ProductModel product = productRepository.findById(productId)
                 .orElseThrow(() -> new CoreException(ErrorType.NOT_FOUND, "상품이 존재하지 않습니다."));
-        
+
         // 도메인 서비스를 통한 좋아요 제거
         LikeModel like = productLikeDomainService.removeLike(product, userId);
-        
+
         // null이 반환되면 이미 좋아요가 취소되어 있는 상태이므로 아무 동작도 하지 않음
         if (like != null) {
             likeRepository.delete(like);
@@ -95,13 +95,13 @@ public class LikeApplicationService {
         }
 
         Map<Long, ProductModel> productMap = productRepository.findAllByIds(productIds)
-                                                .stream()
-                                                .collect(Collectors.toMap(ProductModel::getId, product -> product));
+                .stream()
+                .collect(Collectors.toMap(ProductModel::getId, product -> product));
 
         List<ProductOutputInfo> productOutputInfoList = new ArrayList<>();
 
         for (Long productId : productIds) {
-            ProductModel productModel = productMap.get(productId); 
+            ProductModel productModel = productMap.get(productId);
 
             // 만약 좋아요 기록은 있으나 상품이 삭제되어 없을 경우 
             if (productModel == null) {
@@ -112,20 +112,18 @@ public class LikeApplicationService {
             if (productModel.getBrandId() != null) {
                 brandModel = brandRepository.findById(productModel.getBrandId()).orElse(null);
             }
-            
+
             CategoryModel categoryModel = null;
             if (productModel.getCategoryId() != null) {
                 categoryModel = categoryRepository.findById(productModel.getCategoryId()).orElse(null);
             }
 
-            int currentLikesCount = productModel.getLikesCount(); 
-
-            ProductOutputInfo outputInfo = ProductOutputInfo.convertToInfo(productModel, brandModel, categoryModel, currentLikesCount);
+            ProductOutputInfo outputInfo = ProductOutputInfo.convertToInfo(productModel, brandModel, categoryModel);
             productOutputInfoList.add(outputInfo);
         }
 
         return productOutputInfoList;
-        
+
     }
 
 }

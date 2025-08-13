@@ -3,24 +3,33 @@ package com.loopers.application.product;
 import com.loopers.domain.product.ProductSortBy;
 import lombok.Getter;
 
+import java.time.ZonedDateTime;
+
 @Getter
 public class ProductQuery {
 
     private String productName;
-    private String brandName;
-    private String categoryName;
+    private Long brandId;
+    private Long categoryId;
     private ProductSortBy sortBy;
-    private int page;
     private int size;
+    private Long lastId;
+    private Integer lastLikesCount;
+    private Integer lastPrice;
+    private ZonedDateTime lastCreatedAt;
 
-    public static ProductQuery from(String productName, String brandName, String categoryName, ProductSortBy sortBy, int page, int size) {
+    public static ProductQuery from(String productName, Long brandId, Long categoryId, ProductSortBy sortBy, int size,
+                                    Long lastId, Integer lastLikesCount, Integer lastPrice, String lastCreatedAt) {
         ProductQuery info = new ProductQuery();
         info.productName = productName;
-        info.brandName = brandName;
-        info.categoryName = categoryName;
+        info.brandId = brandId;
+        info.categoryId = categoryId;
         info.sortBy = sortBy;
-        info.page = page;
         info.size = size;
+        info.lastId = lastId;
+        info.lastLikesCount = lastLikesCount;
+        info.lastPrice = lastPrice;
+        info.lastCreatedAt = lastCreatedAt != null ? ZonedDateTime.parse(lastCreatedAt) : null;
         return info;
     }
 

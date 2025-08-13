@@ -62,51 +62,37 @@ class ProductSearchDomainServiceTest {
         void validateSearchCriteriaShortProductName() {
             // given
             String productName ="a";
-            int page = 0;
-            int size = 10;
-
-            // when & then
-            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
-                    .isInstanceOf(IllegalArgumentException.class);
-        }
-
-        @Test
-        @DisplayName("페이지 크기가 0 이하면 예외가 발생한다.")
-        void validateSearchCriteriaInvalidPageSize() {
-            // given
-            String productName ="a";
-            int page = 0;
             int size = 0;
+
             // when & then
-            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
+            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
-        @DisplayName("페이지 크기가 100을 초과하면 예외가 발생한다.")
-        void validateSearchCriteriaTooLargePageSize() {
+        @DisplayName("페이지 사이즈가 음수면 예외가 발생한다.")
+        void validateSearchCriteriaZeroOrNegativePageSize() {
             // given
-            String productName ="a";
-            int page = 0;
+            String productName = "상품";
+            int size = -1;
+
+            // when & then
+            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("페이지 사이즈가 100보다 크면 예외가 발생한다.")
+        void validateSearchCriteriaPageSizeTooLarge() {
+            // given
+            String productName = "상품";
             int size = 101;
 
             // when & then
-            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
+            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
-        @Test
-        @DisplayName("페이지 번호가 음수이면 예외가 발생한다.")
-        void validateSearchCriteriaNegativePage() {
-            // given
-            String productName ="a";
-            int page = -1;
-            int size = 1;
-
-            // when & then
-            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
-                    .isInstanceOf(IllegalArgumentException.class);
-        }
     }
 
     @Nested
