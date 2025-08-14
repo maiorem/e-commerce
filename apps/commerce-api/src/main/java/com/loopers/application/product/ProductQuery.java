@@ -24,7 +24,7 @@ public class ProductQuery {
         info.productName = productName;
         info.brandId = brandId;
         info.categoryId = categoryId;
-        info.sortBy = sortBy;
+        info.sortBy = sortBy != null ? sortBy : ProductSortBy.LIKES;
         info.size = size;
         info.lastId = lastId;
         info.lastLikesCount = lastLikesCount;

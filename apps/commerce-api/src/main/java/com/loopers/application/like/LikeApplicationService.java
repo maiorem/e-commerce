@@ -25,6 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -94,9 +96,26 @@ public class LikeApplicationService {
             return new ArrayList<>();
         }
 
+        // 모든 상품 정보를 한 번에 조회
         Map<Long, ProductModel> productMap = productRepository.findAllByIds(productIds)
                 .stream()
                 .collect(Collectors.toMap(ProductModel::getId, product -> product));
+
+        // 모든 브랜드 ID와 카테고리 ID를 수집
+        Set<Long> brandIds = productMap.values().stream()
+                .map(ProductModel::getBrandId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Set<Long> categoryIds = productMap.values().stream()
+                .map(ProductModel::getCategoryId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // 모든 브랜드/카테고리 정보를 한 번에 조회
+        Map<Long, BrandModel> brandMap = brandRepository.findAllById(brandIds).stream()
+                .collect(Collectors.toMap(BrandModel::getId, brand -> brand));
+        Map<Long, CategoryModel> categoryMap = categoryRepository.findAllById(categoryIds).stream()
+                .collect(Collectors.toMap(CategoryModel::getId, category -> category));
 
         List<ProductOutputInfo> productOutputInfoList = new ArrayList<>();
 
@@ -108,15 +127,8 @@ public class LikeApplicationService {
                 continue; // 일단 스킵하고 다음 좋아요 기록으로 넘어감
             }
 
-            BrandModel brandModel = null;
-            if (productModel.getBrandId() != null) {
-                brandModel = brandRepository.findById(productModel.getBrandId()).orElse(null);
-            }
-
-            CategoryModel categoryModel = null;
-            if (productModel.getCategoryId() != null) {
-                categoryModel = categoryRepository.findById(productModel.getCategoryId()).orElse(null);
-            }
+            BrandModel brandModel = brandMap.get(productModel.getBrandId());
+            CategoryModel categoryModel = categoryMap.get(productModel.getCategoryId());
 
             ProductOutputInfo outputInfo = ProductOutputInfo.convertToInfo(productModel, brandModel, categoryModel);
             productOutputInfoList.add(outputInfo);

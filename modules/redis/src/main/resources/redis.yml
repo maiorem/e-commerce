@@ -2,61 +2,44 @@ spring:
   config:
     activate:
       on-profile: local, test
-
-datasource:
   redis:
+    host: localhost
+    port: 6379
     database: 0
-    master:
-      host: localhost
-      port: 6379
-    replicas:
-      - host: localhost
-        port: 6380
+    timeout: 50ms
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1ms
 
 ---
 spring:
   config:
     activate:
       on-profile: dev
-
-datasource:
   redis:
+    host: redis-master
+    port: 6379
     database: 0
-    master:
-      host: redis-master
-      port: 6379
-    replicas:
-      - host: redis-replica-1
-        port: 6379
 
 ---
 spring:
   config:
     activate:
       on-profile: qa
-
-datasource:
   redis:
+    host: redis-master
+    port: 6379
     database: 0
-    master:
-      host: redis-master
-      port: 6379
-    replicas:
-      - host: redis-replica-1
-        port: 6379
 
 ---
 spring:
   config:
     activate:
       on-profile: prd
-
-datasource:
   redis:
+    host: redis-master
+    port: 6379
     database: 0
-    master:
-      host: redis-master
-      port: 6379
-    replicas:
-      - host: redis-replica-1
-        port: 6379
