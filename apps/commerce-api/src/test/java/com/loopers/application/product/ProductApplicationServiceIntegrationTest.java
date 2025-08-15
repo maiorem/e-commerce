@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.List;
 
@@ -41,13 +42,16 @@ public class ProductApplicationServiceIntegrationTest {
     private LikeJpaRepository likeJpaRepository;
 
     @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
     private DatabaseCleanUp databaseCleanUp;
 
     @AfterEach
     void tearDown() {
         databaseCleanUp.truncateAllTables();
+        redisTemplate.getConnectionFactory().getConnection().flushAll();
     }
-
 
     @Nested
     @DisplayName("상품 목록 조회 시,")
@@ -357,8 +361,7 @@ public class ProductApplicationServiceIntegrationTest {
 
                 // then
                 assertThat(productList).isNotNull();
-                assertThat(productList).hasSize(2);
-                // 카테고리 필터링이 제대로 작동하는지 확인
+                assertThat(productList).hasSize(2);            
                 assertThat(productList).allMatch(product -> product.categoryName() != null);
             }
 
@@ -437,7 +440,6 @@ public class ProductApplicationServiceIntegrationTest {
                 // then
                 assertThat(productList).isNotNull();
                 assertThat(productList).hasSize(2);
-                // 브랜드 필터링이 제대로 작동하는지 확인
                 assertThat(productList).allMatch(product -> product.brandName() != null);
             }
 

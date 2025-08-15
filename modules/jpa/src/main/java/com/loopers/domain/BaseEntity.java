@@ -1,8 +1,13 @@
 package com.loopers.domain;
 
+import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.*;
 import lombok.Getter;
+
 
 import java.io.Serializable;
 import java.time.ZonedDateTime;
@@ -13,11 +18,8 @@ import java.time.ZonedDateTime;
  */
 @MappedSuperclass
 @Getter
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "@class")
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class BaseEntity implements Serializable {
-
-    protected BaseEntity() {}
-
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
