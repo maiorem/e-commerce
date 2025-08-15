@@ -1,5 +1,6 @@
 package com.loopers.domain.product;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.loopers.domain.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -9,6 +10,7 @@ import lombok.Getter;
 @Entity
 @Table(name = "product")
 @Getter
+@JsonTypeName("ProductModel")
 public class ProductModel extends BaseEntity {
 
     private Long brandId;

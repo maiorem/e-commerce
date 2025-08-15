@@ -361,7 +361,7 @@ public class ProductApplicationServiceIntegrationTest {
 
                 // then
                 assertThat(productList).isNotNull();
-                assertThat(productList).hasSize(2);
+                assertThat(productList).hasSize(2);            
                 assertThat(productList).allMatch(product -> product.categoryName() != null);
             }
 
