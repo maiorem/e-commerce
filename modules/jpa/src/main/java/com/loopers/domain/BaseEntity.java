@@ -4,10 +4,6 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import jakarta.persistence.*;
-import lombok.Getter;
-
 
 import java.io.Serializable;
 import java.time.ZonedDateTime;
