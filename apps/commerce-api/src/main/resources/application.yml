@@ -29,6 +29,9 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+cache:
+  type: redis
+
 ---
 spring:
   config:

@@ -31,13 +31,14 @@ datasource:
         rewriteBatchedStatements: true
 
 ---
-spring.config.activate.on-profile: local
-
 spring:
+  config:
+    activate:
+      on-profile: local
   jpa:
     show-sql: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
 
 datasource:
   mysql-jpa:
@@ -47,9 +48,10 @@ datasource:
       password: application
 
 ---
-spring.config.activate.on-profile: test
-
 spring:
+  config:
+    activate:
+      on-profile: test
   jpa:
     show-sql: true
     hibernate:
@@ -62,9 +64,10 @@ datasource:
       minimum-idle: 5
 
 ---
-spring.config.activate.on-profile: dev
-
 spring:
+  config:
+    activate:
+      on-profile: dev
   jpa:
     show-sql: true
 
@@ -76,7 +79,10 @@ datasource:
       password: application
 
 ---
-spring.config.activate.on-profile: qa
+spring:
+  config:
+    activate:
+      on-profile: qa
 
 datasource:
   mysql-jpa:
@@ -86,7 +92,10 @@ datasource:
       password: application
 
 ---
-spring.config.activate.on-profile: prd
+spring:
+  config:
+    activate:
+      on-profile: prd
 
 datasource:
   mysql-jpa:

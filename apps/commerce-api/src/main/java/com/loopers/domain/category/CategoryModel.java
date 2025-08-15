@@ -1,5 +1,6 @@
 package com.loopers.domain.category;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.loopers.domain.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -8,6 +9,7 @@ import lombok.Getter;
 @Entity
 @Table(name = "category")
 @Getter
+@JsonTypeName("CategoryModel")
 public class CategoryModel extends BaseEntity {
 
     private String name;

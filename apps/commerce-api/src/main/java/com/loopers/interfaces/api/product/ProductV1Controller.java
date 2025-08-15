@@ -28,34 +28,30 @@ public class ProductV1Controller implements ProductV1ApiSpec {
                 request.productName(), request.brandId(), request.categoryId(), request.sortBy(), request.pageSize(),
                 request.lastId(), request.lastLikesCount(), request.lastPrice(), request.lastCreatedAt());
 
+
         ProductQuery query = ProductQuery.from(
                 request.productName(), request.brandId(), request.categoryId(), request.sortBy(),
-                request.pageSize(), request.lastId(), request.lastLikesCount(), request.lastPrice(),
-                request.lastCreatedAt()
+                request.pageSize(), request.lastId(), request.lastLikesCount(), request.lastPrice(), request.lastCreatedAt()
         );
         
-
         List<ProductOutputInfo> products = productApplicationService.getProductList(query);
 
-        ProductV1Dto.ProductListResponse response = ProductV1Dto.ProductListResponse.from(products, request.pageSize());
+        ProductV1Dto.ProductListResponse responseBody = ProductV1Dto.ProductListResponse.from(products, request.pageSize());
 
-        return ApiResponse.success(response);
+        return ApiResponse.success(responseBody);
     }
 
     @Override
     @GetMapping("/{productId}")
     public ApiResponse<ProductV1Dto.ProductResponseDto> getProductDetail(
-            Long productId
-    ) {
-        log.info("상품 상세 조회 요청 - productId: {}", productId);
+            Long productId) {
 
         ProductOutputInfo product = productApplicationService.getProductDetail(productId);
-        ProductV1Dto.ProductResponseDto response = ProductV1Dto.ProductResponseDto.from(
+        ProductV1Dto.ProductResponseDto responseBody = ProductV1Dto.ProductResponseDto.from(
                 product.id(), product.name(), product.brandName(), product.categoryName(),
                 product.price(), product.likeCount(), product.stock()
         );
 
-        log.info("상품 상세 조회 완료 - productId: {}, name: {}", productId, product.name());
-        return ApiResponse.success(response);
+        return ApiResponse.success(responseBody);
     }
 }

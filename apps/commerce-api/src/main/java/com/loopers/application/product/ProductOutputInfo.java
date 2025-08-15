@@ -1,11 +1,13 @@
 package com.loopers.application.product;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.loopers.domain.brand.BrandModel;
 import com.loopers.domain.category.CategoryModel;
 import com.loopers.domain.product.ProductModel;
 
 import java.time.ZonedDateTime;
 
+@JsonTypeName("ProductOutputInfo")
 public record ProductOutputInfo(
         Long id,
         String name,

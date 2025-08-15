@@ -25,6 +25,13 @@ dependencies {
 
     // aspects
     implementation("org.springframework:spring-aspects")
+
+    // Spring Cache
+    implementation("org.springframework.boot:spring-boot-starter-cache")
+
+    // Redis Cache
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+
 }
 
 // LargeSeeder 실행을 위한 태스크
@@ -47,4 +54,8 @@ tasks.register("runLargeSeeder", JavaExec::class) {
     environment("MYSQL_USER", "application")
     environment("MYSQL_PASSWORD", "application")
     environment("MYSQL_DATABASE", "loopers")
+}
+
+tasks.withType<org.springframework.boot.gradle.tasks.run.BootRun> {
+    jvmArgs = listOf("-Xmx4g", "-XX:+HeapDumpOnOutOfMemoryError", "-XX:HeapDumpPath=./dumps/")
 }
