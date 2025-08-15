@@ -18,6 +18,13 @@ spring:
         maximum-pool-size: 10
         minimum-idle: 5
 
+    redis:
+      database: 0
+      master:
+        host: ${datasource.redis.master.host:localhost}
+        port: ${datasource.redis.master.port:6379}
+      replicas: []
+
 logging:
   level:
     com.loopers: DEBUG

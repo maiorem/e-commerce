@@ -139,13 +139,6 @@ public class ProductApplicationService {
      */
     public ProductOutputInfo getProductDetail(Long id) {
 
-        // 상품 상세 캐시에서 조회 시도
-        Optional<ProductOutputInfo> cached = productCacheService.getCachedProductDetail(id);
-        if (cached.isPresent()) {
-            return cached.get();
-        }
-
-        // 캐시 미스 시 DB 조회
         ProductModel productModel = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 상품을 찾을 수 없습니다."));
 
@@ -161,9 +154,7 @@ public class ProductApplicationService {
         }
 
         ProductOutputInfo result = ProductOutputInfo.convertToInfo(productModel, brandModel, categoryModel);
-        
-        productCacheService.cacheProductDetail(id, result);
-        
+
         return result;
     }
 }

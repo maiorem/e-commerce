@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Import;
 
 import com.loopers.support.config.TestConfig;
 import com.loopers.utils.DatabaseCleanUp;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.List;
 
@@ -36,12 +37,17 @@ public class CategoryApplicationServiceIntegrationTest {
     @Autowired
     private ProductJpaRepository productJpaRepository;
 
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
+
     @Autowired
     private DatabaseCleanUp databaseCleanUp;
 
     @AfterEach
     void tearDown() {
         databaseCleanUp.truncateAllTables();
+        redisTemplate.getConnectionFactory().getConnection().flushAll();
     }
 
     @Nested
@@ -68,7 +74,6 @@ public class CategoryApplicationServiceIntegrationTest {
                 assertThat(categoryList).hasSize(2);
                 assertThat(categoryList).extracting("name").containsExactlyInAnyOrder("Electronics", "Clothing");
             }
-
 
         }
 
@@ -102,14 +107,62 @@ public class CategoryApplicationServiceIntegrationTest {
             void getCategoryDetail() {
                 // given
                 CategoryModel category = CategoryModel.of("Electronics", "전자제품");
-                categoryJpaRepository.save(category);
+                CategoryModel savedCategory = categoryJpaRepository.save(category);
 
-                ProductModel product1 = ProductModel.builder().categoryId(10L).name("").description("스포츠 신발").price(100000).stock(100).build();
-                ProductModel product2 = ProductModel.builder().categoryId(category.getId()).name("Samsung Galaxy S23").description("스마트폰").price(100000).stock(100).build();
-                ProductModel product3 = ProductModel.builder().categoryId(10L).name("Adidas Superstar").description("스포츠 신발").price(100000).stock(100).build();
-                ProductModel product4 = ProductModel.builder().categoryId(category.getId()).name("Apple iPhone 15").description("스마트폰").price(100000).stock(100).build();
-                ProductModel product5 = ProductModel.builder().categoryId(14L).name("Dyson").description("청소기").price(100000).stock(100).build();
-                ProductModel product6 = ProductModel.builder().categoryId(category.getId()).name("LG OLED TV").description("고급 TV").price(2000000).stock(50).build();
+                ProductModel product1 = ProductModel.builder()
+                    .brandId(1L)
+                    .categoryId(999L)
+                    .name("Nike Air")
+                    .description("스포츠 신발")
+                    .price(100000)
+                    .stock(100)
+                    .likesCount(0)
+                    .build();
+                ProductModel product2 = ProductModel.builder()
+                    .brandId(2L)
+                    .categoryId(savedCategory.getId())
+                    .name("Samsung Galaxy S23")
+                    .description("스마트폰")
+                    .price(100000)
+                    .stock(100)
+                    .likesCount(0)
+                    .build();
+                ProductModel product3 = ProductModel.builder()
+                    .brandId(3L)
+                    .categoryId(999L)
+                    .name("Adidas Superstar")
+                    .description("스포츠 신발")
+                    .price(100000)
+                    .stock(100)
+                    .likesCount(0)
+                    .build();
+                ProductModel product4 = ProductModel.builder()
+                    .brandId(4L)
+                    .categoryId(savedCategory.getId())
+                    .name("Apple iPhone 15")
+                    .description("스마트폰")
+                    .price(100000)
+                    .stock(100)
+                    .likesCount(0)
+                    .build();
+                ProductModel product5 = ProductModel.builder()
+                    .brandId(5L)
+                    .categoryId(999L)
+                    .name("Dyson")
+                    .description("청소기")
+                    .price(100000)
+                    .stock(100)
+                    .likesCount(0)
+                    .build();
+                ProductModel product6 = ProductModel.builder()
+                    .brandId(6L)
+                    .categoryId(savedCategory.getId())
+                    .name("LG OLED TV")
+                    .description("고급 TV")
+                    .price(2000000)
+                    .stock(50)
+                    .likesCount(0)
+                    .build();
                 productJpaRepository.save(product1);
                 productJpaRepository.save(product2);
                 productJpaRepository.save(product3);
@@ -117,14 +170,13 @@ public class CategoryApplicationServiceIntegrationTest {
                 productJpaRepository.save(product5);
                 productJpaRepository.save(product6);
 
-
                 // when
-                CategoryModel categoryDetail = categoryApplicationService.getCategoryDetail(category.getId());
+                CategoryModel categoryDetail = categoryApplicationService.getCategoryDetail(savedCategory.getId());
 
                 // then
                 assertThat(categoryDetail).isNotNull();
-                assertThat(categoryDetail.getName()).isEqualTo(category.getName());
-                assertThat(categoryApplicationService.getProductList(categoryDetail.getId())).hasSize(3);
+                assertThat(categoryDetail.getName()).isEqualTo(savedCategory.getName());
+                assertThat(categoryApplicationService.getProductList(savedCategory.getId())).hasSize(3);
             }
 
             @Test
@@ -132,14 +184,14 @@ public class CategoryApplicationServiceIntegrationTest {
             void getCategoryDetailWithNoProducts() {
                 // given
                 CategoryModel category = CategoryModel.of("Electronics", "전자제품");
-                categoryJpaRepository.save(category); // 카테고리를 먼저 저장
+                CategoryModel savedCategory = categoryJpaRepository.save(category);
 
                 // when
-                CategoryModel categoryDetail = categoryApplicationService.getCategoryDetail(category.getId());
+                CategoryModel categoryDetail = categoryApplicationService.getCategoryDetail(savedCategory.getId());
 
                 // then
                 assertThat(categoryDetail).isNotNull();
-                assertThat(categoryApplicationService.getProductList(categoryDetail.getId())).isEmpty();
+                assertThat(categoryApplicationService.getProductList(savedCategory.getId())).isEmpty();
             }
 
         }
@@ -160,5 +212,4 @@ public class CategoryApplicationServiceIntegrationTest {
 
     }
 
-    
 }

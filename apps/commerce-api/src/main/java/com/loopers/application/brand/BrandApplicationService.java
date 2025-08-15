@@ -24,7 +24,7 @@ public class BrandApplicationService {
     /**
      * 브랜드 목록 조회 (캐싱 적용)
      */
-    @Cacheable(value = "brand", key = "'list'")
+    @Cacheable(value = "brandList", key = "'list'")
     public List<BrandModel> getBrandList() {
         log.info("브랜드 목록 DB 조회 (캐시 미스)");
         return brandRepository.findAll();

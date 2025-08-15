@@ -43,13 +43,15 @@ public class RedisCacheRepositoryImpl implements CacheRepository {
                 return Optional.empty();
             }
             
-            // 타입 안전성 확인
-            if (clazz.isInstance(value)) {
+            // Explicitly convert LinkedHashMap to target class using objectMapper
+            T convertedValue = objectMapper.convertValue(value, clazz);
+
+            if (convertedValue != null) {
                 log.debug("Redis 캐시 조회 완료 - 키: {}", key);
-                return Optional.of(clazz.cast(value));
+                return Optional.of(convertedValue);
             } else {
-                log.warn("Redis 캐시 타입 불일치 - 키: {}, 예상 타입: {}, 실제 타입: {}", 
-                    key, clazz.getSimpleName(), value.getClass().getSimpleName());
+                log.warn("Redis 캐시 변환 실패 - 키: {}, 예상 타입: {}, 실제 값: {}", 
+                    key, clazz.getSimpleName(), value);
                 return Optional.empty();
             }
         } catch (Exception e) {
@@ -66,19 +68,12 @@ public class RedisCacheRepositoryImpl implements CacheRepository {
                 return Optional.empty();
             }
             
-            // List 타입 확인 및 변환
             if (value instanceof List<?> list) {
-                // List의 모든 요소가 clazz 타입인지 확인
-                boolean allMatch = list.stream().allMatch(clazz::isInstance);
-                if (allMatch) {
-                    @SuppressWarnings("unchecked")
-                    List<T> typedList = (List<T>) list;
-                    log.debug("Redis List 캐시 조회 완료 - 키: {}", key);
-                    return Optional.of(typedList);
-                } else {
-                    log.warn("Redis List 캐시 타입 불일치 - 키: {}, 예상 타입: {}", key, clazz.getSimpleName());
-                    return Optional.empty();
-                }
+                List<T> typedList = list.stream()
+                                        .map(element -> objectMapper.convertValue(element, clazz))
+                                        .collect(java.util.stream.Collectors.toList());
+                log.debug("Redis List 캐시 조회 완료 - 키: {}", key);
+                return Optional.of(typedList);
             } else {
                 log.warn("Redis 캐시가 List 타입이 아님 - 키: {}, 실제 타입: {}", key, value.getClass().getSimpleName());
                 return Optional.empty();

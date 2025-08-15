@@ -72,7 +72,7 @@ subprojects {
     tasks.withType(Jar::class) { enabled = true }
     tasks.withType(BootJar::class) { enabled = false }
 
-    configure(allprojects.filter { it.parent?.name.equals("apps") }) {
+    configure(subprojects.filter { it.path.startsWith(":apps:") }) {
         tasks.withType(Jar::class) { enabled = false }
         tasks.withType(BootJar::class) { enabled = true }
     }

@@ -24,7 +24,7 @@ public class CategoryApplicationService {
     /**
      * 카테고리 목록 조회 (캐싱 적용)
      */
-    @Cacheable(value = "category", key = "'list'")
+    @Cacheable(value = "categoryList", key = "'list'")
     public List<CategoryModel> getCategoryList() {
         log.info("카테고리 목록 DB 조회 (캐시 미스)");
         return categoryRepository.findAll();

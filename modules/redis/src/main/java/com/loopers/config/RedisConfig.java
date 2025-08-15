@@ -30,7 +30,14 @@ public class RedisConfig {
         ObjectMapper mapper = new ObjectMapper();
         // JSR310 (Java 8 Date & Time) support
         mapper.registerModule(new JavaTimeModule());
-        // Store type information in JSON
+        return mapper;
+    }
+
+    @Bean
+    public ObjectMapper redisObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JavaTimeModule());
+        // Store type information in JSON for Redis serialization
         mapper.activateDefaultTyping(
                 LaissezFaireSubTypeValidator.instance,
                 ObjectMapper.DefaultTyping.NON_FINAL,
@@ -40,8 +47,8 @@ public class RedisConfig {
     }
 
     @Bean
-    public GenericJackson2JsonRedisSerializer redisValueSerializer(ObjectMapper objectMapper) {
-        return new GenericJackson2JsonRedisSerializer(objectMapper);
+    public GenericJackson2JsonRedisSerializer redisValueSerializer(ObjectMapper redisObjectMapper) {
+        return new GenericJackson2JsonRedisSerializer(redisObjectMapper);
     }
 
     @Primary
@@ -64,11 +71,13 @@ public class RedisConfig {
 
     @Bean
     @ConditionalOnMissingBean(CacheManager.class)
-    public CacheManager cacheManager(LettuceConnectionFactory lettuceConnectionFactory, GenericJackson2JsonRedisSerializer redisValueSerializer) {
+    public CacheManager cacheManager(LettuceConnectionFactory lettuceConnectionFactory, ObjectMapper redisObjectMapper) {
+        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(redisObjectMapper);
+
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(10)) // 기본 TTL 10분
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(redisValueSerializer))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer))
                 .disableCachingNullValues();
 
         return RedisCacheManager.builder(lettuceConnectionFactory)
