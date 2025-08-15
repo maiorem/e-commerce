@@ -1,6 +1,5 @@
 package com.loopers.domain.brand;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.loopers.domain.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -9,7 +8,6 @@ import lombok.Getter;
 @Entity
 @Table(name = "brand")
 @Getter
-@JsonTypeName("BrandModel")
 public class BrandModel extends BaseEntity {
 
     private String name;
