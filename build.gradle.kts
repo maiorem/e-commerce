@@ -17,11 +17,6 @@ plugins {
     id("io.spring.dependency-management")
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
 
 allprojects {
     val projectGroup: String by project
@@ -31,13 +26,24 @@ allprojects {
     repositories {
         mavenCentral()
     }
-}
 
+}
 subprojects {
     apply(plugin = "java")
+
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+
     apply(plugin = "org.springframework.boot")
     apply(plugin = "io.spring.dependency-management")
     apply(plugin = "jacoco")
+
+
 
     dependencyManagement {
         imports {
