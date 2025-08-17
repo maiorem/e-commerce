@@ -22,11 +22,15 @@ spring:
       - jpa.yml
       - logging.yml
       - monitoring.yml
+      - redis.yml
 
 springdoc:
   use-fqn: true
   swagger-ui:
     path: /swagger-ui.html
+
+cache:
+  type: redis
 
 ---
 spring:

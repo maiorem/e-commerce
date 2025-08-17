@@ -7,11 +7,9 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,27 +43,21 @@ public class ProductRepositoryImpl implements ProductRepository {
     }
 
     @Override
-    public Page<ProductModel> findSearchProductList(Pageable pageable, String productName, Long brandId, Long categoryId, ProductSortBy sortBy) {
+    public List<ProductModel> findSearchProductList(int size, String productName, Long brandId, Long categoryId, ProductSortBy sortBy, Long lastId, Integer lastLikesCount, Integer lastPrice, ZonedDateTime lastCreatedAt) {
         // 필터링
-        BooleanBuilder filterBuilder = ProductQueryFilter.createFilterBuilder(productName, brandId, categoryId);
+        CursorFilter cursorFilter = CursorFilter.from(lastId, lastLikesCount != null ? lastLikesCount : 0, lastPrice != null ? lastPrice : 0, lastCreatedAt);
+        BooleanBuilder filterBuilder = ProductQueryFilter.createFilterBuilder(productName, brandId, categoryId, sortBy, cursorFilter);
 
         // 정렬
-        OrderSpecifier<?> orderSpecifier = ProductQueryFilter.getOrderSpecifier(sortBy);
+        OrderSpecifier<?>[] orderSpecifier = ProductQueryFilter.getOrderSpecifier(sortBy);
 
-        List<ProductModel> list = jpaQueryFactory
+        return jpaQueryFactory
                 .selectFrom(productModel)
                 .where(filterBuilder)
                 .orderBy(orderSpecifier)
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
+                .limit(size)
                 .fetch();
 
-        long total = jpaQueryFactory
-                .selectFrom(productModel)
-                .where(filterBuilder)
-                .fetch().size();
-
-        return new PageImpl<>(list, pageable, total);
     }
 
     @Override

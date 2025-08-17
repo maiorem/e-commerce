@@ -2,6 +2,7 @@ package com.loopers.domain.brand;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface BrandRepository {
     
@@ -10,4 +11,6 @@ public interface BrandRepository {
     List<BrandModel> findAll();
 
     Optional<BrandModel> findByName(String brandName);
+
+    List<BrandModel> findAllById(Set<Long> brandIds);
 }

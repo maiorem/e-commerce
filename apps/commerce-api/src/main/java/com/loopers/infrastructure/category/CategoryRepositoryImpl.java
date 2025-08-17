@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Component
@@ -28,6 +29,11 @@ public class CategoryRepositoryImpl implements CategoryRepository {
     @Override
     public Optional<CategoryModel> findByName(String categoryName) {
         return categoryJpaRepository.findByName(categoryName);
+    }
+
+    @Override
+    public List<CategoryModel> findAllById(Set<Long> categoryIds) {
+        return categoryJpaRepository.findAllById(categoryIds);
     }
 
 }

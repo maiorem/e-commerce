@@ -1,7 +1,5 @@
 package com.loopers.domain.product;
 
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -10,9 +8,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @ExtendWith(MockitoExtension.class)
@@ -67,51 +62,37 @@ class ProductSearchDomainServiceTest {
         void validateSearchCriteriaShortProductName() {
             // given
             String productName ="a";
-            int page = 0;
-            int size = 10;
-
-            // when & then
-            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
-                    .isInstanceOf(IllegalArgumentException.class);
-        }
-
-        @Test
-        @DisplayName("페이지 크기가 0 이하면 예외가 발생한다.")
-        void validateSearchCriteriaInvalidPageSize() {
-            // given
-            String productName ="a";
-            int page = 0;
             int size = 0;
+
             // when & then
-            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
+            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
         @Test
-        @DisplayName("페이지 크기가 100을 초과하면 예외가 발생한다.")
-        void validateSearchCriteriaTooLargePageSize() {
+        @DisplayName("페이지 사이즈가 음수면 예외가 발생한다.")
+        void validateSearchCriteriaZeroOrNegativePageSize() {
             // given
-            String productName ="a";
-            int page = 0;
+            String productName = "상품";
+            int size = -1;
+
+            // when & then
+            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size))
+                    .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        @DisplayName("페이지 사이즈가 100보다 크면 예외가 발생한다.")
+        void validateSearchCriteriaPageSizeTooLarge() {
+            // given
+            String productName = "상품";
             int size = 101;
 
             // when & then
-            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
+            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size))
                     .isInstanceOf(IllegalArgumentException.class);
         }
 
-        @Test
-        @DisplayName("페이지 번호가 음수이면 예외가 발생한다.")
-        void validateSearchCriteriaNegativePage() {
-            // given
-            String productName ="a";
-            int page = -1;
-            int size = 1;
-
-            // when & then
-            assertThatThrownBy(() -> productSearchDomainService.validateSearchCriteria(productName, size, page))
-                    .isInstanceOf(IllegalArgumentException.class);
-        }
     }
 
     @Nested
@@ -135,103 +116,4 @@ class ProductSearchDomainServiceTest {
         }
     }
 
-    @Nested
-    @DisplayName("정렬 규칙 적용 시")
-    class Apply_Domain_Sorting_Rules {
-
-        @Test
-        @DisplayName("좋아요순 정렬을 적용할 수 있다.")
-        void applyDomainSortingRulesLikes() {
-            // given
-            List<ProductModel> products = List.of(product1, product2, product3);
-
-            // when
-            List<ProductModel> result = productSearchDomainService.applyDomainSortingRules(products, ProductSortBy.LIKES);
-
-            // then
-            assertThat(result).hasSize(3);
-            assertThat(result.get(0).getLikesCount()).isEqualTo(20); // product2
-            assertThat(result.get(1).getLikesCount()).isEqualTo(10); // product1
-            assertThat(result.get(2).getLikesCount()).isEqualTo(5);  // product3
-        }
-
-        @Test
-        @DisplayName("가격 오름차순 정렬을 적용할 수 있다.")
-        void applyDomainSortingRulesPriceAsc() {
-            // given
-            List<ProductModel> products = List.of(product2, product1, product3);
-
-            // when
-            List<ProductModel> result = productSearchDomainService.applyDomainSortingRules(products, ProductSortBy.PRICE_ASC);
-
-            // then
-            assertThat(result).hasSize(3);
-            assertThat(result.get(0).getPrice()).isEqualTo(10000); // product1
-            assertThat(result.get(1).getPrice()).isEqualTo(15000); // product3
-            assertThat(result.get(2).getPrice()).isEqualTo(20000); // product2
-        }
-
-        @Test
-        @DisplayName("가격 내림차순 정렬을 적용할 수 있다.")
-        void applyDomainSortingRulesPriceDesc() {
-            // given
-            List<ProductModel> products = List.of(product1, product2, product3);
-
-            // when
-            List<ProductModel> result = productSearchDomainService.applyDomainSortingRules(products, ProductSortBy.PRICE_DESC);
-
-            // then
-            assertThat(result).hasSize(3);
-            assertThat(result.get(0).getPrice()).isEqualTo(20000); // product2
-            assertThat(result.get(1).getPrice()).isEqualTo(15000); // product3
-            assertThat(result.get(2).getPrice()).isEqualTo(10000); // product1
-        }
-
-        @Test
-        @DisplayName("null 정렬 기준은 원본 순서를 유지한다.")
-        void applyDomainSortingRulesNull() {
-            // given
-            List<ProductModel> products = List.of(product1, product2, product3);
-
-            // when
-            List<ProductModel> result = productSearchDomainService.applyDomainSortingRules(products, null);
-
-            // then
-            assertThat(result).isEqualTo(products);
-        }
-    }
-
-    @Nested
-    @DisplayName("도메인 필터링 규칙 적용 시")
-    class Apply_Domain_Filtering_Rules {
-
-        @Test
-        @DisplayName("재고가 0인 상품을 필터링한다.")
-        void applyDomainFilteringRules() {
-            // given
-            List<ProductModel> products = List.of(product1, product2, product3);
-
-            // when
-            List<ProductModel> result = productSearchDomainService.applyDomainFilteringRules(products);
-
-            // then
-            assertThat(result).hasSize(2);
-            assertThat(result).contains(product1, product2);
-            assertThat(result).doesNotContain(product3); // 재고가 0인 상품 제외
-        }
-
-        @Test
-        @DisplayName("모든 상품에 재고가 있으면 필터링하지 않는다.")
-        void applyDomainFilteringRulesAllInStock() {
-            // given
-            List<ProductModel> products = List.of(product1, product2);
-
-            // when
-            List<ProductModel> result = productSearchDomainService.applyDomainFilteringRules(products);
-
-            // then
-            assertThat(result).hasSize(2);
-            assertThat(result).contains(product1, product2);
-        }
-    }
 } 
