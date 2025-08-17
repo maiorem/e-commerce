@@ -10,13 +10,13 @@ import com.loopers.infrastructure.category.CategoryJpaRepository;
 import com.loopers.infrastructure.like.LikeJpaRepository;
 import com.loopers.infrastructure.product.ProductJpaRepository;
 import com.loopers.utils.DatabaseCleanUp;
+import com.loopers.utils.RedisCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.List;
 
@@ -42,7 +42,7 @@ public class ProductApplicationServiceIntegrationTest {
     private LikeJpaRepository likeJpaRepository;
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisCleanUp redisCleanUp;
 
     @Autowired
     private DatabaseCleanUp databaseCleanUp;
@@ -50,8 +50,9 @@ public class ProductApplicationServiceIntegrationTest {
     @AfterEach
     void tearDown() {
         databaseCleanUp.truncateAllTables();
-        redisTemplate.getConnectionFactory().getConnection().flushAll();
+        redisCleanUp.truncateAll();
     }
+
 
     @Nested
     @DisplayName("상품 목록 조회 시,")

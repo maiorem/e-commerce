@@ -4,9 +4,11 @@ import com.loopers.domain.category.CategoryModel;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.infrastructure.category.CategoryJpaRepository;
 import com.loopers.infrastructure.product.ProductJpaRepository;
-
+import com.loopers.support.config.TestConfig;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
+import com.loopers.utils.DatabaseCleanUp;
+import com.loopers.utils.RedisCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -14,10 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-
-import com.loopers.support.config.TestConfig;
-import com.loopers.utils.DatabaseCleanUp;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.List;
 
@@ -37,9 +35,8 @@ public class CategoryApplicationServiceIntegrationTest {
     @Autowired
     private ProductJpaRepository productJpaRepository;
 
-
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisCleanUp redisCleanUp;
 
     @Autowired
     private DatabaseCleanUp databaseCleanUp;
@@ -47,8 +44,9 @@ public class CategoryApplicationServiceIntegrationTest {
     @AfterEach
     void tearDown() {
         databaseCleanUp.truncateAllTables();
-        redisTemplate.getConnectionFactory().getConnection().flushAll();
+        redisCleanUp.truncateAll();
     }
+
 
     @Nested
     @DisplayName("카테고리 목록 조회 시,")

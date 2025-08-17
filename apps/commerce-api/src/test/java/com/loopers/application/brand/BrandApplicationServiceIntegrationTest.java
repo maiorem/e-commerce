@@ -8,6 +8,7 @@ import com.loopers.support.config.TestConfig;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
+import com.loopers.utils.RedisCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -15,7 +16,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.List;
 
@@ -36,7 +36,7 @@ public class BrandApplicationServiceIntegrationTest {
     private ProductJpaRepository productJpaRepository;
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisCleanUp redisCleanUp;
 
     @Autowired
     private DatabaseCleanUp databaseCleanUp;
@@ -44,7 +44,7 @@ public class BrandApplicationServiceIntegrationTest {
     @AfterEach
     void tearDown() {
         databaseCleanUp.truncateAllTables();
-        redisTemplate.getConnectionFactory().getConnection().flushAll();
+        redisCleanUp.truncateAll();
     }
 
     @Nested
