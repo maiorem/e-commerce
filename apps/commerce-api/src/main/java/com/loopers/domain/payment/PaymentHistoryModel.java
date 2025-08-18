@@ -19,17 +19,21 @@ public class PaymentHistoryModel extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
-    private int amount;
+    private String transactionKey;
+
+    private int finalOrderPrice;
+
     private LocalDateTime paymentDate;
 
     protected PaymentHistoryModel() {}
 
-    public static PaymentHistoryModel complete(Long orderId, PaymentMethod paymentMethod, int amount) {
+    public static PaymentHistoryModel of(Long orderId, PaymentMethod paymentMethod, int finalOrderPrice, PaymentResult result) {
         PaymentHistoryModel payment = new PaymentHistoryModel();
         payment.orderId = orderId;
         payment.paymentMethod = paymentMethod;
-        payment.paymentStatus = PaymentStatus.SUCCESS;
-        payment.amount = amount;
+        payment.paymentStatus = result.status();
+        payment.transactionKey = result.transactionKey();
+        payment.finalOrderPrice = finalOrderPrice;
         payment.paymentDate = LocalDateTime.now();
         return payment;
     }

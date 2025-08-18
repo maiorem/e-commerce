@@ -2,7 +2,6 @@ package com.loopers.domain.coupon;
 
 import com.loopers.domain.BaseEntity;
 import com.loopers.domain.user.UserId;
-import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -23,7 +22,7 @@ public class UserCouponModel extends BaseEntity {
 
     private String couponCode;
 
-    private boolean isUsed;
+    private UserCoupontStatus status = UserCoupontStatus.AVAILABLE;
 
     private LocalDate issuedAt;
 
@@ -36,14 +35,17 @@ public class UserCouponModel extends BaseEntity {
         }
         userCouponModel.userId = userId;
         userCouponModel.couponCode = couponCode;
-        userCouponModel.isUsed = false;
+        userCouponModel.status = UserCoupontStatus.AVAILABLE;;
         userCouponModel.issuedAt = LocalDate.now();
         return userCouponModel;
     }
 
     public boolean useCoupon(LocalDate usedAt) {
-        if (this.isUsed) {
+        if (this.status == UserCoupontStatus.USED) {
             throw new IllegalArgumentException("이미 사용된 쿠폰입니다.");
+        }
+        if (this.status == UserCoupontStatus.EXPIRED) {
+            throw new IllegalArgumentException("만료된 쿠폰입니다.");
         }
         if (usedAt.isBefore(issuedAt)) {
             throw new IllegalArgumentException("쿠폰이 아직 발급되지 않았습니다.");
@@ -56,11 +58,34 @@ public class UserCouponModel extends BaseEntity {
         if (usedAt == null || usedAt.isBefore(issuedAt)) {
             throw new IllegalArgumentException("사용 날짜는 발급 날짜 이후여야 합니다.");
         }
-        if (this.isUsed) {
+        if (this.status == UserCoupontStatus.USED) {
             throw new IllegalArgumentException("이미 사용된 쿠폰입니다.");
         }
-        this.isUsed = true;
+        this.status = UserCoupontStatus.USED;
         this.usedAt = usedAt;
     }
+
+    public void reserve() {
+        if (this.status != UserCoupontStatus.AVAILABLE) {
+            throw new IllegalStateException("사용할 수 없는 쿠폰입니다.");
+        }
+        this.status = UserCoupontStatus.RESERVED;
+    }
+
+    public void completeUsage() {
+        if (this.status != UserCoupontStatus.RESERVED) {
+            throw new IllegalStateException("사용 완료 처리할 수 없는 쿠폰입니다.");
+        }
+        this.status = UserCoupontStatus.USED;
+        this.usedAt = LocalDate.now();
+    }
+
+    public void cancelReservation() {
+        if (this.status != UserCoupontStatus.RESERVED) {
+            throw new IllegalStateException("예약 취소할 수 없는 쿠폰입니다.");
+        }
+        this.status = UserCoupontStatus.AVAILABLE;
+    }
+
 
 }

@@ -26,4 +26,13 @@ public class StockDeductionProcessor {
             productStockDomainService.deductStock(product, item.getQuantity());
         });
     }
+
+    public void restoreProductStocks(List<OrderItemModel> orderItems) {
+        orderItems.forEach(item -> {
+            ProductModel product = productRepository.findByIdForUpdate(item.getProductId())
+                .orElseThrow(() -> new IllegalArgumentException("상품을 찾을 수 없습니다. 상품 ID: " + item.getProductId()));
+
+            productStockDomainService.restoreStock(product, item.getQuantity());
+        });
+    }
 }
