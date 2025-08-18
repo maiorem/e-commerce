@@ -34,4 +34,18 @@ public class PointProcessor {
         }
         return usedPoints;
     }
+
+    public void restorePoint(UserId userId, int usedPoints) {
+        PointModel availablePoint = pointRepository.findByUserIdForUpdate(userId).orElse(null);
+
+        if (availablePoint != null) {
+            // 포인트 복원
+            availablePoint.restorePoint(usedPoints);
+            pointRepository.save(availablePoint);
+
+            // 포인트 복원 내역 저장
+            PointHistoryModel pointHistory = pointDomainService.createPointHistory(userId, usedPoints, availablePoint.getAmount(), PointChangeReason.ORDER_RESTORE);
+            pointRepository.saveHistory(pointHistory);
+        }
+    }
 }

@@ -58,4 +58,11 @@ public class ProductModel extends BaseEntity {
         }
         this.likesCount--;
     }
+
+    public void restoreStock(int quantity) {
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("수량은 0보다 커야 합니다.");
+        }
+        this.stock += quantity;
+    }
 }

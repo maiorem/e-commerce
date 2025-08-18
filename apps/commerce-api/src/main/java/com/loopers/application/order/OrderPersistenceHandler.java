@@ -4,8 +4,6 @@ import com.loopers.domain.order.OrderItemModel;
 import com.loopers.domain.order.OrderItemRepository;
 import com.loopers.domain.order.OrderModel;
 import com.loopers.domain.order.OrderRepository;
-import com.loopers.domain.payment.PaymentHistoryModel;
-import com.loopers.domain.payment.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -18,13 +16,12 @@ public class OrderPersistenceHandler {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
-    private final PaymentRepository paymentRepository;
 
     public OrderModel saveOrder(OrderModel order) {
        return orderRepository.save(order);
     }
 
-    public List<OrderItemModel> saveOrderItemAndPaymentHistory(OrderModel order, List<OrderItemModel> orderItems, PaymentHistoryModel paymentHistory) {
+    public List<OrderItemModel> saveOrderItemAndPaymentHistory(OrderModel order, List<OrderItemModel> orderItems) {
 
         List<OrderItemModel> savedOrderItems = new ArrayList<>();
         orderItems.forEach(item -> {
@@ -38,9 +35,6 @@ public class OrderPersistenceHandler {
 
             savedOrderItems.add(savedItem);
         });
-
-        // 결제 내역 저장
-        paymentRepository.save(paymentHistory);
 
         return savedOrderItems;
     }

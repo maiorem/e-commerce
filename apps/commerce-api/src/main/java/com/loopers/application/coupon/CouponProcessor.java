@@ -48,4 +48,24 @@ public class CouponProcessor {
         userCoupon.useCoupon(LocalDate.now());
         userCouponRepository.save(userCoupon);
     }
+
+    public void reserveCoupon(UserId userId, String couponCode) {
+        if (couponCode == null || couponCode.isEmpty()) {
+            return;
+        }
+        UserCouponModel userCoupon = userCouponRepository.findByUserIdAndCouponCode(userId, couponCode)
+                .orElseThrow(() -> new IllegalArgumentException("사용자에게 해당 쿠폰이 없습니다."));
+        userCoupon.reserve();
+        userCouponRepository.save(userCoupon);
+    }
+
+    public void restoreCoupon(UserId userId, String couponCode) {
+        if (couponCode == null || couponCode.isEmpty()) {
+            return;
+        }
+        UserCouponModel userCoupon = userCouponRepository.findByUserIdAndCouponCode(userId, couponCode)
+                .orElseThrow(() -> new IllegalArgumentException("사용자에게 해당 쿠폰이 없습니다."));
+        userCoupon.cancelReservation();
+        userCouponRepository.save(userCoupon);
+    }
 }
