@@ -12,7 +12,7 @@ Content-Type: application/json
 }
 
 ### 결제 정보 확인
-GET http://localhost:8082/api/v1/payments/20250817:TR:d6de8c
+GET http://localhost:8082/api/v1/payments/20250819:TR:a03925
 X-USER-ID: 135135
 
 ### 주문에 엮인 결제 정보 조회

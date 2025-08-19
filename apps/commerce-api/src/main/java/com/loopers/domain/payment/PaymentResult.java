@@ -1,46 +1,35 @@
 package com.loopers.domain.payment;
 
-import com.loopers.infrastructure.pg_client.PgClientDto;
-
-public record PaymentResult(Result result, String errorCode, String message, String transactionKey, PaymentStatus status, String reason) {
-
-    public static PaymentResult success(PgClientDto.PgClientResponse response) {
-
+public record PaymentResult(
+        boolean requestSuccess,
+        String transactionKey,
+        String message,
+        RequestResultStatus status
+) {
+    public static PaymentResult success(String transactionKey) {
         return new PaymentResult(
-                Result.valueOf(response.meta().result().toUpperCase()),
-                response.meta().errorCode(),
-                response.meta().message(),
-                response.data().transactionKey(),
-                PaymentStatus.valueOf(response.data().status().toUpperCase()),
-                response.data().reason()
+                true,
+                transactionKey,
+                "결제 요청이 접수되었습니다",
+                RequestResultStatus.PENDING
         );
     }
 
-    public static PaymentResult from(PgClientDto.PgClientResponse response) {
-        if (response.meta().result().equalsIgnoreCase("success")) {
-            return success(response);
-        } else {
-            return new PaymentResult(
-                    Result.valueOf(response.meta().result().toUpperCase()),
-                    response.meta().errorCode(),
-                    response.meta().message(),
-                    null,
-                    PaymentStatus.FAILED,
-                    response.data().reason()
-            );
-        }
+    public static PaymentResult failed(String message) {
+        return new PaymentResult(
+                false,
+                null,
+                message,
+                RequestResultStatus.REQUEST_FAILED
+        );
     }
-
-    public static PaymentResult from(Result result, String errorCode, String message, String transactionKey, PaymentStatus status, String reason) {
-        return new PaymentResult(result, errorCode, message, transactionKey, status, reason);
-    }
-
 
     public boolean isSuccess() {
-        return this.status == PaymentStatus.SUCCESS;
+        return this.requestSuccess;
     }
 
     public boolean isFailed() {
-        return this.status == PaymentStatus.FAILED;
+        return !this.requestSuccess;
     }
+
 }

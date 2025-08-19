@@ -27,26 +27,40 @@ public class OrderModel extends BaseEntity {
 
     private int totalAmount;
 
+    private String transactionKey;
+    private String couponCode;
+    private int usedPoints;
+
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
     protected OrderModel() {}
 
-    public static OrderModel create(UserId userId, int totalAmount) {
+    public static OrderModel create(UserId userId, int totalAmount, String couponCode, int usedPoints) {
         OrderModel order = new OrderModel();
         order.userId = userId;
         order.orderNumber = OrderNumberGenerator.generateOrderNumber();
         order.orderDate = OrderDate.of(LocalDateTime.now());
         order.totalAmount = totalAmount;
-        order.status = OrderStatus.PENDING;
+        order.couponCode = couponCode;
+        order.usedPoints = usedPoints;
+        order.status = OrderStatus.CREATED;
         return order;
     }
 
-    public void complete() {
-        this.status = OrderStatus.COMPLETED;
+    public void pending(String transactionKey) {
+        if (transactionKey == null || transactionKey.isEmpty()) {
+            throw new IllegalArgumentException("트랜잭션 키는 비어있을 수 없습니다.");
+        }
+        this.transactionKey = transactionKey;
+        this.status = OrderStatus.PENDING;
     }
 
-    public void cancel() {
+    public void confirmPayment() {
+        this.status = OrderStatus.CONFIRMED;
+    }
+
+    public void cancelByPaymentFailure() {
         this.status = OrderStatus.CANCELLED;
     }
 } 

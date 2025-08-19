@@ -1,7 +1,7 @@
 package com.loopers.application.order;
 
 import com.loopers.application.coupon.CouponProcessor;
-import com.loopers.application.payment.PaymentHistoryProcessor;
+import com.loopers.application.payment.PaymentHistoryStore;
 import com.loopers.application.point.PointProcessor;
 import com.loopers.application.product.StockDeductionProcessor;
 import com.loopers.application.user.UserValidator;
@@ -38,7 +38,7 @@ public class OrderApplicationService {
 
     private final CouponProcessor couponProcessor;
 
-    private final PaymentHistoryProcessor paymentHistoryProcessor;
+    private final PaymentHistoryStore paymentHistoryStore;
 
     private final OrderCreationDomainService orderCreationDomainService;
 
@@ -71,8 +71,8 @@ public class OrderApplicationService {
         // 6. 재고 차감
         stockDeductionProcessor.deductProductStocks(orderItems);
 
-        // 7. 주문 생성 저장 (PENDING)
-        OrderModel order = OrderModel.create(command.userId(), finalTotalPrice);
+        // 7. 주문 생성 저장
+        OrderModel order = OrderModel.create(command.userId(), finalTotalPrice, command.couponCode(), usedPoints);
         orderPersistenceHandler.saveOrder(order);
 
         // -- 쿠폰 사용예약  --
@@ -83,12 +83,13 @@ public class OrderApplicationService {
         PaymentResult result = paymentGatewayPort.processPayment(payment);
 
         if (result.isSuccess()) {
-            // 9. 주문 정보 및 주문 아이템 저장
+            // 9. 주문 정보 및 주문 아이템 저장 (PENDING)
+            order.pending(result.transactionKey());
             List<OrderItemModel> savedOrderItems = orderPersistenceHandler.saveOrderItemAndPaymentHistory(order, orderItems);
 
             // 10. 결제 결과 저장
             PaymentHistoryModel paymentHistory = PaymentHistoryModel.of(order.getId(), command.paymentMethod(), finalTotalPrice, result);
-            paymentHistoryProcessor.savePaymentHistory(paymentHistory);
+            paymentHistoryStore.savePaymentHistory(paymentHistory);
 
             // 11. 최종 응답 DTO 변환 및 반환
             List<OrderItemInfo> orderItemInfos = OrderItemInfo.createOrderItemInfos(savedOrderItems, products);
@@ -103,7 +104,7 @@ public class OrderApplicationService {
 
             // 10. 결제 실패 히스토리 저장
             PaymentHistoryModel paymentHistory = PaymentHistoryModel.of(order.getId(), command.paymentMethod(), finalTotalPrice, result);
-            paymentHistoryProcessor.savePaymentHistory(paymentHistory);
+            paymentHistoryStore.savePaymentHistory(paymentHistory);
 
             // 11. 결제 실패 예외 발생
             throw new PaymentFailedException("결제에 실패했습니다.");
