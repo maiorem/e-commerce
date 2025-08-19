@@ -31,7 +31,7 @@ public class PaymentHistoryModel extends BaseEntity {
         PaymentHistoryModel payment = new PaymentHistoryModel();
         payment.orderId = orderId;
         payment.paymentMethod = paymentMethod;
-        payment.paymentStatus = result.status();
+        payment.paymentStatus = result.isSuccess() ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
         payment.transactionKey = result.transactionKey();
         payment.finalOrderPrice = finalOrderPrice;
         payment.paymentDate = LocalDateTime.now();

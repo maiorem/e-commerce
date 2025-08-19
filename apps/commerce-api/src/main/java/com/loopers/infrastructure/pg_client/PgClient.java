@@ -2,8 +2,7 @@ package com.loopers.infrastructure.pg_client;
 
 import com.loopers.support.http.config.FeignClientTimeoutConfig;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient(
         name = "pgClient",
@@ -14,5 +13,11 @@ public interface PgClient {
 
     @PostMapping("/api/v1/payments")
     PgClientDto.PgClientResponse requestPayment(@RequestBody PgClientDto.PgClientRequest request);
+
+    @GetMapping("/api/v1/payments/{transactionKey}")
+    PgClientDto.PgClientQueryResponse getTransaction(@PathVariable("transactionKey") String transactionKey);
+
+    @GetMapping("/api/v1/payments")
+    PgClientDto.PgClientHistoryResponse getPaymentsByOrderId(@RequestParam("orderId") String orderId);
 
 }

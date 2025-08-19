@@ -2,10 +2,12 @@ package com.loopers.infrastructure.order;
 
 import com.loopers.domain.order.OrderModel;
 import com.loopers.domain.order.OrderRepository;
+import com.loopers.domain.order.OrderStatus;
 import com.loopers.domain.user.UserId;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,5 +40,15 @@ public class OrderRepositoryImpl implements OrderRepository {
     @Override
     public void delete(OrderModel order) {
         orderJpaRepository.delete(order);
+    }
+
+    @Override
+    public Optional<OrderModel> findByTransactionKey(String transactionId) {
+        return orderJpaRepository.findByTransactionKey(transactionId);
+    }
+
+    @Override
+    public List<OrderModel> findByStatusAndCreatedBefore(OrderStatus orderStatus, LocalDateTime localDateTime) {
+        return orderJpaRepository.findByStatusAndCreatedAtBefore(orderStatus, localDateTime);
     }
 }

@@ -7,7 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class PaymentHistoryProcessor {
+public class PaymentHistoryStore {
 
     private final PaymentRepository paymentRepository;
 
