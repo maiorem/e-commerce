@@ -50,7 +50,7 @@ public class LargeSeeder {
 
     // ---------- USER (single-thread) ----------
     public static void seedUsers(Supplier<Connection> cs, int count) {
-        final String sql = "INSERT INTO user (user_id, email, gender, birth_date, created_at, updated_at) VALUES (?,?,?,?,?,?)";
+        final String sql = "INSERT INTO user (user_id, email, gender, birth_date, version, created_at, updated_at) VALUES (?,?,?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
@@ -60,10 +60,11 @@ public class LargeSeeder {
                 ps.setString(2, "user" + i + "@loopers.com");
                 ps.setString(3, i % 2 == 0 ? "MALE" : "FEMALE");
                 ps.setString(4, generateRandomBirthDate());
+                ps.setLong(5, 0L); // version 기본값 0
 
                 ZonedDateTime[] ts = randomRangePast(365 * 3);
-                ps.setTimestamp(5, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(6, Timestamp.from(ts[1].toInstant()));
+                ps.setTimestamp(6, Timestamp.from(ts[0].toInstant()));
+                ps.setTimestamp(7, Timestamp.from(ts[1].toInstant()));
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
@@ -81,7 +82,7 @@ public class LargeSeeder {
 
     // ---------- BRAND (single-thread) ----------
     public static void seedBrands(Supplier<Connection> cs, int count) {
-        final String sql = "INSERT INTO brand (name, description, created_at, updated_at) VALUES (?,?,?,?)";
+        final String sql = "INSERT INTO brand (name, description, version, created_at, updated_at) VALUES (?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
@@ -94,10 +95,11 @@ public class LargeSeeder {
                 int brandIndex = (i - 1) % brandNames.length;
                 ps.setString(1, brandNames[brandIndex] + " " + ((i - 1) / brandNames.length + 1));
                 ps.setString(2, brandDescriptions[brandIndex] + " " + ((i - 1) / brandNames.length + 1));
+                ps.setLong(3, 0L); // version 기본값 0
 
                 ZonedDateTime[] ts = randomRangePast(365 * 3);
-                ps.setTimestamp(3, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(4, Timestamp.from(ts[1].toInstant()));
+                ps.setTimestamp(4, Timestamp.from(ts[0].toInstant()));
+                ps.setTimestamp(5, Timestamp.from(ts[1].toInstant()));
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
@@ -115,7 +117,7 @@ public class LargeSeeder {
 
     // ---------- CATEGORY (single-thread) ----------
     public static void seedCategories(Supplier<Connection> cs, int count) {
-        final String sql = "INSERT INTO category (name, description, created_at, updated_at) VALUES (?,?,?,?)";
+        final String sql = "INSERT INTO category (name, description, version, created_at, updated_at) VALUES (?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
@@ -128,10 +130,11 @@ public class LargeSeeder {
                 int categoryIndex = (i - 1) % categoryNames.length;
                 ps.setString(1, categoryNames[categoryIndex] + " " + ((i - 1) / categoryNames.length + 1));
                 ps.setString(2, categoryDescriptions[categoryIndex] + " " + ((i - 1) / categoryNames.length + 1));
+                ps.setLong(3, 0L); // version 기본값 0
 
                 ZonedDateTime[] ts = randomRangePast(365 * 3);
-                ps.setTimestamp(3, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(4, Timestamp.from(ts[1].toInstant()));
+                ps.setTimestamp(4, Timestamp.from(ts[0].toInstant()));
+                ps.setTimestamp(5, Timestamp.from(ts[1].toInstant()));
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
@@ -160,7 +163,7 @@ public class LargeSeeder {
     }
 
     private static void insertProductsRange(Supplier<Connection> cs, int start, int end, int brandCount, int categoryCount) {
-        final String sql = "INSERT INTO product (brand_id, category_id, name, description, price, stock, likes_count, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?)";
+        final String sql = "INSERT INTO product (brand_id, category_id, name, description, price, stock, likes_count, version, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
@@ -173,10 +176,11 @@ public class LargeSeeder {
                 ps.setInt(5, samplePrice());
                 ps.setInt(6, sampleStock());
                 ps.setInt(7, sampleLike());
+                ps.setLong(8, 0L); // version 기본값 0
 
                 ZonedDateTime[] ts = randomRangePast(365 * 3);
-                ps.setTimestamp(8, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(9, Timestamp.from(ts[1].toInstant()));
+                ps.setTimestamp(9, Timestamp.from(ts[0].toInstant()));
+                ps.setTimestamp(10, Timestamp.from(ts[1].toInstant()));
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
@@ -205,7 +209,7 @@ public class LargeSeeder {
     }
 
     private static void insertLikesRange(Supplier<Connection> cs, int start, int end, int userCount, int productCount) {
-        final String sql = "INSERT INTO likes (user_id, product_id, created_at, updated_at) VALUES (?,?,?,?)";
+        final String sql = "INSERT INTO likes (user_id, product_id, version, created_at, updated_at) VALUES (?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
@@ -213,10 +217,11 @@ public class LargeSeeder {
             for (int i = start; i <= end; i++) {
                 ps.setString(1, "user" + String.format("%06d", ThreadLocalRandom.current().nextInt(1, userCount + 1)));
                 ps.setLong(2, ThreadLocalRandom.current().nextInt(1, productCount + 1));
+                ps.setLong(3, 0L); // version 기본값 0
 
                 ZonedDateTime[] ts = randomRangePast(365 * 3);
-                ps.setTimestamp(3, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(4, Timestamp.from(ts[1].toInstant()));
+                ps.setTimestamp(4, Timestamp.from(ts[0].toInstant()));
+                ps.setTimestamp(5, Timestamp.from(ts[1].toInstant()));
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
@@ -234,7 +239,7 @@ public class LargeSeeder {
 
     // ---------- POINT (single-thread) ----------
     public static void seedPoints(Supplier<Connection> cs, int count, int userCount) {
-        final String sql = "INSERT INTO point (user_id, amount, expired_at, created_at, updated_at) VALUES (?,?,?,?,?)";
+        final String sql = "INSERT INTO point (user_id, amount, expired_at, version, created_at, updated_at) VALUES (?,?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
@@ -246,10 +251,11 @@ public class LargeSeeder {
                 // 1년 후 만료
                 ZonedDateTime expiredAt = ZonedDateTime.now().plusYears(1);
                 ps.setTimestamp(3, Timestamp.from(expiredAt.toInstant()));
+                ps.setLong(4, 0L); // version 기본값 0
 
                 ZonedDateTime[] ts = randomRangePast(365 * 3);
-                ps.setTimestamp(4, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(5, Timestamp.from(ts[1].toInstant()));
+                ps.setTimestamp(5, Timestamp.from(ts[0].toInstant()));
+                ps.setTimestamp(6, Timestamp.from(ts[1].toInstant()));
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
@@ -267,7 +273,7 @@ public class LargeSeeder {
 
     // ---------- COUPON (single-thread) ----------
     public static void seedCoupons(Supplier<Connection> cs, int count) {
-        final String sql = "INSERT INTO coupon (name, coupon_code, type, status, discount_value, minimum_order_amount, maximum_discount_amount, issued_at, valid_until, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+        final String sql = "INSERT INTO coupon (name, coupon_code, type, status, discount_value, minimum_order_amount, maximum_discount_amount, issued_at, valid_until, version, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
@@ -288,10 +294,11 @@ public class LargeSeeder {
                 ZonedDateTime validUntil = issuedAt.plusDays(365);
                 ps.setTimestamp(8, Timestamp.from(issuedAt.toInstant()));
                 ps.setTimestamp(9, Timestamp.from(validUntil.toInstant()));
+                ps.setLong(10, 0L); // version 기본값 0
 
                 ZonedDateTime[] ts = randomRangePast(365 * 3);
-                ps.setTimestamp(10, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(11, Timestamp.from(ts[1].toInstant()));
+                ps.setTimestamp(11, Timestamp.from(ts[0].toInstant()));
+                ps.setTimestamp(12, Timestamp.from(ts[1].toInstant()));
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
@@ -321,7 +328,7 @@ public class LargeSeeder {
 
     private static void insertOrdersRange(Supplier<Connection> cs, int start, int end, int userCount) {
         // 현재 엔티티 구조에 맞게 수정: total_amount는 Money 타입이므로 제거하고 기본 컬럼만 사용
-        final String sql = "INSERT INTO orders (user_id, order_date, order_number, status, payment_method, created_at, updated_at) VALUES (?,?,?,?,?,?,?)";
+        final String sql = "INSERT INTO orders (user_id, order_date, order_number, status, payment_method, version, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
@@ -338,8 +345,9 @@ public class LargeSeeder {
                 ps.setString(3, "ORDER" + String.format("%08d", i)); // order_number
                 ps.setString(4, orderStatuses[ThreadLocalRandom.current().nextInt(orderStatuses.length)]); // status
                 ps.setString(5, paymentMethods[ThreadLocalRandom.current().nextInt(paymentMethods.length)]); // payment_method
-                ps.setTimestamp(6, Timestamp.from(ts[0].toInstant())); // created_at
-                ps.setTimestamp(7, Timestamp.from(ts[1].toInstant())); // updated_at
+                ps.setLong(6, 0L); // version 기본값 0
+                ps.setTimestamp(7, Timestamp.from(ts[0].toInstant())); // created_at
+                ps.setTimestamp(8, Timestamp.from(ts[1].toInstant())); // updated_at
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
@@ -357,7 +365,7 @@ public class LargeSeeder {
 
     // ---------- ORDER_ITEM (single-thread) ----------
     public static void seedOrderItems(Supplier<Connection> cs, int count, int orderCount, int productCount) {
-        final String sql = "INSERT INTO order_item (order_id, product_id, quantity, price_at_order, created_at, updated_at) VALUES (?,?,?,?,?,?)";
+        final String sql = "INSERT INTO order_item (order_id, product_id, quantity, price_at_order, version, created_at, updated_at) VALUES (?,?,?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
@@ -369,10 +377,11 @@ public class LargeSeeder {
                 ps.setLong(2, productId);
                 ps.setInt(3, ThreadLocalRandom.current().nextInt(1, 10));
                 ps.setInt(4, samplePrice());
+                ps.setLong(5, 0L); // version 기본값 0
 
                 ZonedDateTime[] ts = recentSkewed(365, 1.8);
-                ps.setTimestamp(5, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(6, Timestamp.from(ts[1].toInstant()));
+                ps.setTimestamp(6, Timestamp.from(ts[0].toInstant()));
+                ps.setTimestamp(7, Timestamp.from(ts[1].toInstant()));
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
@@ -390,7 +399,7 @@ public class LargeSeeder {
 
     // ---------- USER_COUPON (single-thread) ----------
     public static void seedUserCoupons(Supplier<Connection> cs, int count, int userCount, int couponCount) {
-        final String sql = "INSERT INTO user_coupon (user_id, coupon_code, status, issued_at, created_at, updated_at) VALUES (?,?,?,?,?,?)";
+        final String sql = "INSERT INTO user_coupon (user_id, coupon_code, status, issued_at, version, created_at, updated_at) VALUES (?,?,?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
@@ -407,10 +416,11 @@ public class LargeSeeder {
                 
                 ZonedDateTime issuedAt = ZonedDateTime.now().minusDays(ThreadLocalRandom.current().nextInt(0, 365));
                 ps.setTimestamp(4, Timestamp.from(issuedAt.toInstant()));
+                ps.setLong(5, 0L); // version 기본값 0
 
                 ZonedDateTime[] ts = randomRangePast(365 * 3);
-                ps.setTimestamp(5, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(6, Timestamp.from(ts[1].toInstant()));
+                ps.setTimestamp(6, Timestamp.from(ts[0].toInstant()));
+                ps.setTimestamp(7, Timestamp.from(ts[1].toInstant()));
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
