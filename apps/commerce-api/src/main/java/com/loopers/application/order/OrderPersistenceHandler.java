@@ -21,7 +21,7 @@ public class OrderPersistenceHandler {
        return orderRepository.save(order);
     }
 
-    public List<OrderItemModel> saveOrderItemAndPaymentHistory(OrderModel order, List<OrderItemModel> orderItems) {
+    public List<OrderItemModel> saveOrderItem(OrderModel order, List<OrderItemModel> orderItems) {
 
         List<OrderItemModel> savedOrderItems = new ArrayList<>();
         orderItems.forEach(item -> {

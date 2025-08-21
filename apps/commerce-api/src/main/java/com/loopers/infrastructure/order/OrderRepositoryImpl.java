@@ -43,11 +43,6 @@ public class OrderRepositoryImpl implements OrderRepository {
     }
 
     @Override
-    public Optional<OrderModel> findByTransactionKey(String transactionId) {
-        return orderJpaRepository.findByTransactionKey(transactionId);
-    }
-
-    @Override
     public List<OrderModel> findByStatusAndCreatedBefore(OrderStatus orderStatus, LocalDateTime localDateTime) {
         return orderJpaRepository.findByStatusAndCreatedAtBefore(orderStatus, localDateTime);
     }
