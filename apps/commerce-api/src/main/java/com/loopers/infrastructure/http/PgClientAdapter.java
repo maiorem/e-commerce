@@ -6,6 +6,8 @@ import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @RequiredArgsConstructor
 @Component
@@ -20,8 +22,9 @@ public class PgClientAdapter implements PaymentGatewayPort {
     @Retry(name = "pgRetry", fallbackMethod = "fallback")
     @Override
     public PaymentResult processPayment(PaymentData paymentData) {
+        String userId = getCurrentUserId();
         PgClientDto.PgClientRequest request = PgClientDto.PgClientRequest.from(paymentData, callbackUrl);
-        PgClientDto.PgClientResponse response= pgClient.requestPayment(request);
+        PgClientDto.PgClientResponse response= pgClient.requestPayment(userId, request);
         return PaymentResult.success(response.data().transactionKey());
     }
 
@@ -31,8 +34,9 @@ public class PgClientAdapter implements PaymentGatewayPort {
 
     @Override
     public PaymentQueryResult queryPaymentStatus(String transactionKey) {
+        String userId = getCurrentUserId();
         try {
-            PgClientDto.PgClientQueryResponse response = pgClient.getTransaction(transactionKey);
+            PgClientDto.PgClientQueryResponse response = pgClient.getTransaction(userId, transactionKey);
 
             return PaymentQueryResult.success(
                     response.data().transactionKey(),
@@ -48,12 +52,21 @@ public class PgClientAdapter implements PaymentGatewayPort {
 
     @Override
     public PaymentHistoryResult queryPaymentHistory(String orderId) {
+        String userId = getCurrentUserId();
         try {
-            PgClientDto.PgClientHistoryResponse response = pgClient.getPaymentsByOrderId(orderId);
+            PgClientDto.PgClientHistoryResponse response = pgClient.getPaymentsByOrderId(userId, orderId);
             return PaymentHistoryResult.success(response);
         } catch (Exception e) {
             return PaymentHistoryResult.failed("결제 내역 조회 실패: " + e.getMessage());
         }
+    }
+
+    private String getCurrentUserId() {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes != null) {
+            return attributes.getRequest().getHeader("X-USER-ID");
+        }
+        return null;
     }
 
 }
