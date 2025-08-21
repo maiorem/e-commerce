@@ -23,6 +23,10 @@ public class OrderPersistenceHandler {
 
     public List<OrderItemModel> saveOrderItem(OrderModel order, List<OrderItemModel> orderItems) {
 
+        if (order.getId() == null) {
+            throw new IllegalStateException("주문 ID가 설정되지 않았습니다. 주문을 먼저 저장해주세요.");
+        }
+
         List<OrderItemModel> savedOrderItems = new ArrayList<>();
         orderItems.forEach(item -> {
             OrderItemModel orderItemWithOrderId = OrderItemModel.builder()

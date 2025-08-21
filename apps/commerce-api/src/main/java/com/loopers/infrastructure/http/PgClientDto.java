@@ -1,7 +1,5 @@
 package com.loopers.infrastructure.http;
 
-import com.loopers.domain.order.Money;
-import com.loopers.domain.payment.CardType;
 import com.loopers.domain.payment.PaymentData;
 
 import java.util.List;
@@ -10,17 +8,17 @@ public class PgClientDto {
 
     public record PgClientRequest(
             String orderId,
-            CardType cardType,
-            String cardNumber,
-            Money finalTotalPrice,
+            String cardType,
+            String cardNo,
+            String amount,
             String callbackUrl
     ) {
         public static PgClientRequest from(PaymentData paymentData, String callbackUrl) {
             return new PgClientRequest(
                     paymentData.orderId().toString(),
-                    paymentData.cardType(),
+                    paymentData.cardType().toString(),
                     paymentData.cardNumber(),
-                    paymentData.finalTotalPrice(),
+                    String.valueOf(paymentData.finalTotalPrice().getAmount()),
                     callbackUrl
             );
         }

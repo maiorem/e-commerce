@@ -12,7 +12,7 @@ Content-Type: application/json
   "items": [
     {
         "product_id": 2,
-        "quantity": 2,
+        "quantity": 1,
         "product_name": "상품 2",
         "product_price": 27000
     },

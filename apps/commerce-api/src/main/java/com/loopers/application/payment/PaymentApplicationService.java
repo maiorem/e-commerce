@@ -43,18 +43,33 @@ public class PaymentApplicationService {
      */
     public void processCardPayment(OrderInfo orderInfo, PaymentMethod paymentMethod, CardType cardType, String cardNumber) {
         try {
+            log.info("카드 결제 요청 시작 - OrderId: {}, Amount: {}", orderInfo.orderId(), orderInfo.totalPrice().getAmount());
+            
             PaymentData payment = PaymentData.create(orderInfo.orderId(), paymentMethod, cardType, cardNumber, orderInfo.totalPrice(), orderInfo.userId());
+
             PaymentResult result = paymentGatewayPort.processPayment(payment);
+            
             if (result.isSuccess()) {
+                log.info("카드 결제 요청 성공 - OrderId: {}, TransactionKey: {}", orderInfo.orderId(), result.transactionKey());
+                
                 PaymentModel paymentInfo = PaymentModel.create(orderInfo.orderId(), paymentMethod, orderInfo.totalPrice());
                 paymentProcessor.save(paymentInfo);
+                
                 CardPayment cardPayment = CardPayment.create(paymentInfo, result.transactionKey(), cardType, cardNumber);
                 cardPaymentRepository.save(cardPayment);
+                
+                log.info("카드 결제 정보 저장 완료 - OrderId: {}, PaymentId: {}", orderInfo.orderId(), paymentInfo.getId());
             } else {
-                log.error("결제 요청 실패: {}, 메시지: {}", result.transactionKey(), result.message());
+                log.error("카드 결제 요청 실패 - OrderId: {}, TransactionKey: {}, Message: {}", 
+                         orderInfo.orderId(), result.transactionKey(), result.message());
+                throw new PaymentFailedException("카드 결제 요청에 실패했습니다: " + result.message());
             }
+        } catch (PaymentFailedException e) {
+            log.error("카드 결제 실패 - OrderId: {}, Error: {}", orderInfo.orderId(), e.getMessage());
+            throw e; // PaymentFailedException은 다시 던짐
         } catch (Exception e) {
-            log.error("결제 요청 접수 중 오류 발생: {}", e.getMessage(), e);
+            log.error("카드 결제 요청 중 예상치 못한 오류 발생 - OrderId: {}, Error: {}", orderInfo.orderId(), e.getMessage(), e);
+            throw new PaymentFailedException("카드 결제 처리 중 오류가 발생했습니다: " + e.getMessage(), e);
         }
     }
 

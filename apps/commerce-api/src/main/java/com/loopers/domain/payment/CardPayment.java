@@ -27,6 +27,7 @@ public class CardPayment extends BaseEntity {
         cardPayment.paymentId = payment.getId();
         cardPayment.transactionKey = transactionKey;
         cardPayment.cardType = cardType;
+        cardPayment.cardNumber = cardNumber;
         return cardPayment;
     }
 
