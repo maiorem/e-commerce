@@ -22,7 +22,7 @@ public abstract class BaseEntity implements Serializable {
     private Long id;
 
     @Version
-    private Long version;
+    private Long version = 0L;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private ZonedDateTime createdAt;

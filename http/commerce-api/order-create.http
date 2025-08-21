@@ -7,20 +7,20 @@ Content-Type: application/json
   "payment_method": "CREDIT_CARD",
   "card_type": "SAMSUNG",
   "card_number": "1234-5678-9814-1451",
-  "point_amount": 5000,
-  "coupon_code": "COUPON000001",
+  "point_amount": null,
+  "coupon_code": null,
   "items": [
     {
-        "product_id": 122,
+        "product_id": 2,
         "quantity": 2,
-        "product_name": "Wireless Headphones",
-        "product_price": 25000
+        "product_name": "상품 2",
+        "product_price": 27000
     },
     {
         "product_id": 78,
         "quantity": 1,
-        "product_name": "Bluetooth Speaker",
-        "product_price": 15000
+        "product_name": "상품 78",
+        "product_price": 12000
     }
   ]
 }
