@@ -1,6 +1,7 @@
 package com.loopers.infrastructure.http;
 
 import com.loopers.domain.payment.*;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +16,7 @@ public class PgClientAdapter implements PaymentGatewayPort {
     @Value("${payment.pg.callback-url}")
     private String callbackUrl;
 
+    @CircuitBreaker(name = "pgCircuit", fallbackMethod = "fallback")
     @Retry(name = "pgRetry", fallbackMethod = "fallback")
     @Override
     public PaymentResult processPayment(PaymentData paymentData) {
@@ -27,7 +29,6 @@ public class PgClientAdapter implements PaymentGatewayPort {
         return PaymentResult.failed("결제에 실패하였습니다 : " + t.getMessage());
     }
 
-    @Retry(name = "pgQueryRetry", fallbackMethod = "queryFallback")
     @Override
     public PaymentQueryResult queryPaymentStatus(String transactionKey) {
         try {
@@ -44,11 +45,6 @@ public class PgClientAdapter implements PaymentGatewayPort {
             return PaymentQueryResult.failed("조회 실패: " + e.getMessage());
         }
     }
-
-    public PaymentQueryResult queryFallback(String transactionKey, Throwable t) {
-        return PaymentQueryResult.failed("결제 상태 조회 실패: " + t.getMessage());
-    }
-
 
     @Override
     public PaymentHistoryResult queryPaymentHistory(String orderId) {
