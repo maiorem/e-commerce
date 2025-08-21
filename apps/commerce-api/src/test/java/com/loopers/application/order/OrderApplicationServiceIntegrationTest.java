@@ -4,10 +4,9 @@ import com.loopers.domain.coupon.CouponModel;
 import com.loopers.domain.coupon.CouponType;
 import com.loopers.domain.coupon.UserCouponModel;
 import com.loopers.domain.coupon.UserCouponRepository;
-import com.loopers.domain.order.OrderItemModel;
-import com.loopers.domain.order.OrderItemRepository;
-import com.loopers.domain.order.OrderModel;
-import com.loopers.domain.order.OrderRepository;
+import com.loopers.domain.order.*;
+import com.loopers.domain.payment.CardType;
+import com.loopers.domain.coupon.UserCoupontStatus;
 import com.loopers.domain.payment.PaymentMethod;
 import com.loopers.domain.point.PointModel;
 import com.loopers.domain.point.PointRepository;
@@ -122,15 +121,15 @@ class OrderApplicationServiceIntegrationTest {
             new OrderItemCommand(null, products.get(1).getId(), 1, "Samsung Galaxy S23", 1200000)
         );
         
-        orderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, coupon.getCouponCode(), 50000, orderItemCommands);
+        orderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, CardType.SAMSUNG, "1234567890123456", coupon.getCouponCode(), 50000, orderItemCommands);
 
         orderItems = List.of(
-            OrderItemModel.builder().productId(products.get(0).getId()).quantity(2).priceAtOrder(1000000).build(),
-            OrderItemModel.builder().productId(products.get(1).getId()).quantity(1).priceAtOrder(1200000).build()
+            OrderItemModel.builder().orderId(1L).productId(products.get(0).getId()).quantity(2).priceAtOrder(Money.of(1000000)).build(),
+            OrderItemModel.builder().orderId(1L).productId(products.get(1).getId()).quantity(1).priceAtOrder(Money.of(1200000)).build()
         );
 
         availablePoint = pointRepository.save(PointModel.of(userId, 100000));
-        order = OrderModel.create(userId, 3150000); // (1000000 * 2 + 1200000 * 1) - 50000
+        order = OrderModel.create(userId, Money.of(3150000), coupon.getCouponCode(), PaymentMethod.CREDIT_CARD); // (1000000 * 2 + 1200000 * 1) - 50000
     }
 
     @AfterEach
@@ -146,7 +145,7 @@ class OrderApplicationServiceIntegrationTest {
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.totalPrice()).isEqualTo(3145000); // (1000000 * 2 + 1200000 * 1) - 50000 - 5000(쿠폰할인)
+        assertThat(result.totalPrice().getAmount()).isEqualTo(3145000); // (1000000 * 2 + 1200000 * 1) - 50000 - 5000(쿠폰할인)
         assertThat(result.quantity()).isEqualTo(3); // 2 + 1
 
         // DB 저장 확인
@@ -173,14 +172,14 @@ class OrderApplicationServiceIntegrationTest {
     @DisplayName("포인트가 없는 사용자의 주문 생성")
     void createOrderWithoutPoints() {
         // given
-        OrderCommand orderCommandWithoutPoints = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, coupon.getCouponCode(),0, orderItemCommands);
+        OrderCommand orderCommandWithoutPoints = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, CardType.SAMSUNG, "1234567890123456", coupon.getCouponCode(), 0, orderItemCommands);
 
         // when
         OrderInfo result = orderApplicationService.createOrder(orderCommandWithoutPoints);
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.totalPrice()).isEqualTo(3195000); // (1000000 * 2 + 1200000 * 1) - 5000(쿠폰할인)
+        assertThat(result.totalPrice().getAmount()).isEqualTo(3195000); // (1000000 * 2 + 1200000 * 1) - 5000(쿠폰할인)
         
         // 포인트가 차감되지 않았는지 확인
         Optional<PointModel> updatedPoint = pointRepository.findByUserIdForUpdate(userId);
@@ -193,7 +192,7 @@ class OrderApplicationServiceIntegrationTest {
     void createOrderWithNonExistentUser() {
         // given
         UserId nonExistentUserId = UserId.of("seyoung12");
-        OrderCommand invalidOrderCommand = new OrderCommand(nonExistentUserId, PaymentMethod.CREDIT_CARD, coupon.getCouponCode(),0, orderItemCommands);
+        OrderCommand invalidOrderCommand = new OrderCommand(nonExistentUserId, PaymentMethod.CREDIT_CARD, CardType.SAMSUNG, "1234567890123456", coupon.getCouponCode(), 0, orderItemCommands);
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(invalidOrderCommand))
@@ -220,7 +219,7 @@ class OrderApplicationServiceIntegrationTest {
             new OrderItemCommand(null, outOfStockProduct.getId(), 1, "테스트상품", 50000)
         );
         
-        OrderCommand invalidOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, coupon.getCouponCode(),0, invalidOrderItemCommands);
+        OrderCommand invalidOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, CardType.SAMSUNG, "1234567890123456", coupon.getCouponCode(), 0, invalidOrderItemCommands);
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(invalidOrderCommand))
@@ -245,7 +244,7 @@ class OrderApplicationServiceIntegrationTest {
         UserCouponModel percentageUserCoupon = UserCouponModel.create(userId, percentageCoupon.getCouponCode());
         userCouponRepository.save(percentageUserCoupon);
 
-        OrderCommand percentageOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, percentageCoupon.getCouponCode(), 0, orderItemCommands);
+        OrderCommand percentageOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, CardType.SAMSUNG, "1234567890123456", percentageCoupon.getCouponCode(), 0, orderItemCommands);
 
         // when
         OrderInfo result = orderApplicationService.createOrder(percentageOrderCommand);
@@ -255,7 +254,7 @@ class OrderApplicationServiceIntegrationTest {
         // 주문 금액: (1000000 * 2 + 1200000 * 1) = 3200000
         // 10% 할인: 3200000 * 0.1 = 320000, 최대 할인 금액 100000 적용
         // 최종 금액: 3200000 - 100000 = 3100000
-        assertThat(result.totalPrice()).isEqualTo(3100000);
+        assertThat(result.totalPrice().getAmount()).isEqualTo(3100000);
     }
 
     @Test
@@ -276,7 +275,7 @@ class OrderApplicationServiceIntegrationTest {
         UserCouponModel expiredUserCoupon = UserCouponModel.create(userId, expiredCoupon.getCouponCode());
         userCouponRepository.save(expiredUserCoupon);
 
-        OrderCommand expiredOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, expiredCoupon.getCouponCode(), 0, orderItemCommands);
+        OrderCommand expiredOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, CardType.SAMSUNG, "1234567890123456", expiredCoupon.getCouponCode(), 0, orderItemCommands);
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(expiredOrderCommand))
@@ -313,7 +312,7 @@ class OrderApplicationServiceIntegrationTest {
         UserCouponModel highMinimumUserCoupon = UserCouponModel.create(userId, highMinimumCoupon.getCouponCode());
         userCouponRepository.save(highMinimumUserCoupon);
 
-        OrderCommand highMinimumOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, highMinimumCoupon.getCouponCode(), 0, orderItemCommands);
+        OrderCommand highMinimumOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, CardType.SAMSUNG, "1234567890123456", highMinimumCoupon.getCouponCode(), 0, orderItemCommands);
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(highMinimumOrderCommand))
@@ -324,7 +323,7 @@ class OrderApplicationServiceIntegrationTest {
     @DisplayName("존재하지 않는 쿠폰 사용 시도")
     void createOrderWithNonExistentCoupon() {
         // given
-        OrderCommand nonExistentCouponCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, "NON_EXISTENT_COUPON", 0, orderItemCommands);
+        OrderCommand nonExistentCouponCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, CardType.SAMSUNG, "1234567890123456", "NON_EXISTENT_COUPON", 0, orderItemCommands);
 
         // when & then
         assertThatThrownBy(() -> orderApplicationService.createOrder(nonExistentCouponCommand))
@@ -335,14 +334,14 @@ class OrderApplicationServiceIntegrationTest {
     @DisplayName("쿠폰 없이 주문 생성")
     void createOrderWithoutCoupon() {
         // given
-        OrderCommand noCouponCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, null, 0, orderItemCommands);
+        OrderCommand noCouponCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, CardType.SAMSUNG, "1234567890123456", null, 0, orderItemCommands);
 
         // when
         OrderInfo result = orderApplicationService.createOrder(noCouponCommand);
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.totalPrice()).isEqualTo(3200000); // (1000000 * 2 + 1200000 * 1) - 할인 없음
+        assertThat(result.totalPrice().getAmount()).isEqualTo(3200000); // (1000000 * 2 + 1200000 * 1) - 할인 없음
     }
 
     @Test
@@ -356,7 +355,7 @@ class OrderApplicationServiceIntegrationTest {
         
         Optional<UserCouponModel> usedUserCoupon = userCouponRepository.findByUserIdAndCouponCode(userId, coupon.getCouponCode());
         assertThat(usedUserCoupon).isPresent();
-        assertThat(usedUserCoupon.get().isUsed()).isTrue();
-        assertThat(usedUserCoupon.get().getUsedAt()).isNotNull();
+        assertThat(usedUserCoupon.get().getStatus()).isEqualTo(UserCoupontStatus.RESERVED); // 주문 생성 시 RESERVED 상태
+        assertThat(usedUserCoupon.get().getUsedAt()).isNull(); // 아직 사용되지 않음
     }
 }

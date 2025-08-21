@@ -46,8 +46,18 @@ class OrderCreationDomainServiceTest {
 
             List<ProductModel> products = List.of(product1, product2);
 
-            OrderItemModel orderItem1 = new OrderItemModel(1L, 1L, 2, 10000);
-            OrderItemModel orderItem2 = new OrderItemModel(1L, 2L, 1, 20000);
+            OrderItemModel orderItem1 = OrderItemModel.builder()
+                .orderId(1L)
+                .productId(1L)
+                .quantity(2)
+                .priceAtOrder(Money.of(10000))
+                .build();
+            OrderItemModel orderItem2 = OrderItemModel.builder()
+                .orderId(1L)
+                .productId(2L)
+                .quantity(1)
+                .priceAtOrder(Money.of(20000))
+                .build();
 
             List<OrderItemModel> orderItems = List.of(orderItem1, orderItem2);
 
@@ -63,7 +73,12 @@ class OrderCreationDomainServiceTest {
 
             List<ProductModel> products = List.of(product);
 
-            OrderItemModel orderItem = new OrderItemModel(1L, 999L, 1, 10000);
+            OrderItemModel orderItem = OrderItemModel.builder()
+                .orderId(1L)
+                .productId(999L)
+                .quantity(1)
+                .priceAtOrder(Money.of(10000))
+                .build();
             List<OrderItemModel> orderItems = List.of(orderItem);
 
             // when & then
@@ -79,7 +94,12 @@ class OrderCreationDomainServiceTest {
 
             List<ProductModel> products = List.of(product);
 
-            OrderItemModel orderItem = new OrderItemModel(1L, 1L, 0, 10000);
+            OrderItemModel orderItem = OrderItemModel.builder()
+                .orderId(1L)
+                .productId(1L)
+                .quantity(0)
+                .priceAtOrder(Money.of(10000))
+                .build();
             List<OrderItemModel> orderItems = List.of(orderItem);
 
             // when & then
@@ -95,7 +115,12 @@ class OrderCreationDomainServiceTest {
 
             List<ProductModel> products = List.of(product);
 
-            OrderItemModel orderItem = new OrderItemModel(1L, 1L, 10, 10000);
+            OrderItemModel orderItem = OrderItemModel.builder()
+                .orderId(1L)
+                .productId(1L)
+                .quantity(10)
+                .priceAtOrder(Money.of(10000))
+                .build();
             List<OrderItemModel> orderItems = List.of(orderItem);
 
             // when & then
@@ -112,8 +137,18 @@ class OrderCreationDomainServiceTest {
         @DisplayName("주문 아이템들의 총 가격을 계산한다")
         void calculateOrderPriceSuccess() {
             // given
-            OrderItemModel orderItem1 = new OrderItemModel(1L, 1L, 2, 10000);
-            OrderItemModel orderItem2 = new OrderItemModel(1L, 2L, 1, 20000);
+            OrderItemModel orderItem1 = OrderItemModel.builder()
+                .orderId(1L)
+                .productId(1L)
+                .quantity(2)
+                .priceAtOrder(Money.of(10000))
+                .build();
+            OrderItemModel orderItem2 = OrderItemModel.builder()
+                .orderId(1L)
+                .productId(2L)
+                .quantity(1)
+                .priceAtOrder(Money.of(20000))
+                .build();
             List<OrderItemModel> orderItems = List.of(orderItem1, orderItem2);
 
             // when

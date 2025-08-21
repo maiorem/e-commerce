@@ -1,7 +1,7 @@
 package com.loopers.application.order;
 
 import com.loopers.application.product.StockDeductionProcessor;
-import com.loopers.domain.order.OrderItemModel;
+import com.loopers.domain.order.*;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.utils.DatabaseCleanUp;
@@ -59,9 +59,10 @@ public class StockDeductionPessimisticLockTest {
         orderItems = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             OrderItemModel orderItem = OrderItemModel.builder()
+                    .orderId(1L)
                     .productId(product.getId())
                     .quantity(10)
-                    .priceAtOrder(10000)
+                    .priceAtOrder(Money.of(10000))
                     .build();
             orderItems.add(orderItem);
         }
@@ -128,9 +129,10 @@ public class StockDeductionPessimisticLockTest {
         // 주문 아이템 30개 주문
         orderItems = new ArrayList<>();
         OrderItemModel orderItem = OrderItemModel.builder()
+                .orderId(1L)
                 .productId(lowStockProduct.getId())
                 .quantity(30)
-                .priceAtOrder(10000)
+                .priceAtOrder(Money.of(10000))
                 .build();
         orderItems.add(orderItem);
 
@@ -189,9 +191,10 @@ public class StockDeductionPessimisticLockTest {
 
         orderItems = new ArrayList<>();
         OrderItemModel orderItem = OrderItemModel.builder()
+                .orderId(1L)
                 .productId(exactStockProduct.getId())
                 .quantity(50)
-                .priceAtOrder(10000)
+                .priceAtOrder(Money.of(10000))
                 .build();
         orderItems.add(orderItem);
 
