@@ -1,4 +1,4 @@
-package com.loopers.infrastructure.pg_client;
+package com.loopers.infrastructure.http;
 
 import com.loopers.support.http.config.FeignClientTimeoutConfig;
 import org.springframework.cloud.openfeign.FeignClient;

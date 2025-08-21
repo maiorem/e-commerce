@@ -1,5 +1,6 @@
 package com.loopers.application.order;
 
+import com.loopers.domain.order.Money;
 import com.loopers.domain.order.OrderModel;
 import com.loopers.domain.order.OrderNumber;
 import com.loopers.domain.order.OrderStatus;
@@ -13,7 +14,7 @@ public record OrderInfo(
         UserId userId,
         String productName,
         int quantity,
-        double totalPrice,
+        Money totalPrice,
         String orderDate,
         OrderStatus status
 ) {

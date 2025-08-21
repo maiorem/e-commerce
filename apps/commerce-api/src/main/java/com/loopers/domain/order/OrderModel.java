@@ -1,15 +1,14 @@
 package com.loopers.domain.order;
 
 import com.loopers.domain.BaseEntity;
+import com.loopers.domain.payment.PaymentMethod;
 import com.loopers.domain.user.UserId;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -25,42 +24,45 @@ public class OrderModel extends BaseEntity {
     @Embedded
     private OrderNumber orderNumber;
 
-    private int totalAmount;
+    private Money totalAmount;
 
-    private String transactionKey;
     private String couponCode;
-    private int usedPoints;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
+
+    @Transient
+    private List<OrderItemModel> orderItems = new ArrayList<>();
+
+
     protected OrderModel() {}
 
-    public static OrderModel create(UserId userId, int totalAmount, String couponCode, int usedPoints) {
+    public static OrderModel create(UserId userId, Money totalAmount, String couponCode, PaymentMethod paymentMethod) {
         OrderModel order = new OrderModel();
         order.userId = userId;
         order.orderNumber = OrderNumberGenerator.generateOrderNumber();
         order.orderDate = OrderDate.of(LocalDateTime.now());
         order.totalAmount = totalAmount;
         order.couponCode = couponCode;
-        order.usedPoints = usedPoints;
+        order.paymentMethod = paymentMethod;
         order.status = OrderStatus.CREATED;
         return order;
     }
 
-    public void pending(String transactionKey) {
-        if (transactionKey == null || transactionKey.isEmpty()) {
-            throw new IllegalArgumentException("트랜잭션 키는 비어있을 수 없습니다.");
+    public void confirm() {
+        if (this.status != OrderStatus.CREATED) {
+            throw new IllegalStateException("CREATED 상태에서만 확정 가능합니다.");
         }
-        this.transactionKey = transactionKey;
-        this.status = OrderStatus.PENDING;
-    }
-
-    public void confirmPayment() {
         this.status = OrderStatus.CONFIRMED;
     }
 
-    public void cancelByPaymentFailure() {
+    public void cancel() {
+        if (this.status == OrderStatus.CONFIRMED) {
+            throw new IllegalStateException("이미 확정된 주문은 취소할 수 없습니다.");
+        }
         this.status = OrderStatus.CANCELLED;
     }
 } 

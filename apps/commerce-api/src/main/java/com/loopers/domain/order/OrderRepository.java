@@ -18,7 +18,5 @@ public interface OrderRepository {
     
     void delete(OrderModel order);
 
-    Optional<OrderModel> findByTransactionKey(String transactionId);
-
     List<OrderModel> findByStatusAndCreatedBefore(OrderStatus orderStatus, LocalDateTime localDateTime);
 } 

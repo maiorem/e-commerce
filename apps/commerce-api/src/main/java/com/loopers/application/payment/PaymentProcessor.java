@@ -1,27 +1,17 @@
 package com.loopers.application.payment;
 
-import com.loopers.domain.payment.PaymentData;
-import com.loopers.domain.payment.PaymentGatewayPort;
-import com.loopers.domain.payment.PaymentResult;
+import com.loopers.domain.payment.PaymentModel;
+import com.loopers.domain.payment.PaymentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.retry.annotation.Retryable;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.CompletableFuture;
 
 @Component
 @RequiredArgsConstructor
 public class PaymentProcessor {
 
-    private final PaymentGatewayPort paymentGatewayPort;
+    private final PaymentRepository paymentRepository;
 
-    @Async
-    @Retryable(maxAttempts = 3)
-    public CompletableFuture<PaymentResult> processAsync(PaymentData data) {
-        return CompletableFuture.supplyAsync(() -> {
-            return paymentGatewayPort.processPayment(data);
-        });
+    public PaymentModel save(PaymentModel paymentHistory) {
+        return paymentRepository.save(paymentHistory);
     }
-
 }

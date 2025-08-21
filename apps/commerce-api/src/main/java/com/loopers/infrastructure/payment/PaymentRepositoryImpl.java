@@ -1,10 +1,12 @@
 package com.loopers.infrastructure.payment;
 
-import com.loopers.domain.payment.PaymentHistoryModel;
+import com.loopers.domain.payment.PaymentModel;
 import com.loopers.domain.payment.PaymentRepository;
+import com.loopers.domain.payment.PaymentStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,30 +14,30 @@ import java.util.Optional;
 @Component
 public class PaymentRepositoryImpl implements PaymentRepository {
 
-    private final PaymentJpaRepository paymentHistoryJpaRepository;
+    private final PaymentJpaRepository paymentJpaRepository;
 
     @Override
-    public PaymentHistoryModel save(PaymentHistoryModel payment) {
-        return null;
+    public PaymentModel save(PaymentModel payment) {
+        return paymentJpaRepository.save(payment);
     }
 
     @Override
-    public Optional<PaymentHistoryModel> findById(Long id) {
-        return Optional.empty();
+    public Optional<PaymentModel> findById(Long id) {
+        return paymentJpaRepository.findById(id);
     }
 
     @Override
-    public Optional<PaymentHistoryModel> findByOrderId(Long orderId) {
-        return Optional.empty();
+    public List<PaymentModel> findAll() {
+        return paymentJpaRepository.findAll();
     }
 
     @Override
-    public List<PaymentHistoryModel> findAll() {
-        return List.of();
+    public Optional<PaymentModel> findByTransactionKey(String transactionKey) {
+        return paymentJpaRepository.findByTransactionKey(transactionKey);
     }
 
     @Override
-    public void delete(PaymentHistoryModel payment) {
-
+    public List<PaymentModel> findByStatusAndCreatedBefore(PaymentStatus paymentStatus, LocalDateTime time) {
+        return paymentJpaRepository.findByStatusAndCreatedAtBefore(paymentStatus, time);
     }
 }

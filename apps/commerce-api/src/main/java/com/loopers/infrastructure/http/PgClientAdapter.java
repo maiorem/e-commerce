@@ -1,4 +1,4 @@
-package com.loopers.infrastructure.pg_client;
+package com.loopers.infrastructure.http;
 
 import com.loopers.domain.payment.*;
 import io.github.resilience4j.retry.annotation.Retry;
