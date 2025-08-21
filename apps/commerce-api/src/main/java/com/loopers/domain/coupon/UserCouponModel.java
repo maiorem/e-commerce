@@ -2,9 +2,7 @@ package com.loopers.domain.coupon;
 
 import com.loopers.domain.BaseEntity;
 import com.loopers.domain.user.UserId;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,6 +20,7 @@ public class UserCouponModel extends BaseEntity {
 
     private String couponCode;
 
+    @Enumerated(EnumType.STRING)
     private UserCoupontStatus status = UserCoupontStatus.AVAILABLE;
 
     private LocalDate issuedAt;

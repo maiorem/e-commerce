@@ -1,8 +1,9 @@
 package com.loopers.domain.coupon;
 
 import com.loopers.domain.BaseEntity;
-import com.loopers.support.error.ErrorType;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -19,7 +20,9 @@ public class CouponModel extends BaseEntity {
 
     private String name;
     private String couponCode;
+    @Enumerated(EnumType.STRING)
     private CouponType type;
+    @Enumerated(EnumType.STRING)
     private CouponStatus status;
     private int discountValue;
     private int minimumOrderAmount;
