@@ -2,13 +2,13 @@ package com.loopers.infrastructure.payment;
 
 import com.loopers.domain.payment.CardPayment;
 import com.loopers.domain.payment.CardPaymentRepository;
-import com.loopers.domain.payment.PaymentStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Optional;
 
 @RequiredArgsConstructor
+@Component
 public class CardPaymentRepositoryImpl implements CardPaymentRepository {
 
     private final CardPaymentJpaRepository cardPaymentJpaRepository;
@@ -19,7 +19,12 @@ public class CardPaymentRepositoryImpl implements CardPaymentRepository {
     }
 
     @Override
-    public List<CardPayment> findByStatusAndCreatedBefore(PaymentStatus paymentStatus, LocalDateTime localDateTime) {
-        return cardPaymentJpaRepository.findByStatusAndCreatedBefore(paymentStatus, localDateTime);
+    public Optional<CardPayment> findByTransactionKey(String transactionId) {
+        return cardPaymentJpaRepository.findByTransactionKey(transactionId);
+    }
+
+    @Override
+    public Optional<CardPayment> findByPaymentId(Long paymentId) {
+        return cardPaymentJpaRepository.findByPaymentId(paymentId);
     }
 }

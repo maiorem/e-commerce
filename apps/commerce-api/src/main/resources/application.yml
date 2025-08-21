@@ -41,10 +41,23 @@ resilience4j:
     instances:
       pgRetry:
         max-attempts: 3
-        wait-duration: 1s
+        wait-duration: 5s
         retry-exceptions:
           - feign.RetryableException
+          - java.net.SocketTimeoutException
+          - java.net.ConnectException
         fail-after-max-attempts: true
+  circuitbreaker:
+    instances:
+      pgCircuit:
+        failure-rate-threshold: 50 # 실패율 임계값 (default : 50)
+        slow-call-rate-threshold: 50 # 느린 호출 비율 임계값 (default : 50)
+        slow-call-duration-threshold: 2s # 느린 호출 지속 시간 임계값 (default : 2s)
+        minimum-number-of-calls: 10 # 최소 호출 수 (default : 10)
+        sliding-window-size: 10 # 슬라이딩 윈도우 크기 (default : 10)
+        wait-duration-in-open-state: 5s # 오픈 상태에서 대기 시간 (default : 60s)
+        permitted-number-of-calls-in-half-open-state: 3 # 반 오픈 상태에서 허용된 호출 수 (default : 10)
+        automatic-transition-from-open-to-half-open-enabled: true # 오픈 상태에서 반 오픈 상태로 자동 전환 활성화 (default : true)
 
 ---
 spring:

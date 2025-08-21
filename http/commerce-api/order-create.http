@@ -1,0 +1,26 @@
+### 주문 생성
+POST http://localhost:8080/api/v1/orders
+X-USER-ID: user000001
+Content-Type: application/json
+
+{
+  "payment_method": "CREDIT_CARD",
+  "card_type": "SAMSUNG",
+  "card_number": "1234-5678-9814-1451",
+  "point_amount": 5000,
+  "coupon_code": "COUPON000001",
+  "items": [
+    {
+        "product_id": 122,
+        "quantity": 2,
+        "product_name": "Wireless Headphones",
+        "product_price": 25000
+    },
+    {
+        "product_id": 78,
+        "quantity": 1,
+        "product_name": "Bluetooth Speaker",
+        "product_price": 15000
+    }
+  ]
+}

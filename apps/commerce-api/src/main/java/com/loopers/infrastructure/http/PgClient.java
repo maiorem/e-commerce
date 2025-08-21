@@ -12,12 +12,12 @@ import org.springframework.web.bind.annotation.*;
 public interface PgClient {
 
     @PostMapping("/api/v1/payments")
-    PgClientDto.PgClientResponse requestPayment(@RequestBody PgClientDto.PgClientRequest request);
+    PgClientDto.PgClientResponse requestPayment(@RequestHeader("X-USER-ID") String userId, @RequestBody PgClientDto.PgClientRequest request);
 
     @GetMapping("/api/v1/payments/{transactionKey}")
-    PgClientDto.PgClientQueryResponse getTransaction(@PathVariable("transactionKey") String transactionKey);
+    PgClientDto.PgClientQueryResponse getTransaction(@RequestHeader("X-USER-ID") String userId, @PathVariable("transactionKey") String transactionKey);
 
     @GetMapping("/api/v1/payments")
-    PgClientDto.PgClientHistoryResponse getPaymentsByOrderId(@RequestParam("orderId") String orderId);
+    PgClientDto.PgClientHistoryResponse getPaymentsByOrderId(@RequestHeader("X-USER-ID") String userId, @RequestParam("orderId") String orderId);
 
 }

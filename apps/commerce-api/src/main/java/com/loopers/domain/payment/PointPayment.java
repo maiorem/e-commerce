@@ -10,7 +10,6 @@ import lombok.Getter;
 @Table(name = "point_payment")
 public class PointPayment extends BaseEntity {
 
-    @Id
     private Long paymentId;
 
     private Long pointId;

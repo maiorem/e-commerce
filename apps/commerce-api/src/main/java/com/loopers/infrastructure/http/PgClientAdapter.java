@@ -1,10 +1,13 @@
 package com.loopers.infrastructure.http;
 
 import com.loopers.domain.payment.*;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 @RequiredArgsConstructor
 @Component
@@ -15,11 +18,13 @@ public class PgClientAdapter implements PaymentGatewayPort {
     @Value("${payment.pg.callback-url}")
     private String callbackUrl;
 
+    @CircuitBreaker(name = "pgCircuit", fallbackMethod = "fallback")
     @Retry(name = "pgRetry", fallbackMethod = "fallback")
     @Override
     public PaymentResult processPayment(PaymentData paymentData) {
+        String userId = getCurrentUserId();
         PgClientDto.PgClientRequest request = PgClientDto.PgClientRequest.from(paymentData, callbackUrl);
-        PgClientDto.PgClientResponse response= pgClient.requestPayment(request);
+        PgClientDto.PgClientResponse response= pgClient.requestPayment(userId, request);
         return PaymentResult.success(response.data().transactionKey());
     }
 
@@ -27,11 +32,11 @@ public class PgClientAdapter implements PaymentGatewayPort {
         return PaymentResult.failed("결제에 실패하였습니다 : " + t.getMessage());
     }
 
-    @Retry(name = "pgQueryRetry", fallbackMethod = "queryFallback")
     @Override
     public PaymentQueryResult queryPaymentStatus(String transactionKey) {
+        String userId = getCurrentUserId();
         try {
-            PgClientDto.PgClientQueryResponse response = pgClient.getTransaction(transactionKey);
+            PgClientDto.PgClientQueryResponse response = pgClient.getTransaction(userId, transactionKey);
 
             return PaymentQueryResult.success(
                     response.data().transactionKey(),
@@ -45,19 +50,23 @@ public class PgClientAdapter implements PaymentGatewayPort {
         }
     }
 
-    public PaymentQueryResult queryFallback(String transactionKey, Throwable t) {
-        return PaymentQueryResult.failed("결제 상태 조회 실패: " + t.getMessage());
-    }
-
-
     @Override
     public PaymentHistoryResult queryPaymentHistory(String orderId) {
+        String userId = getCurrentUserId();
         try {
-            PgClientDto.PgClientHistoryResponse response = pgClient.getPaymentsByOrderId(orderId);
+            PgClientDto.PgClientHistoryResponse response = pgClient.getPaymentsByOrderId(userId, orderId);
             return PaymentHistoryResult.success(response);
         } catch (Exception e) {
             return PaymentHistoryResult.failed("결제 내역 조회 실패: " + e.getMessage());
         }
+    }
+
+    private String getCurrentUserId() {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        if (attributes != null) {
+            return attributes.getRequest().getHeader("X-USER-ID");
+        }
+        return null;
     }
 
 }

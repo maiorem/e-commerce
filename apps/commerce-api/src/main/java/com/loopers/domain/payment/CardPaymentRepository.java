@@ -2,12 +2,13 @@ package com.loopers.domain.payment;
 
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CardPaymentRepository {
     CardPayment save(CardPayment cardPayment);
 
-    List<CardPayment> findByStatusAndCreatedBefore(PaymentStatus paymentStatus, LocalDateTime localDateTime);
+    Optional<CardPayment> findByTransactionKey(String transactionId);
+
+    Optional<CardPayment> findByPaymentId(Long paymentId);
 }

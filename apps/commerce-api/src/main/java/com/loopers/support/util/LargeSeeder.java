@@ -2,12 +2,13 @@ package com.loopers.support.util;
 
 import java.sql.*;
 import java.time.ZonedDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.*;
-import java.util.function.Supplier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Supplier;
 
 public class LargeSeeder {
 
@@ -19,9 +20,9 @@ public class LargeSeeder {
     public static final int LIKE_COUNT = 5_000_000;
     public static final int POINT_COUNT = 50_000;
     public static final int COUPON_COUNT = 10_000;
+    public static final int USER_COUPON_COUNT = 50_000; // 유저당 평균 0.5개 쿠폰
     public static final int ORDER_COUNT = 200_000;
     public static final int ORDER_ITEM_COUNT = 600_000;
-    public static final int PAYMENT_COUNT = 200_000;
 
     // ---- TUNING ----
     public static final int PRODUCT_THREADS = 8;
@@ -39,9 +40,9 @@ public class LargeSeeder {
         seedLikes(connectionSupplier, LIKE_COUNT, USER_COUNT, PRODUCT_COUNT, LIKE_THREADS);
         seedPoints(connectionSupplier, POINT_COUNT, USER_COUNT);
         seedCoupons(connectionSupplier, COUPON_COUNT);
+        seedUserCoupons(connectionSupplier, USER_COUPON_COUNT, USER_COUNT, COUPON_COUNT);
         seedOrders(connectionSupplier, ORDER_COUNT, USER_COUNT, ORDER_THREADS);
         seedOrderItems(connectionSupplier, ORDER_ITEM_COUNT, ORDER_COUNT, PRODUCT_COUNT);
-        seedPayments(connectionSupplier, PAYMENT_COUNT, ORDER_COUNT);
         
         long t1 = System.currentTimeMillis();
         System.out.println("[LargeSeeder] done in " + (t1 - t0) + " ms");
@@ -85,9 +86,14 @@ public class LargeSeeder {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
 
+            String[] brandNames = {"삼성", "LG", "애플", "구글", "마이크로소프트", "아마존", "테슬라", "현대", "기아", "포드"};
+            String[] brandDescriptions = {"삼성 브랜드", "LG 브랜드", "애플 브랜드", "구글 브랜드", "마이크로소프트 브랜드", 
+                                        "아마존 브랜드", "테슬라 브랜드", "현대 브랜드", "기아 브랜드", "포드 브랜드"};
+
             for (int i = 1; i <= count; i++) {
-                ps.setString(1, "브랜드 " + i);
-                ps.setString(2, "브랜드 " + i + " 설명");
+                int brandIndex = (i - 1) % brandNames.length;
+                ps.setString(1, brandNames[brandIndex] + " " + ((i - 1) / brandNames.length + 1));
+                ps.setString(2, brandDescriptions[brandIndex] + " " + ((i - 1) / brandNames.length + 1));
 
                 ZonedDateTime[] ts = randomRangePast(365 * 3);
                 ps.setTimestamp(3, Timestamp.from(ts[0].toInstant()));
@@ -160,17 +166,15 @@ public class LargeSeeder {
             conn.setAutoCommit(false);
 
             for (int i = start; i <= end; i++) {
-                int brandId = skewedBrandId(brandCount, 2.2);
-                int categoryId = skewedCategoryId(categoryCount, 1.5);
-                ps.setLong(1, brandId);
-                ps.setLong(2, categoryId);
+                ps.setLong(1, ThreadLocalRandom.current().nextInt(1, brandCount + 1));
+                ps.setLong(2, ThreadLocalRandom.current().nextInt(1, categoryCount + 1));
                 ps.setString(3, "상품 " + i);
-                ps.setString(4, "상품 " + i + " 설명");
+                ps.setString(4, "상품 " + i + "에 대한 설명입니다.");
                 ps.setInt(5, samplePrice());
                 ps.setInt(6, sampleStock());
                 ps.setInt(7, sampleLike());
 
-                ZonedDateTime[] ts = recentSkewed(365, 2.3);
+                ZonedDateTime[] ts = randomRangePast(365 * 3);
                 ps.setTimestamp(8, Timestamp.from(ts[0].toInstant()));
                 ps.setTimestamp(9, Timestamp.from(ts[1].toInstant()));
 
@@ -184,7 +188,7 @@ public class LargeSeeder {
             ps.executeBatch();
             conn.commit();
         } catch (SQLException e) {
-            throw new RuntimeException("insertProductsRange failed [" + start + "~" + end + "]", e);
+            throw new RuntimeException("insertProductsRange failed", e);
         }
     }
 
@@ -207,12 +211,10 @@ public class LargeSeeder {
             conn.setAutoCommit(false);
 
             for (int i = start; i <= end; i++) {
-                int userId = ThreadLocalRandom.current().nextInt(1, userCount + 1);
-                int productId = skewedProductId(productCount, 2.0);
-                ps.setString(1, "user" + String.format("%06d", userId));
-                ps.setLong(2, productId);
+                ps.setString(1, "user" + String.format("%06d", ThreadLocalRandom.current().nextInt(1, userCount + 1)));
+                ps.setLong(2, ThreadLocalRandom.current().nextInt(1, productCount + 1));
 
-                ZonedDateTime[] ts = recentSkewed(90, 1.5);
+                ZonedDateTime[] ts = randomRangePast(365 * 3);
                 ps.setTimestamp(3, Timestamp.from(ts[0].toInstant()));
                 ps.setTimestamp(4, Timestamp.from(ts[1].toInstant()));
 
@@ -226,7 +228,7 @@ public class LargeSeeder {
             ps.executeBatch();
             conn.commit();
         } catch (SQLException e) {
-            throw new RuntimeException("insertLikesRange failed [" + start + "~" + end + "]", e);
+            throw new RuntimeException("insertLikesRange failed", e);
         }
     }
 
@@ -238,12 +240,14 @@ public class LargeSeeder {
             conn.setAutoCommit(false);
 
             for (int i = 1; i <= count; i++) {
-                int userId = ThreadLocalRandom.current().nextInt(1, userCount + 1);
-                ps.setString(1, "user" + String.format("%06d", userId));
+                ps.setString(1, "user" + String.format("%06d", ThreadLocalRandom.current().nextInt(1, userCount + 1)));
                 ps.setInt(2, samplePointAmount());
-                ps.setTimestamp(3, Timestamp.from(ZonedDateTime.now().plusYears(1).toInstant()));
+                
+                // 1년 후 만료
+                ZonedDateTime expiredAt = ZonedDateTime.now().plusYears(1);
+                ps.setTimestamp(3, Timestamp.from(expiredAt.toInstant()));
 
-                ZonedDateTime[] ts = recentSkewed(30, 1.0);
+                ZonedDateTime[] ts = randomRangePast(365 * 3);
                 ps.setTimestamp(4, Timestamp.from(ts[0].toInstant()));
                 ps.setTimestamp(5, Timestamp.from(ts[1].toInstant()));
 
@@ -268,18 +272,24 @@ public class LargeSeeder {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
 
+            String[] couponTypes = {"FIXED_AMOUNT", "PERCENTAGE"};
+            String[] couponStatuses = {"ACTIVE", "INACTIVE"};
+
             for (int i = 1; i <= count; i++) {
                 ps.setString(1, "쿠폰 " + i);
                 ps.setString(2, "COUPON" + String.format("%06d", i));
-                ps.setInt(3, i % 2 == 0 ? 0 : 1); // 0: FIXED_AMOUNT, 1: PERCENTAGE
-                ps.setInt(4, 1); // 1: ACTIVE
-                ps.setInt(5, i % 2 == 0 ? 5000 : 20); // FIXED_AMOUNT: 5000원, PERCENTAGE: 20%
-                ps.setInt(6, 10000);
-                ps.setInt(7, 10000);
-                ps.setTimestamp(8, Timestamp.from(ZonedDateTime.now().toInstant()));
-                ps.setTimestamp(9, Timestamp.from(ZonedDateTime.now().plusMonths(6).toInstant()));
+                ps.setString(3, couponTypes[i % couponTypes.length]);
+                ps.setString(4, couponStatuses[i % couponStatuses.length]);
+                ps.setInt(5, i % 2 == 0 ? 1000 : 10); // 정액: 1000원, 정률: 10%
+                ps.setInt(6, 10000); // 최소 주문 금액
+                ps.setInt(7, i % 2 == 0 ? 5000 : 5000); // 최대 할인 금액
+                
+                ZonedDateTime issuedAt = ZonedDateTime.now().minusDays(ThreadLocalRandom.current().nextInt(0, 365));
+                ZonedDateTime validUntil = issuedAt.plusDays(365);
+                ps.setTimestamp(8, Timestamp.from(issuedAt.toInstant()));
+                ps.setTimestamp(9, Timestamp.from(validUntil.toInstant()));
 
-                ZonedDateTime[] ts = recentSkewed(30, 1.0);
+                ZonedDateTime[] ts = randomRangePast(365 * 3);
                 ps.setTimestamp(10, Timestamp.from(ts[0].toInstant()));
                 ps.setTimestamp(11, Timestamp.from(ts[1].toInstant()));
 
@@ -310,21 +320,26 @@ public class LargeSeeder {
     }
 
     private static void insertOrdersRange(Supplier<Connection> cs, int start, int end, int userCount) {
-        final String sql = "INSERT INTO orders (user_id, total_amount, order_date, order_number, created_at, updated_at) VALUES (?,?,?,?,?,?)";
+        // 현재 엔티티 구조에 맞게 수정: total_amount는 Money 타입이므로 제거하고 기본 컬럼만 사용
+        final String sql = "INSERT INTO orders (user_id, order_date, order_number, status, payment_method, created_at, updated_at) VALUES (?,?,?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
 
+            String[] orderStatuses = {"CREATED", "CONFIRMED", "CANCELLED"};
+            String[] paymentMethods = {"CREDIT_CARD", "POINT"};
+
             for (int i = start; i <= end; i++) {
                 int userId = ThreadLocalRandom.current().nextInt(1, userCount + 1);
                 ps.setString(1, "user" + String.format("%06d", userId));
-                ps.setInt(2, sampleOrderAmount());
-                ps.setString(4, "ORDER" + String.format("%08d", i)); // order_number 추가
-
+                
                 ZonedDateTime[] ts = recentSkewed(365, 1.8);
-                ps.setTimestamp(3, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(5, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(6, Timestamp.from(ts[1].toInstant()));
+                ps.setTimestamp(2, Timestamp.from(ts[0].toInstant())); // order_date
+                ps.setString(3, "ORDER" + String.format("%08d", i)); // order_number
+                ps.setString(4, orderStatuses[ThreadLocalRandom.current().nextInt(orderStatuses.length)]); // status
+                ps.setString(5, paymentMethods[ThreadLocalRandom.current().nextInt(paymentMethods.length)]); // payment_method
+                ps.setTimestamp(6, Timestamp.from(ts[0].toInstant())); // created_at
+                ps.setTimestamp(7, Timestamp.from(ts[1].toInstant())); // updated_at
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
@@ -373,24 +388,29 @@ public class LargeSeeder {
         }
     }
 
-    // ---------- PAYMENT (single-thread) ----------
-    public static void seedPayments(Supplier<Connection> cs, int count, int orderCount) {
-        final String sql = "INSERT INTO payment_history (order_id, payment_method, payment_status, amount, payment_date, created_at, updated_at) VALUES (?,?,?,?,?,?,?)";
+    // ---------- USER_COUPON (single-thread) ----------
+    public static void seedUserCoupons(Supplier<Connection> cs, int count, int userCount, int couponCount) {
+        final String sql = "INSERT INTO user_coupon (user_id, coupon_code, status, issued_at, created_at, updated_at) VALUES (?,?,?,?,?,?)";
         try (Connection conn = cs.get();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             conn.setAutoCommit(false);
 
             for (int i = 1; i <= count; i++) {
-                int orderId = ThreadLocalRandom.current().nextInt(1, orderCount + 1);
-                ps.setLong(1, orderId);
-                ps.setString(2, samplePaymentMethod());
-                ps.setString(3, "SUCCESS"); // 기본적으로 성공 상태
-                ps.setInt(4, samplePaymentAmount());
+                // 랜덤 유저 선택
+                int userId = ThreadLocalRandom.current().nextInt(1, userCount + 1);
+                // 랜덤 쿠폰 선택
+                int couponId = ThreadLocalRandom.current().nextInt(1, couponCount + 1);
+                
+                ps.setString(1, "user" + String.format("%06d", userId));
+                ps.setString(2, "COUPON" + String.format("%06d", couponId));
+                ps.setString(3, "AVAILABLE"); // 사용 가능한 상태
+                
+                ZonedDateTime issuedAt = ZonedDateTime.now().minusDays(ThreadLocalRandom.current().nextInt(0, 365));
+                ps.setTimestamp(4, Timestamp.from(issuedAt.toInstant()));
 
-                ZonedDateTime[] ts = recentSkewed(365, 1.8);
+                ZonedDateTime[] ts = randomRangePast(365 * 3);
                 ps.setTimestamp(5, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(6, Timestamp.from(ts[0].toInstant()));
-                ps.setTimestamp(7, Timestamp.from(ts[1].toInstant()));
+                ps.setTimestamp(6, Timestamp.from(ts[1].toInstant()));
 
                 ps.addBatch();
                 if (i % BATCH_SIZE == 0) {
@@ -402,58 +422,43 @@ public class LargeSeeder {
             ps.executeBatch();
             conn.commit();
         } catch (SQLException e) {
-            throw new RuntimeException("seedPayments failed", e);
+            throw new RuntimeException("seedUserCoupons failed", e);
         }
     }
 
-    // ---------- Helpers ----------
 
-    private static List<int[]> splitRange(int total, int threads) {
-        List<int[]> ranges = new ArrayList<>(threads);
-        int base = total / threads;
-        int rem = total % threads;
-        int cur = 1;
-        for (int t = 0; t < threads; t++) {
-            int size = base + (t < rem ? 1 : 0);
-            int start = cur;
-            int end = cur + size - 1;
-            if (size > 0) ranges.add(new int[]{start, end});
-            cur = end + 1;
+    // ---------- UTILITY METHODS ----------
+    private static List<int[]> splitRange(int count, int threads) {
+        List<int[]> ranges = new ArrayList<>();
+        int chunk = count / threads;
+        int remainder = count % threads;
+        
+        int start = 1;
+        for (int i = 0; i < threads; i++) {
+            int end = start + chunk - 1 + (i < remainder ? 1 : 0);
+            ranges.add(new int[]{start, end});
+            start = end + 1;
         }
         return ranges;
     }
 
     private static void waitAll(ExecutorService es, List<Future<?>> futures) {
-        es.shutdown();
-        for (Future<?> f : futures) {
-            try { f.get(); }
-            catch (InterruptedException ie) { Thread.currentThread().interrupt(); }
-            catch (ExecutionException ee) { throw new RuntimeException(ee.getCause()); }
+        try {
+            for (Future<?> future : futures) {
+                future.get();
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("Thread execution failed", e);
+        } finally {
+            es.shutdown();
         }
     }
 
-    private static int skewedBrandId(int brandCount, double alpha) {
-        double u = ThreadLocalRandom.current().nextDouble();
-        int id = 1 + (int) Math.floor(Math.pow(u, alpha) * brandCount);
-        if (id < 1) id = 1;
-        if (id > brandCount) id = brandCount;
-        return id;
-    }
-
-    private static int skewedCategoryId(int categoryCount, double alpha) {
-        double u = ThreadLocalRandom.current().nextDouble();
-        int id = 1 + (int) Math.floor(Math.pow(u, alpha) * categoryCount);
-        if (id < 1) id = 1;
-        if (id > categoryCount) id = categoryCount;
-        return id;
-    }
-
-    private static int skewedProductId(int productCount, double alpha) {
-        double u = ThreadLocalRandom.current().nextDouble();
-        int id = 1 + (int) Math.floor(Math.pow(u, alpha) * productCount);
-        if (id < 1) id = 1;
-        if (id > productCount) id = productCount;
-        return id;
+    private static String generateRandomBirthDate() {
+        int year = ThreadLocalRandom.current().nextInt(1960, 2005);
+        int month = ThreadLocalRandom.current().nextInt(1, 13);
+        int day = ThreadLocalRandom.current().nextInt(1, 29);
+        return String.format("%04d-%02d-%02d", year, month, day);
     }
 
     private static int samplePrice() {
@@ -525,40 +530,36 @@ public class LargeSeeder {
         return methods[ThreadLocalRandom.current().nextInt(methods.length)];
     }
 
-    private static String generateRandomBirthDate() {
-        int year = ThreadLocalRandom.current().nextInt(1960, 2010);
-        int month = ThreadLocalRandom.current().nextInt(1, 13);
-        int day = ThreadLocalRandom.current().nextInt(1, 29);
-        return String.format("%04d-%02d-%02d", year, month, day);
+    private static String generateCardNumber() {
+        return String.format("%04d-%04d-%04d-%04d",
+            ThreadLocalRandom.current().nextInt(1000, 10000),
+            ThreadLocalRandom.current().nextInt(1000, 10000),
+            ThreadLocalRandom.current().nextInt(1000, 10000),
+            ThreadLocalRandom.current().nextInt(1000, 10000));
     }
 
     private static double normal01() {
-        ThreadLocalRandom r = ThreadLocalRandom.current();
-        double u1 = Math.max(1e-12, r.nextDouble());
-        double u2 = r.nextDouble();
-        return Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+        double u = Math.random();
+        double v = Math.random();
+        return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
     }
 
-    private static ZonedDateTime[] recentSkewed(int daysRange, double alpha) {
-        ThreadLocalRandom r = ThreadLocalRandom.current();
-        double u = r.nextDouble();
-        int daysBack = (int) Math.floor(Math.pow(u, alpha) * daysRange);
-        ZonedDateTime created = ZonedDateTime.now(ZoneId.systemDefault())
-                .minusDays(daysBack)
-                .minusHours(r.nextInt(0, 24))
-                .minusMinutes(r.nextInt(0, 60));
-        ZonedDateTime updated = created.plusHours(r.nextInt(0, 240));
+    private static ZonedDateTime[] randomRangePast(int days) {
+        ZonedDateTime now = ZonedDateTime.now();
+        ZonedDateTime past = now.minusDays(ThreadLocalRandom.current().nextInt(0, days));
+        ZonedDateTime created = past.minusMinutes(ThreadLocalRandom.current().nextInt(0, 60));
+        ZonedDateTime updated = past.plusMinutes(ThreadLocalRandom.current().nextInt(0, 60));
         return new ZonedDateTime[]{created, updated};
     }
 
-    private static ZonedDateTime[] randomRangePast(int daysBackMax) {
-        ThreadLocalRandom r = ThreadLocalRandom.current();
-        int d = r.nextInt(0, daysBackMax + 1);
-        ZonedDateTime c = ZonedDateTime.now(ZoneId.systemDefault())
-                .minusDays(d)
-                .minusHours(r.nextInt(0, 24))
-                .minusMinutes(r.nextInt(0, 60));
-        ZonedDateTime u = c.plusHours(r.nextInt(0, 240));
+    private static ZonedDateTime[] recentSkewed(int days, double skew) {
+        ZonedDateTime now = ZonedDateTime.now();
+        double rand = Math.pow(Math.random(), skew);
+        int daysAgo = (int) (rand * days);
+        ZonedDateTime past = now.minusDays(daysAgo);
+        
+        ZonedDateTime c = past.minusMinutes(ThreadLocalRandom.current().nextInt(0, 60));
+        ZonedDateTime u = past.plusMinutes(ThreadLocalRandom.current().nextInt(0, 60));
         return new ZonedDateTime[]{c, u};
     }
 
@@ -590,6 +591,9 @@ public class LargeSeeder {
             System.out.println("   - Categories: " + CATEGORY_COUNT);
             System.out.println("   - Products: " + PRODUCT_COUNT);
             System.out.println("   - Likes: " + LIKE_COUNT);
+            System.out.println("   - Points: " + POINT_COUNT);
+            System.out.println("   - Coupons: " + COUPON_COUNT);
+            System.out.println("   - User Coupons: " + USER_COUPON_COUNT);
             System.out.println("   - Orders: " + ORDER_COUNT);
         }
 

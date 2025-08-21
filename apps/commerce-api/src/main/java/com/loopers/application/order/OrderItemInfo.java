@@ -18,7 +18,7 @@ public record OrderItemInfo(
                 productModel.getId(),
                 productModel.getName(),
                 orderItemModel.getQuantity(),
-                orderItemModel.getPriceAtOrder()
+                orderItemModel.getPriceAtOrder().getAmount()
         );
     }
 

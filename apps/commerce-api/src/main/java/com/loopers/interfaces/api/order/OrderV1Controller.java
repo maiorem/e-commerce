@@ -21,7 +21,7 @@ public class OrderV1Controller implements OrderV1ApiSpec {
 
     @Override
     @PostMapping
-    public ApiResponse<OrderV1Dto.CreateOrderResponse> createOrder(@RequestHeader("X-USER_ID") String userId, OrderV1Dto.CreateOrderRequest request) {
+    public ApiResponse<OrderV1Dto.CreateOrderResponse> createOrder(@RequestHeader("X-USER-ID") String userId, OrderV1Dto.CreateOrderRequest request) {
         OrderCommand command = request.toCommand(userId);
 
         // 주문 생성

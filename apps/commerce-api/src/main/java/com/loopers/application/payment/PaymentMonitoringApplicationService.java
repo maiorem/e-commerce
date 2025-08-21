@@ -7,7 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Slf4j
@@ -23,15 +23,14 @@ public class PaymentMonitoringApplicationService {
     @Transactional
     public void checkPendingPayments() {
         // CardPayment에서 PENDING 상태인 것들 조회
-        List<CardPayment> pendingPayments = cardPaymentRepository.findByStatusAndCreatedBefore(
+        List<PaymentModel> pendingPayments = paymentRepository.findByStatusAndCreatedBefore(
                 PaymentStatus.PENDING,
-                LocalDateTime.now().minusMinutes(5)
+                ZonedDateTime.now().minusMinutes(5)
         );
 
-        for (CardPayment cardPay : pendingPayments) {
-            PaymentModel payment = paymentRepository.findById(cardPay.getPaymentId()).orElseThrow(() ->
-                    new IllegalArgumentException("결제 정보가 존재하지 않습니다: paymentId=" + cardPay.getPaymentId()));
-
+        for (PaymentModel payment : pendingPayments) {
+            CardPayment cardPay = cardPaymentRepository.findByPaymentId(payment.getId())
+                    .orElseThrow(() -> new IllegalStateException("결제 정보가 존재하지 않습니다: paymentId=" + payment.getId()));
             try {
                 // transactionKey로 PG 상태 조회
                 PaymentQueryResult queryResult = paymentGatewayPort.queryPaymentStatus(cardPay.getTransactionKey());
@@ -44,11 +43,11 @@ public class PaymentMonitoringApplicationService {
                             queryResult.reason() + " (스케줄러 확인)"
                     );
                     log.info("PENDING 결제 상태 업데이트: paymentId={}, orderId={}, status={}",
-                            cardPay.getId(), payment.getOrderId(), queryResult.status());
+                            payment.getId(), payment.getOrderId(), queryResult.status());
                 }
             } catch (Exception e) {
                 log.error("결제 상태 확인 실패: paymentId={}, orderId={}, transactionKey={}, error={}",
-                        cardPay.getId(), payment.getOrderId(), cardPay.getTransactionKey(), e.getMessage());
+                        payment.getId(), payment.getOrderId(), cardPay.getTransactionKey(), e.getMessage());
             }
         }
     }
