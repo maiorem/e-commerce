@@ -1,6 +1,6 @@
 package com.loopers.domain.payment;
 
-import com.loopers.infrastructure.pg_client.PgClientDto;
+import com.loopers.infrastructure.http.PgClientDto;
 import lombok.Getter;
 
 import java.util.List;

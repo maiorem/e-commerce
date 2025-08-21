@@ -1,5 +1,6 @@
-package com.loopers.infrastructure.pg_client;
+package com.loopers.infrastructure.http;
 
+import com.loopers.domain.order.Money;
 import com.loopers.domain.payment.CardType;
 import com.loopers.domain.payment.PaymentData;
 
@@ -11,15 +12,15 @@ public class PgClientDto {
             String orderId,
             CardType cardType,
             String cardNumber,
-            Long finalTotalPrice,
-            String calbackUrl
+            Money finalTotalPrice,
+            String callbackUrl
     ) {
         public static PgClientRequest from(PaymentData paymentData, String callbackUrl) {
             return new PgClientRequest(
                     paymentData.orderId().toString(),
                     paymentData.cardType(),
                     paymentData.cardNumber(),
-                    (long) paymentData.finalTotalPrice(),
+                    paymentData.finalTotalPrice(),
                     callbackUrl
             );
         }

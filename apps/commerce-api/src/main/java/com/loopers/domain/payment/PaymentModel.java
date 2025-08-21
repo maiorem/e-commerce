@@ -1,15 +1,18 @@
 package com.loopers.domain.payment;
 
 import com.loopers.domain.BaseEntity;
+import com.loopers.domain.order.Money;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "payment_history")
+@Table(name = "payment")
 @Getter
-public class PaymentHistoryModel extends BaseEntity {
+@NoArgsConstructor(access = lombok.AccessLevel.PROTECTED)
+public class PaymentModel extends BaseEntity {
 
     private Long orderId;
 
@@ -21,14 +24,12 @@ public class PaymentHistoryModel extends BaseEntity {
 
     private String transactionKey;
 
-    private int finalOrderPrice;
+    private Money finalOrderPrice;
 
     private LocalDateTime paymentDate;
 
-    protected PaymentHistoryModel() {}
-
-    public static PaymentHistoryModel of(Long orderId, PaymentMethod paymentMethod, int finalOrderPrice, PaymentResult result) {
-        PaymentHistoryModel payment = new PaymentHistoryModel();
+    public static PaymentModel create(Long orderId, PaymentMethod paymentMethod, Money finalOrderPrice, PaymentResult result) {
+        PaymentModel payment = new PaymentModel();
         payment.orderId = orderId;
         payment.paymentMethod = paymentMethod;
         payment.paymentStatus = result.isSuccess() ? PaymentStatus.SUCCESS : PaymentStatus.FAILED;
@@ -45,4 +46,5 @@ public class PaymentHistoryModel extends BaseEntity {
     public void fail() {
         this.paymentStatus = PaymentStatus.FAILED;
     }
-} 
+
+}
