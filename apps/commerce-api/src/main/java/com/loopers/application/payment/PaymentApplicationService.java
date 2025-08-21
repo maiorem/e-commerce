@@ -113,8 +113,11 @@ public class PaymentApplicationService {
     @Transactional
     public void handlePaymentCallback(String transactionId, PaymentStatus status, String reason) {
 
-        PaymentModel payment = paymentRepository.findByTransactionKey(transactionId)
+        CardPayment cardPayment = cardPaymentRepository.findByTransactionKey(transactionId)
                 .orElseThrow(() -> new IllegalArgumentException("결제 내역이 존재하지 않습니다: " + transactionId));
+
+        PaymentModel payment = paymentRepository.findById(cardPayment.getPaymentId()).orElseThrow(()
+                -> new IllegalArgumentException("결제 정보가 존재하지 않습니다: paymentId=" + cardPayment.getPaymentId()));
 
         OrderModel order = orderRepository.findById(payment.getOrderId())
                 .orElseThrow(() -> new IllegalArgumentException("주문 내역이 존재하지 않습니다: " + payment.getOrderId()));

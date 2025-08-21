@@ -13,7 +13,7 @@ public class CouponValidationDomainService {
         if (!coupon.isValid(orderPrice, now)) {
             throw new IllegalArgumentException("쿠폰이 유효하지 않습니다.");
         }
-        if (userCoupon.isUsed()) {
+        if (userCoupon.getStatus() == UserCoupontStatus.USED) {
             throw new IllegalArgumentException("이미 사용된 쿠폰입니다.");
         }
     }

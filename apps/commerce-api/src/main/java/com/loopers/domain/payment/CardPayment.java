@@ -10,8 +10,7 @@ import lombok.Getter;
 @Table(name = "card_payment")
 public class CardPayment extends BaseEntity {
 
-    @Id
-    private Long paymentId;
+    Long paymentId;
 
     private String transactionKey;
 

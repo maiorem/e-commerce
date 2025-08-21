@@ -1,6 +1,6 @@
 package com.loopers.domain.payment;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -12,7 +12,5 @@ public interface PaymentRepository {
 
     List<PaymentModel> findAll();
 
-    Optional<PaymentModel> findByTransactionKey(String transactionKey);
-
-    List<PaymentModel> findByStatusAndCreatedBefore(PaymentStatus paymentStatus, LocalDateTime timestamp);
-} 
+    List<PaymentModel> findByStatusAndCreatedBefore(PaymentStatus paymentStatus, ZonedDateTime localDateTime);
+}

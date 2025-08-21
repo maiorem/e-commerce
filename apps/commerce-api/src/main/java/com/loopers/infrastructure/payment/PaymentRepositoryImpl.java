@@ -6,7 +6,7 @@ import com.loopers.domain.payment.PaymentStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,12 +32,7 @@ public class PaymentRepositoryImpl implements PaymentRepository {
     }
 
     @Override
-    public Optional<PaymentModel> findByTransactionKey(String transactionKey) {
-        return paymentJpaRepository.findByTransactionKey(transactionKey);
-    }
-
-    @Override
-    public List<PaymentModel> findByStatusAndCreatedBefore(PaymentStatus paymentStatus, LocalDateTime time) {
-        return paymentJpaRepository.findByStatusAndCreatedAtBefore(paymentStatus, time);
+    public List<PaymentModel> findByStatusAndCreatedBefore(PaymentStatus paymentStatus, ZonedDateTime localDateTime) {
+        return paymentJpaRepository.findByPaymentStatusAndCreatedAtBefore(paymentStatus, localDateTime);
     }
 }
