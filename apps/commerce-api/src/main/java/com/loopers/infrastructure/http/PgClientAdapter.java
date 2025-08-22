@@ -1,6 +1,8 @@
 package com.loopers.infrastructure.http;
 
 import com.loopers.domain.payment.*;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +19,8 @@ public class PgClientAdapter implements PaymentGatewayPort {
     private String callbackUrl;
 
     @Override
+    @CircuitBreaker(name = "pgCircuit", fallbackMethod = "fallback")
+    @Retry(name = "pgRetry", fallbackMethod = "fallback")
     public PaymentResult processPayment(PaymentData paymentData) {
         try {
             String userId = paymentData.userId().getValue();

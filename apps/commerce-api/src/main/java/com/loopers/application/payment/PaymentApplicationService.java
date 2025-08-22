@@ -219,4 +219,22 @@ public class PaymentApplicationService {
             }
         }
     }
+
+    public void handlePaymentFailure(Long orderId) {
+        try {
+            OrderModel order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new IllegalArgumentException("주문이 존재하지 않습니다: " + orderId));
+            order.cancel(); // 또는 FAILED 상태로 변경
+            orderRepository.save(order);
+            // 재고 복구
+            List<OrderItemModel> orderItems = orderItemRepository.findByOrderId(order.getId());
+            stockDeductionProcessor.restoreProductStocks(orderItems);
+            // 쿠폰 복구
+            couponProcessor.restoreCoupon(order.getUserId(), order.getCouponCode());
+
+            log.info("결제 실패로 인한 주문 취소 완료 - OrderId: {}", orderId);
+        } catch (Exception e) {
+            log.error("결제 실패 처리 중 오류 발생 - OrderId: {}, Error: {}", orderId, e.getMessage(), e);
+        }
+    }
 }

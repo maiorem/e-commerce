@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.concurrent.CompletableFuture;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/orders")
@@ -27,10 +29,10 @@ public class OrderV1Controller implements OrderV1ApiSpec {
     public ApiResponse<OrderV1Dto.CreateOrderResponse> createOrder(@RequestHeader("X-USER-ID") String userId, @RequestBody OrderV1Dto.CreateOrderRequest request) {
         try {
             log.info("주문 생성 시작 - User: {}, Payment: {}", userId, request.paymentMethod());
-            
+
             // 요청 검증
             request.validate();
-            
+
             OrderCommand command = request.toCommand(userId);
             log.info("주문 명령 생성 완료 - Command: {}", command);
 
@@ -41,12 +43,21 @@ public class OrderV1Controller implements OrderV1ApiSpec {
             // 결제 요청
             try {
                 switch (request.paymentMethod()) {
+                    // 카드 결제는 비동기 처리
                     case CREDIT_CARD -> {
+                        CompletableFuture.runAsync(() -> {
                         log.info("카드 결제 처리 시작 - OrderId: {}", orderInfo.orderId());
-                        paymentApplicationService.processCardPayment(
-                                orderInfo, request.paymentMethod(), request.cardType(), request.cardNumber());
-                        log.info("카드 결제 처리 완료 - OrderId: {}", orderInfo.orderId());
+                            try {
+                                paymentApplicationService.processCardPayment(
+                                        orderInfo, request.paymentMethod(), request.cardType(), request.cardNumber());
+                                log.info("카드 결제 처리 완료 - OrderId: {}", orderInfo.orderId());
+                            } catch (Exception e) {
+                                log.error("카드 결제 처리 실패 - OrderId: {}, Error: {}", orderInfo.orderId(), e.getMessage(), e);
+                                paymentApplicationService.handlePaymentFailure(orderInfo.orderId());
+                            }
+                        });
                     }
+                    // 포인트는 동기 처리
                     case POINT -> {
                         log.info("포인트 결제 처리 시작 - OrderId: {}", orderInfo.orderId());
                         paymentApplicationService.processPointPayment(
@@ -64,7 +75,7 @@ public class OrderV1Controller implements OrderV1ApiSpec {
             OrderV1Dto.CreateOrderResponse response = OrderV1Dto.CreateOrderResponse.from(orderInfo);
             log.info("주문 생성 및 결제 완료 - OrderId: {}, Response: {}", orderInfo.orderId(), response);
             return ApiResponse.success(response);
-            
+
         } catch (Exception e) {
             log.error("주문 생성 실패 - User: {}, Error: {}", userId, e.getMessage(), e);
             return ApiResponse.fail("ORDER_CREATION_FAILED", "주문 생성에 실패했습니다: " + e.getMessage(), OrderV1Dto.CreateOrderResponse.class);
