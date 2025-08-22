@@ -6,9 +6,9 @@ import com.loopers.support.error.ErrorType;
 
 public class PaymentV1Dto {
 
-    public record PaymentCallbackResponse(String transactionId, PaymentStatus status, String reason) {
+    public record PaymentCallbackResponse(String transactionKey, PaymentStatus status, String reason) {
         public PaymentCallbackResponse {
-            if (transactionId == null || transactionId.isBlank()) {
+            if (transactionKey == null || transactionKey.isBlank()) {
                 throw new CoreException(ErrorType.NOT_FOUND, "Transaction ID는 비어있을 수 없습니다.");
             }
             if (status == null ) {

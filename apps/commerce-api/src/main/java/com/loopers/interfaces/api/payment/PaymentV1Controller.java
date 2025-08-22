@@ -22,9 +22,9 @@ public class PaymentV1Controller implements PaymentV1ApiSpec {
     public ApiResponse handlePaymnetCallback(PaymentV1Dto.PaymentCallbackResponse response) {
         try {
             // 콜백 요청 유효성 검증
-            paymentApplicationService.validatePaymentCallback(response.transactionId());
+            paymentApplicationService.validatePaymentCallback(response.transactionKey());
 
-            paymentApplicationService.handlePaymentCallback(response.transactionId(), response.status(), response.reason());
+            paymentApplicationService.handlePaymentCallback(response.transactionKey(), response.status(), response.reason());
 
             return ApiResponse.success();
         } catch (IllegalArgumentException e) {
@@ -33,7 +33,7 @@ public class PaymentV1Controller implements PaymentV1ApiSpec {
 
         } catch (Exception e) {
             log.error("콜백 처리 중 오류 발생: transactionId={}, error={}",
-                    response.transactionId(), e.getMessage(), e);
+                    response.transactionKey(), e.getMessage(), e);
             return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "콜백 처리에 실패했습니다.");
         }
     }

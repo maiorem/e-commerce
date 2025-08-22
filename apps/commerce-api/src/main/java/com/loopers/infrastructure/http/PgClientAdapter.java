@@ -5,8 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -21,7 +19,7 @@ public class PgClientAdapter implements PaymentGatewayPort {
     @Override
     public PaymentResult processPayment(PaymentData paymentData) {
         try {
-            String userId = getCurrentUserId();
+            String userId = paymentData.userId().getValue();
             PgClientDto.PgClientRequest request = PgClientDto.PgClientRequest.from(paymentData, callbackUrl);
             
             log.info("PG 결제 요청 시작 - OrderId: {}, Amount: {}, UserId: {}", 
@@ -50,8 +48,7 @@ public class PgClientAdapter implements PaymentGatewayPort {
     }
 
     @Override
-    public PaymentQueryResult queryPaymentStatus(String transactionKey) {
-        String userId = getCurrentUserId();
+    public PaymentQueryResult queryPaymentStatus(String userId, String transactionKey) {
         try {
             PgClientDto.PgClientQueryResponse response = pgClient.getTransaction(userId, transactionKey);
 
@@ -68,8 +65,7 @@ public class PgClientAdapter implements PaymentGatewayPort {
     }
 
     @Override
-    public PaymentHistoryResult queryPaymentHistory(String orderId) {
-        String userId = getCurrentUserId();
+    public PaymentHistoryResult queryPaymentHistory(String userId, String orderId) {
         try {
             PgClientDto.PgClientHistoryResponse response = pgClient.getPaymentsByOrderId(userId, orderId);
             return PaymentHistoryResult.success(response);
@@ -78,12 +74,5 @@ public class PgClientAdapter implements PaymentGatewayPort {
         }
     }
 
-    private String getCurrentUserId() {
-        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
-        if (attributes != null) {
-            return attributes.getRequest().getHeader("X-USER-ID");
-        }
-        return null;
-    }
 
 }
