@@ -13,14 +13,11 @@ export const options = {
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 
 export default function () {
-  // LargeSeeder 기반 사용자 ID 사용 (user000001 ~ user100000)
   const userId = 'user' + String(Math.floor(Math.random() * 100000) + 1).padStart(6, '0');
   
-  // LargeSeeder 기반 상품 ID와 가격 분포 사용
   const productId = Math.floor(Math.random() * 1000000) + 1; // 1 ~ 1,000,000
   const quantity = Math.floor(Math.random() * 9) + 1; // 1~9개 (OrderItem 생성 로직 기반)
   
-  // LargeSeeder의 가격 분포 반영
   function generatePrice() {
     const rand = Math.random();
     if (rand < 0.85) {
@@ -35,7 +32,7 @@ export default function () {
     }
   }
   
-  // 결제 방법 선택 (LargeSeeder 기반: CREDIT_CARD, POINT)
+  // 결제 방법 선택 
   const paymentMethods = ['CREDIT_CARD', 'POINT'];
   const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
   

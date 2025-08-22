@@ -12,6 +12,7 @@ export const options = {
     { duration: '2m', target: 0 },     // 2분간 0명으로 감소
   ]
 };
+
 // 커스텀 메트릭
 const orderCreationDuration = new Trend('order_creation_duration');
 const orderSuccessRate = new Rate('order_success_rate');
@@ -80,6 +81,7 @@ function generateOrderData() {
     point_amount: paymentMethod === 'POINT' ? generatePointAmount() : null,
     coupon_code: couponCode,
     items: items
+
   };
   
   return { userId, orderData };
