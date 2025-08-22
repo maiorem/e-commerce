@@ -3,7 +3,11 @@ package com.loopers.application.like;
 import com.loopers.domain.like.LikeRepository;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.user.*;
+import com.loopers.domain.brand.BrandModel;
+import com.loopers.domain.category.CategoryModel;
 import com.loopers.infrastructure.product.ProductJpaRepository;
+import com.loopers.infrastructure.brand.BrandJpaRepository;
+import com.loopers.infrastructure.category.CategoryJpaRepository;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,12 +40,29 @@ public class LikeApplicationServiceOptimisticLockTest {
     private ProductJpaRepository productRepository;
 
     @Autowired
+    private BrandJpaRepository brandJpaRepository;
+
+    @Autowired
+    private CategoryJpaRepository categoryJpaRepository;
+
+    @Autowired
     private DatabaseCleanUp databaseCleanUp;
 
     private ProductModel product;
+    private BrandModel brand;
+    private CategoryModel category;
 
     @BeforeEach
     void setUp() {
+        databaseCleanUp.truncateAllTables();
+        
+        // Brand와 Category 먼저 생성
+        brand = BrandModel.of("테스트브랜드", "테스트 브랜드입니다");
+        brandJpaRepository.save(brand);
+        
+        category = CategoryModel.of("테스트카테고리", "테스트 카테고리입니다");
+        categoryJpaRepository.save(category);
+        
         // 10명의 사용자를 생성
         for (int i = 1; i <= 10; i++) {
             UserModel user = UserModel.of(
@@ -54,15 +75,15 @@ public class LikeApplicationServiceOptimisticLockTest {
         }
         
         product = ProductModel.builder()
-                .brandId(1L)
-                .categoryId(1L)
+                .brandId(brand.getId())
+                .categoryId(category.getId())
                 .name("테스트 상품")
                 .price(100000)
                 .stock(10)
                 .description("낙관적 락 테스트용 상품")
                 .likesCount(0)
                 .build();
-        productRepository.save(product);
+        product = productRepository.save(product);
     }
 
     @AfterEach

@@ -20,8 +20,8 @@ dependencies {
     testImplementation(testFixtures(project(":modules:jpa")))
     testImplementation(testFixtures(project(":modules:redis")))
 
-    // retry
-    implementation("org.springframework.retry:spring-retry")
+    // retry - Resilience4j 사용으로 spring-retry 제거
+    // implementation("org.springframework.retry:spring-retry")
 
     // aspects
     implementation("org.springframework:spring-aspects")
