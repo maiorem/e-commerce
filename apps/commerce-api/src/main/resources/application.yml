@@ -51,9 +51,11 @@ resilience4j:
         wait-duration: 1s
         retry-exceptions:
           - feign.FeignException
-          - java.lang.RuntimeException
-          - java.net.ConnectException
+          - feign.RetryableException
           - java.net.SocketTimeoutException
+          - java.net.ConnectException
+          - org.springframework.web.client.ResourceAccessException
+          - org.springframework.web.client.HttpServerErrorException
         fail-after-max-attempts: true
         enable-exponential-backoff: false
         exponential-backoff-multiplier: 2
