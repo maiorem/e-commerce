@@ -5,11 +5,13 @@ import com.loopers.domain.order.OrderItemRepository;
 import com.loopers.domain.order.OrderModel;
 import com.loopers.domain.order.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @RequiredArgsConstructor
 @Component
 public class OrderPersistenceHandler {
@@ -18,7 +20,9 @@ public class OrderPersistenceHandler {
     private final OrderItemRepository orderItemRepository;
 
     public OrderModel saveOrder(OrderModel order) {
-       return orderRepository.save(order);
+        OrderModel savedOrder = orderRepository.save(order);
+        log.info("주문 저장 완료 - OrderId: {}", savedOrder.getId());
+        return savedOrder;
     }
 
     public List<OrderItemModel> saveOrderItem(OrderModel order, List<OrderItemModel> orderItems) {

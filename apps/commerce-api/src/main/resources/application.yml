@@ -29,6 +29,13 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+logging:
+  level:
+    io.github.resilience4j: DEBUG
+    com.loopers.infrastructure.http.PgClientAdapter: DEBUG
+    org.springframework.aop: DEBUG
+    org.springframework.retry: DEBUG
+
 cache:
   type: redis
 
@@ -41,12 +48,27 @@ resilience4j:
     instances:
       pgRetry:
         max-attempts: 3
-        wait-duration: 5s
+        wait-duration: 1s
         retry-exceptions:
-          - feign.RetryableException
-          - java.net.SocketTimeoutException
+          - feign.FeignException
+          - java.lang.RuntimeException
           - java.net.ConnectException
+          - java.net.SocketTimeoutException
         fail-after-max-attempts: true
+        enable-exponential-backoff: false
+        exponential-backoff-multiplier: 2
+      optimisticLockRetry:
+        max-attempts: 10
+        wait-duration: 100ms
+        retry-exceptions:
+          - jakarta.persistence.OptimisticLockException
+          - org.hibernate.StaleObjectStateException
+          - org.springframework.orm.ObjectOptimisticLockingFailureException
+        fail-after-max-attempts: true
+    metrics:
+      enabled: true
+    events:
+      enabled: true
   circuitbreaker:
     instances:
       pgCircuit:

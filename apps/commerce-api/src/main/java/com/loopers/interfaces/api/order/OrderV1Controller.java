@@ -5,15 +5,10 @@ import com.loopers.application.order.OrderCommand;
 import com.loopers.application.order.OrderInfo;
 import com.loopers.application.payment.PaymentApplicationService;
 import com.loopers.interfaces.api.ApiResponse;
+import com.loopers.support.error.PaymentFailedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.concurrent.CompletableFuture;
+import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
@@ -43,21 +38,19 @@ public class OrderV1Controller implements OrderV1ApiSpec {
             // 결제 요청
             try {
                 switch (request.paymentMethod()) {
-                    // 카드 결제는 비동기 처리
                     case CREDIT_CARD -> {
-                        CompletableFuture.runAsync(() -> {
                         log.info("카드 결제 처리 시작 - OrderId: {}", orderInfo.orderId());
-                            try {
-                                paymentApplicationService.processCardPayment(
-                                        orderInfo, request.paymentMethod(), request.cardType(), request.cardNumber());
-                                log.info("카드 결제 처리 완료 - OrderId: {}", orderInfo.orderId());
-                            } catch (Exception e) {
-                                log.error("카드 결제 처리 실패 - OrderId: {}, Error: {}", orderInfo.orderId(), e.getMessage(), e);
-                                paymentApplicationService.handlePaymentFailure(orderInfo.orderId());
-                            }
-                        });
+                        try {
+                            paymentApplicationService.processCardPayment(
+                                    orderInfo, request.paymentMethod(), request.cardType(), request.cardNumber());
+                            log.info("카드 결제 처리 완료 - OrderId: {}", orderInfo.orderId());
+                        } catch (Exception e) {
+                            log.error("카드 결제 처리 실패 - OrderId: {}, Error: {}", orderInfo.orderId(), e.getMessage(), e);
+                            // 결제 실패 시 주문 취소 처리
+                            paymentApplicationService.handlePaymentFailure(orderInfo.orderId());
+                            throw new PaymentFailedException("카드 결제에 실패했습니다: " + e.getMessage());
+                        }
                     }
-                    // 포인트는 동기 처리
                     case POINT -> {
                         log.info("포인트 결제 처리 시작 - OrderId: {}", orderInfo.orderId());
                         paymentApplicationService.processPointPayment(

@@ -13,22 +13,48 @@ export const options = {
 const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 
 export default function () {
-  // 랜덤 사용자 ID 생성
-  const userId = `user${Math.floor(Math.random() * 100000) + 1}`;
+  // LargeSeeder 기반 사용자 ID 사용 (user000001 ~ user100000)
+  const userId = 'user' + String(Math.floor(Math.random() * 100000) + 1).padStart(6, '0');
   
-  // 주문 데이터 생성
+  // LargeSeeder 기반 상품 ID와 가격 분포 사용
+  const productId = Math.floor(Math.random() * 1000000) + 1; // 1 ~ 1,000,000
+  const quantity = Math.floor(Math.random() * 9) + 1; // 1~9개 (OrderItem 생성 로직 기반)
+  
+  // LargeSeeder의 가격 분포 반영
+  function generatePrice() {
+    const rand = Math.random();
+    if (rand < 0.85) {
+      // 85%: 1,000 ~ 50,000원
+      return Math.floor(Math.random() * 49) * 1000 + 1000;
+    } else if (rand < 0.95) {
+      // 10%: 51,000 ~ 300,000원
+      return Math.floor(Math.random() * 250) * 1000 + 51000;
+    } else {
+      // 5%: 301,000 ~ 1,000,000원
+      return Math.floor(Math.random() * 700) * 1000 + 301000;
+    }
+  }
+  
+  // 결제 방법 선택 (LargeSeeder 기반: CREDIT_CARD, POINT)
+  const paymentMethods = ['CREDIT_CARD', 'POINT'];
+  const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
+  
+  // 쿠폰 사용 확률 10%
+  const useCoupon = Math.random() < 0.1;
+  const couponCode = useCoupon ? 'COUPON' + String(Math.floor(Math.random() * 10000) + 1).padStart(6, '0') : null;
+  
   const orderData = {
-    payment_method: 'CREDIT_CARD',
-    card_type: 'SAMSUNG',
-    card_number: '1234-5678-9012-3456',
-    point_amount: null,
-    coupon_code: null,
+    payment_method: paymentMethod,
+    card_type: paymentMethod === 'CREDIT_CARD' ? 'SAMSUNG' : null,
+    card_number: paymentMethod === 'CREDIT_CARD' ? '1234-5678-9012-3456' : null,
+    point_amount: paymentMethod === 'POINT' ? Math.floor(Math.random() * 90000) + 10000 : null,
+    coupon_code: couponCode,
     items: [
       {
-        product_id: Math.floor(Math.random() * 1000000) + 1,
-        quantity: Math.floor(Math.random() * 3) + 1,
-        product_name: '테스트 상품',
-        product_price: Math.floor(Math.random() * 100000) + 10000
+        product_id: productId,
+        quantity: quantity,
+        product_name: `상품 ${productId}`,
+        product_price: generatePrice()
       }
     ]
   };

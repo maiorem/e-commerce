@@ -6,13 +6,17 @@ import com.loopers.support.error.ErrorType;
 
 public class PaymentV1Dto {
 
-    public record PaymentCallbackResponse(String transactionKey, PaymentStatus status, String reason) {
-        public PaymentCallbackResponse {
+    public record PaymentCallbackRequest(
+            String transactionKey,
+            PaymentStatus status,
+            String reason
+    ) {
+        public PaymentCallbackRequest {
             if (transactionKey == null || transactionKey.isBlank()) {
-                throw new CoreException(ErrorType.NOT_FOUND, "Transaction ID는 비어있을 수 없습니다.");
+                throw new CoreException(ErrorType.BAD_REQUEST, "Transaction Key는 비어있을 수 없습니다.");
             }
-            if (status == null ) {
-                throw new CoreException(ErrorType.NOT_FOUND, "Status 값은 비어있을 수 없습니다.");
+            if (status == null) {
+                throw new CoreException(ErrorType.BAD_REQUEST, "Status 값은 비어있을 수 없습니다.");
             }
         }
     }
