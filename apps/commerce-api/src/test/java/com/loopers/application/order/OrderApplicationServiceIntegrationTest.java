@@ -13,7 +13,11 @@ import com.loopers.domain.point.PointRepository;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.*;
+import com.loopers.domain.brand.BrandModel;
+import com.loopers.domain.category.CategoryModel;
 import com.loopers.infrastructure.coupon.CouponJpaRepository;
+import com.loopers.infrastructure.brand.BrandJpaRepository;
+import com.loopers.infrastructure.category.CategoryJpaRepository;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +49,9 @@ class OrderApplicationServiceIntegrationTest {
 
     @Autowired
     private ProductRepository productRepository;
+    
+    @Autowired
+    private com.loopers.infrastructure.product.ProductJpaRepository productJpaRepository;
 
     @Autowired
     private PointRepository pointRepository;
@@ -59,6 +66,12 @@ class OrderApplicationServiceIntegrationTest {
     private CouponJpaRepository couponRepository;
 
     @Autowired
+    private BrandJpaRepository brandJpaRepository;
+
+    @Autowired
+    private CategoryJpaRepository categoryJpaRepository;
+
+    @Autowired
     private DatabaseCleanUp databaseCleanUp;
 
     private UserId userId;
@@ -70,10 +83,27 @@ class OrderApplicationServiceIntegrationTest {
     private OrderModel order;
     private CouponModel coupon;
     private UserCouponModel userCoupon;
+    private BrandModel brand;
+    private CategoryModel category;
 
     @BeforeEach
     void setUp() {
+        databaseCleanUp.truncateAllTables();
+        
         userId = UserId.of("seyoung");
+        
+        // User 먼저 생성
+        UserModel user = UserModel.of(userId, Email.of("seyoung@loopers.com"), Gender.FEMALE, BirthDate.of("2000-01-01"));
+        userRepository.save(user);
+
+        // Brand와 Category 먼저 생성
+        brand = BrandModel.of("Apple", "Apple Inc.");
+        brand = brandJpaRepository.saveAndFlush(brand);
+        
+        category = CategoryModel.of("전자제품", "전자제품 카테고리");
+        category = categoryJpaRepository.saveAndFlush(category);
+        
+        // Coupon 생성
         coupon = CouponModel.builder()
             .name("TEST_COUPON")
             .type(CouponType.FIXED_AMOUNT)
@@ -83,36 +113,33 @@ class OrderApplicationServiceIntegrationTest {
             .issuedAt(LocalDate.now())
             .validUntil(LocalDate.now().plusDays(30))
             .build();
+        coupon = couponRepository.saveAndFlush(coupon);
 
         userCoupon = UserCouponModel.create(userId, coupon.getCouponCode());
-        couponRepository.save(coupon);
         userCouponRepository.save(userCoupon);
-
-        UserModel user = UserModel.of(userId, Email.of("seyoung@loopers.com"), Gender.FEMALE, BirthDate.of("2000-01-01"));
-        userRepository.save(user);
 
         // 테스트 데이터 저장
         ProductModel product1 = ProductModel.builder()
-            .brandId(1L)
-            .categoryId(1L)
+            .brandId(brand.getId())
+            .categoryId(category.getId())
             .name("Apple iPhone 14")
             .price(1000000)
             .stock(10)
             .description("Apple iPhone 14")
             .likesCount(0)
             .build();
-        productRepository.save(product1);
+        product1 = productJpaRepository.saveAndFlush(product1);
             
         ProductModel product2 = ProductModel.builder()
-            .brandId(1L)
-            .categoryId(1L)
+            .brandId(brand.getId())
+            .categoryId(category.getId())
             .name("Samsung Galaxy S23")
             .price(1200000)
             .stock(5)
             .description("Samsung Galaxy S23")
             .likesCount(0)
             .build();
-        productRepository.save(product2);
+        product2 = productJpaRepository.saveAndFlush(product2);
             
         products = List.of(product1, product2);
 
@@ -205,15 +232,15 @@ class OrderApplicationServiceIntegrationTest {
         // given
         // 재고가 0인 상품 생성
         ProductModel outOfStockProduct = ProductModel.builder()
-            .brandId(1L)
-            .categoryId(1L)
+            .brandId(brand.getId())
+            .categoryId(category.getId())
             .name("테스트상품")
             .price(50000)
             .stock(0)
             .description("테스트상품")
             .likesCount(0)
             .build();
-        productRepository.save(outOfStockProduct);
+        outOfStockProduct = productJpaRepository.saveAndFlush(outOfStockProduct);
 
         List<OrderItemCommand> invalidOrderItemCommands = List.of(
             new OrderItemCommand(null, outOfStockProduct.getId(), 1, "테스트상품", 50000)
@@ -239,7 +266,7 @@ class OrderApplicationServiceIntegrationTest {
             .issuedAt(LocalDate.now())
             .validUntil(LocalDate.now().plusDays(30))
             .build();
-        couponRepository.save(percentageCoupon);
+        percentageCoupon = couponRepository.saveAndFlush(percentageCoupon);
 
         UserCouponModel percentageUserCoupon = UserCouponModel.create(userId, percentageCoupon.getCouponCode());
         userCouponRepository.save(percentageUserCoupon);
@@ -270,7 +297,7 @@ class OrderApplicationServiceIntegrationTest {
             .issuedAt(LocalDate.now().minusDays(60))
             .validUntil(LocalDate.now().minusDays(1)) // 어제 만료
             .build();
-        couponRepository.save(expiredCoupon);
+        expiredCoupon = couponRepository.saveAndFlush(expiredCoupon);
 
         UserCouponModel expiredUserCoupon = UserCouponModel.create(userId, expiredCoupon.getCouponCode());
         userCouponRepository.save(expiredUserCoupon);
@@ -286,11 +313,25 @@ class OrderApplicationServiceIntegrationTest {
     @DisplayName("이미 사용된 쿠폰 사용 시도")
     void createOrderWithUsedCoupon() {
         // given
-        userCoupon.useCoupon(LocalDate.now());
-        userCouponRepository.save(userCoupon);
+        CouponModel usedCoupon = CouponModel.builder()
+            .name("USED_COUPON")
+            .type(CouponType.FIXED_AMOUNT)
+            .discountValue(5000)
+            .minimumOrderAmount(30000)
+            .maximumDiscountAmount(5000)
+            .issuedAt(LocalDate.now().minusDays(10))
+            .validUntil(LocalDate.now().plusDays(20))
+            .build();
+        usedCoupon = couponRepository.saveAndFlush(usedCoupon);
+        
+        UserCouponModel usedUserCoupon = UserCouponModel.create(userId, usedCoupon.getCouponCode());
+        usedUserCoupon.useCoupon(LocalDate.now());
+        userCouponRepository.save(usedUserCoupon);
+        
+        OrderCommand orderCommandWithUsedCoupon = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, CardType.SAMSUNG, "1234567890123456", usedCoupon.getCouponCode(), 50000, orderItemCommands);
 
         // when & then
-        assertThatThrownBy(() -> orderApplicationService.createOrder(orderCommand))
+        assertThatThrownBy(() -> orderApplicationService.createOrder(orderCommandWithUsedCoupon))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -307,7 +348,7 @@ class OrderApplicationServiceIntegrationTest {
             .issuedAt(LocalDate.now())
             .validUntil(LocalDate.now().plusDays(30))
             .build();
-        couponRepository.save(highMinimumCoupon);
+        highMinimumCoupon = couponRepository.saveAndFlush(highMinimumCoupon);
 
         UserCouponModel highMinimumUserCoupon = UserCouponModel.create(userId, highMinimumCoupon.getCouponCode());
         userCouponRepository.save(highMinimumUserCoupon);

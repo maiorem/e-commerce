@@ -12,38 +12,76 @@ export const options = {
     { duration: '2m', target: 0 },     // 2분간 0명으로 감소
   ]
 };
-/ 커스텀 메트릭
+
+// 커스텀 메트릭
 const orderCreationDuration = new Trend('order_creation_duration');
 const orderSuccessRate = new Rate('order_success_rate');
 
 
 // 기본 URL (로컬 Spring Boot 앱)
-const BASE_URL = __ENV.BASE_URL || 'http://host.docker.internal:8080';
+const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
 
-// 테스트 데이터 생성 함수
+// LargeSeeder 기반 테스트 데이터 생성 함수
 function generateOrderData() {
-  const userId = `user${Math.floor(Math.random() * 100000) + 1}`;
-  const productId = Math.floor(Math.random() * 1000000) + 1;
-  const quantity = Math.floor(Math.random() * 3) + 1; // 1~3개
-  const productPrice = Math.floor(Math.random() * 500000) + 10000; // 10,000 ~ 510,000원
+  // LargeSeeder 기반 사용자 ID 사용 (user000001 ~ user100000)
+  const userId = 'user' + String(Math.floor(Math.random() * 100000) + 1).padStart(6, '0');
   
-  // 랜덤 결제 방법 선택 (80% 카드, 20% 포인트)
-  const useCardPayment = Math.random() < 0.8;
+  // 상품 개수 (1~3개, 평균 3개의 아이템으로 600,000개 주문 아이템 생성)
+  const itemCount = Math.floor(Math.random() * 3) + 1;
+  const items = [];
+  
+  // LargeSeeder의 가격 분포 함수
+  function generatePrice() {
+    const rand = Math.random();
+    if (rand < 0.85) {
+      // 85%: 1,000 ~ 50,000원
+      return Math.floor(Math.random() * 49) * 1000 + 1000;
+    } else if (rand < 0.95) {
+      // 10%: 51,000 ~ 300,000원
+      return Math.floor(Math.random() * 250) * 1000 + 51000;
+    } else {
+      // 5%: 301,000 ~ 1,000,000원
+      return Math.floor(Math.random() * 700) * 1000 + 301000;
+    }
+  }
+  
+  // 여러 상품 아이템 생성
+  for (let i = 0; i < itemCount; i++) {
+    const productId = Math.floor(Math.random() * 1000000) + 1; // 1 ~ 1,000,000
+    const quantity = Math.floor(Math.random() * 9) + 1; // 1~9개
+    
+    items.push({
+      product_id: productId,
+      quantity: quantity,
+      product_name: `상품 ${productId}`,
+      product_price: generatePrice()
+    });
+  }
+  
+  // LargeSeeder 기반 결제 방법 선택 (CREDIT_CARD, POINT)
+  const paymentMethods = ['CREDIT_CARD', 'POINT'];
+  const paymentMethod = paymentMethods[Math.floor(Math.random() * paymentMethods.length)];
+  
+  // 쿠폰 사용 확률 10% (UserCoupon 50,000개 / User 100,000명 = 0.5개 평균)
+  const useCoupon = Math.random() < 0.1;
+  const couponCode = useCoupon ? 'COUPON' + String(Math.floor(Math.random() * 10000) + 1).padStart(6, '0') : null;
+  
+  // 포인트 사용시 LargeSeeder 기반 포인트 금액
+  function generatePointAmount() {
+    const lambda = 1.0 / 10000.0;
+    const u = Math.max(1e-12, Math.random());
+    const x = Math.floor(-Math.log(u) / lambda);
+    return Math.min(x, 100000);
+  }
   
   const orderData = {
-    payment_method: useCardPayment ? 'CREDIT_CARD' : 'POINT',
-    card_type: useCardPayment ? 'SAMSUNG' : null,
-    card_number: useCardPayment ? '1234-5678-9012-3456' : null,
-    point_amount: useCardPayment ? null : Math.floor(Math.random() * 10000) + 1000,
-    coupon_code: Math.random() < 0.3 ? `COUPON${Math.floor(Math.random() * 10000) + 1}` : null, // 30% 확률로 쿠폰 사용
-    items: [
-      {
-        product_id: productId,
-        quantity: quantity,
-        product_name: `상품 ${productId}`,
-        product_price: productPrice
-      }
-    ]
+    payment_method: paymentMethod,
+    card_type: paymentMethod === 'CREDIT_CARD' ? 'SAMSUNG' : null,
+    card_number: paymentMethod === 'CREDIT_CARD' ? '1234-5678-9012-3456' : null,
+    point_amount: paymentMethod === 'POINT' ? generatePointAmount() : null,
+    coupon_code: couponCode,
+    items: items
+
   };
   
   return { userId, orderData };

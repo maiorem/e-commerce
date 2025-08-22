@@ -55,6 +55,10 @@ public class CouponProcessor {
         }
         UserCouponModel userCoupon = userCouponRepository.findByUserIdAndCouponCode(userId, couponCode)
                 .orElseThrow(() -> new IllegalArgumentException("사용자에게 해당 쿠폰이 없습니다."));
+
+        if (userCoupon.getStatus() != UserCoupontStatus.AVAILABLE) {
+            throw new IllegalArgumentException("쿠폰이 사용 가능 상태가 아닙니다. 현재 상태: " + userCoupon.getStatus());
+        }
         userCoupon.reserve();
         userCouponRepository.save(userCoupon);
     }

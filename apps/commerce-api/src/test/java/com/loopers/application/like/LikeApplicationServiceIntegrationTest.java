@@ -2,8 +2,12 @@ package com.loopers.application.like;
 
 import com.loopers.domain.like.LikeRepository;
 import com.loopers.domain.product.ProductModel;
-import com.loopers.domain.user.UserId;
+import com.loopers.domain.user.*;
+import com.loopers.domain.brand.BrandModel;
+import com.loopers.domain.category.CategoryModel;
 import com.loopers.infrastructure.product.ProductJpaRepository;
+import com.loopers.infrastructure.brand.BrandJpaRepository;
+import com.loopers.infrastructure.category.CategoryJpaRepository;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,27 +30,49 @@ class LikeApplicationServiceIntegrationTest {
     private ProductJpaRepository productJpaRepository;
 
     @Autowired
+    private BrandJpaRepository brandJpaRepository;
+
+    @Autowired
+    private CategoryJpaRepository categoryJpaRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
     private DatabaseCleanUp databaseCleanUp;
 
     private ProductModel product;
     private UserId userId;
+    private BrandModel brand;
+    private CategoryModel category;
+    private UserModel user;
 
     @BeforeEach
     void setUp() {
         databaseCleanUp.truncateAllTables();
         
+        // User 먼저 생성
+        userId = UserId.of("seyoung");
+        user = UserModel.of(userId, Email.of("seyoung@loopers.com"), Gender.FEMALE, BirthDate.of("1990-01-01"));
+        userRepository.save(user);
+        
+        // Brand와 Category 생성
+        brand = BrandModel.of("Apple", "Apple Inc.");
+        brandJpaRepository.save(brand);
+        
+        category = CategoryModel.of("전자제품", "전자제품 카테고리");
+        categoryJpaRepository.save(category);
+        
         product = ProductModel.builder()
-                .brandId(1L)
-                .categoryId(1L)
+                .brandId(brand.getId())
+                .categoryId(category.getId())
                 .name("Apple iPhone 14")
                 .description("애플 아이폰 14")
                 .price(10000)
                 .stock(100)
                 .likesCount(0)
                 .build();
-        productJpaRepository.save(product);
-        
-        userId = UserId.of("seyoung");
+        product = productJpaRepository.saveAndFlush(product);
     }
 
     @Test

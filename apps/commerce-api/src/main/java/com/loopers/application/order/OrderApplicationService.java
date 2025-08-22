@@ -52,17 +52,17 @@ public class OrderApplicationService {
         // 4. 재고 차감
         stockDeductionProcessor.deductProductStocks(orderItems);
 
-        // 5. 주문 생성 및 저장 (CREATED 상태)
+        // 5. 주문 생성 및 저장 (CREATED 상태) - 저장된 엔티티 사용
         OrderModel order = OrderModel.create(command.userId(), Money.of(finalTotalPrice), command.couponCode(), command.paymentMethod());
-        orderPersistenceHandler.saveOrder(order);
+        OrderModel savedOrder = orderPersistenceHandler.saveOrder(order);
 
         // 6. 쿠폰 예약
         couponProcessor.reserveCoupon(command.userId(), command.couponCode());
 
-        // 7. 주문 아이템 저장
-        List<OrderItemModel> savedOrderItems = orderPersistenceHandler.saveOrderItem(order, orderItems);
+        // 7. 주문 아이템 저장 - 저장된 엔티티 사용
+        List<OrderItemModel> savedOrderItems = orderPersistenceHandler.saveOrderItem(savedOrder, orderItems);
 
-        return OrderInfo.from(order, OrderItemInfo.createOrderItemInfos(savedOrderItems, products));
+        return OrderInfo.from(savedOrder, OrderItemInfo.createOrderItemInfos(savedOrderItems, products));
     }
 
 } 

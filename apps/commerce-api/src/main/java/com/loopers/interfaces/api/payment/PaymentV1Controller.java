@@ -19,21 +19,27 @@ public class PaymentV1Controller implements PaymentV1ApiSpec {
 
     @Override
     @PostMapping("/callback")
-    public ApiResponse handlePaymnetCallback(PaymentV1Dto.PaymentCallbackResponse response) {
+    public ApiResponse handlePaymentCallback(PaymentV1Dto.PaymentCallbackRequest request) {
         try {
+            log.info("결제 콜백 수신 - TransactionKey: {}, Status: {}, Reason: {}",
+                    request.transactionKey(), request.status(), request.reason());
+
             // 콜백 요청 유효성 검증
-            paymentApplicationService.validatePaymentCallback(response.transactionId());
+            paymentApplicationService.validatePaymentCallback(request.transactionKey());
 
-            paymentApplicationService.handlePaymentCallback(response.transactionId(), response.status(), response.reason());
+            // 결제 콜백 처리
+            paymentApplicationService.handlePaymentCallback(request.transactionKey(), request.status(), request.reason());
 
-            return ApiResponse.success();
+            log.info("결제 콜백 처리 완료 - TransactionKey: {}", request.transactionKey());
+            return ApiResponse.success("결제 콜백 처리 완료");
+
         } catch (IllegalArgumentException e) {
             log.error("잘못된 콜백 요청: {}", e.getMessage());
             return ApiResponse.error(HttpStatus.BAD_REQUEST, e.getMessage());
 
         } catch (Exception e) {
-            log.error("콜백 처리 중 오류 발생: transactionId={}, error={}",
-                    response.transactionId(), e.getMessage(), e);
+            log.error("콜백 처리 중 오류 발생: transactionKey={}, error={}",
+                    request.transactionKey(), e.getMessage(), e);
             return ApiResponse.error(HttpStatus.INTERNAL_SERVER_ERROR, "콜백 처리에 실패했습니다.");
         }
     }

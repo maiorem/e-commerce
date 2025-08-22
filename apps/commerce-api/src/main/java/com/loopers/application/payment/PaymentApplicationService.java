@@ -15,9 +15,11 @@ import com.loopers.support.error.InsufficientPointException;
 import com.loopers.support.error.PaymentFailedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Slf4j
@@ -43,18 +45,33 @@ public class PaymentApplicationService {
      */
     public void processCardPayment(OrderInfo orderInfo, PaymentMethod paymentMethod, CardType cardType, String cardNumber) {
         try {
+            log.info("카드 결제 요청 시작 - OrderId: {}, Amount: {}", orderInfo.orderId(), orderInfo.totalPrice().getAmount());
+            
             PaymentData payment = PaymentData.create(orderInfo.orderId(), paymentMethod, cardType, cardNumber, orderInfo.totalPrice(), orderInfo.userId());
+
             PaymentResult result = paymentGatewayPort.processPayment(payment);
+            
             if (result.isSuccess()) {
+                log.info("카드 결제 요청 성공 - OrderId: {}, TransactionKey: {}", orderInfo.orderId(), result.transactionKey());
+                
                 PaymentModel paymentInfo = PaymentModel.create(orderInfo.orderId(), paymentMethod, orderInfo.totalPrice());
                 paymentProcessor.save(paymentInfo);
+                
                 CardPayment cardPayment = CardPayment.create(paymentInfo, result.transactionKey(), cardType, cardNumber);
                 cardPaymentRepository.save(cardPayment);
+                
+                log.info("카드 결제 정보 저장 완료 - OrderId: {}, PaymentId: {}", orderInfo.orderId(), paymentInfo.getId());
             } else {
-                log.error("결제 요청 실패: {}, 메시지: {}", result.transactionKey(), result.message());
+                log.error("카드 결제 요청 실패 - OrderId: {}, TransactionKey: {}, Message: {}", 
+                         orderInfo.orderId(), result.transactionKey(), result.message());
+                throw new PaymentFailedException("카드 결제 요청에 실패했습니다: " + result.message());
             }
+        } catch (PaymentFailedException e) {
+            log.error("카드 결제 실패 - OrderId: {}, Error: {}", orderInfo.orderId(), e.getMessage());
+            throw e; // PaymentFailedException은 다시 던짐
         } catch (Exception e) {
-            log.error("결제 요청 접수 중 오류 발생: {}", e.getMessage(), e);
+            log.error("카드 결제 요청 중 예상치 못한 오류 발생 - OrderId: {}, Error: {}", orderInfo.orderId(), e.getMessage(), e);
+            throw new PaymentFailedException("카드 결제 처리 중 오류가 발생했습니다: " + e.getMessage(), e);
         }
     }
 
@@ -111,10 +128,10 @@ public class PaymentApplicationService {
      * 결제 콜백 처리
      */
     @Transactional
-    public void handlePaymentCallback(String transactionId, PaymentStatus status, String reason) {
+    public void handlePaymentCallback(String transactionKey, PaymentStatus status, String reason) {
 
-        CardPayment cardPayment = cardPaymentRepository.findByTransactionKey(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("결제 내역이 존재하지 않습니다: " + transactionId));
+        CardPayment cardPayment = cardPaymentRepository.findByTransactionKey(transactionKey)
+                .orElseThrow(() -> new IllegalArgumentException("결제 내역이 존재하지 않습니다: " + transactionKey));
 
         PaymentModel payment = paymentRepository.findById(cardPayment.getPaymentId()).orElseThrow(()
                 -> new IllegalArgumentException("결제 정보가 존재하지 않습니다: paymentId=" + cardPayment.getPaymentId()));
@@ -147,7 +164,18 @@ public class PaymentApplicationService {
      * 결제 콜백 검증
      */
     public void validatePaymentCallback(String transactionKey) {
-        PaymentQueryResult queryResult = paymentGatewayPort.queryPaymentStatus(transactionKey);
+
+        CardPayment cardPayment = cardPaymentRepository.findByTransactionKey(transactionKey).orElseThrow(
+                () -> new IllegalArgumentException("결제 내역이 존재하지 않습니다: " + transactionKey)
+        );
+        PaymentModel paymentModel = paymentRepository.findById(cardPayment.getPaymentId()).orElseThrow(
+                () -> new IllegalArgumentException("결제 정보가 존재하지 않습니다: paymentId=" + cardPayment.getPaymentId()
+        ));
+        OrderModel orderModel = orderRepository.findById(paymentModel.getOrderId()).orElseThrow(
+                () -> new IllegalArgumentException("주문 내역이 존재하지 않습니다: " + paymentModel.getOrderId()
+        ));
+
+        PaymentQueryResult queryResult = paymentGatewayPort.queryPaymentStatus(orderModel.getUserId().getValue(), transactionKey);
         if (!queryResult.isQuerySuccess()) {
             throw new IllegalArgumentException("결제 상태 조회 실패: " + queryResult.reason());
         }
@@ -155,5 +183,58 @@ public class PaymentApplicationService {
             throw new IllegalArgumentException("이미 처리된 결제입니다: " + transactionKey);
         }
 
+    }
+
+    @Scheduled(fixedDelay = 600000) // 10분마다 결제 상태 점검
+    @Transactional
+    public void checkPendingPayments() {
+
+        List<PaymentModel> pendingPayments = paymentRepository.findByStatusAndCreatedBefore(
+                PaymentStatus.PENDING,
+                ZonedDateTime.now().minusMinutes(5)
+        );
+
+        for (PaymentModel payment : pendingPayments) {
+            CardPayment cardPay = cardPaymentRepository.findByPaymentId(payment.getId())
+                    .orElseThrow(() -> new IllegalStateException("결제 정보가 존재하지 않습니다: paymentId=" + payment.getId()));
+            OrderModel orderModel = orderRepository.findById(payment.getOrderId()).orElseThrow(
+                    () -> new IllegalStateException("주문 정보가 존재하지 않습니다: orderId=" + payment.getOrderId()
+                    ));
+            try {
+                PaymentQueryResult queryResult = paymentGatewayPort.queryPaymentStatus(orderModel.getUserId().getValue(), cardPay.getTransactionKey());
+
+                if (queryResult.isQuerySuccess() && queryResult.status() != PaymentStatus.PENDING) {
+
+                    handlePaymentCallback(
+                            cardPay.getTransactionKey(),
+                            queryResult.status(),
+                            queryResult.reason() + " (스케줄러 확인)"
+                    );
+                    log.info("PENDING 결제 상태 업데이트: paymentId={}, orderId={}, status={}",
+                            payment.getId(), payment.getOrderId(), queryResult.status());
+                }
+            } catch (Exception e) {
+                log.error("결제 상태 확인 실패: paymentId={}, orderId={}, transactionKey={}, error={}",
+                        payment.getId(), payment.getOrderId(), cardPay.getTransactionKey(), e.getMessage());
+            }
+        }
+    }
+
+    public void handlePaymentFailure(Long orderId) {
+        try {
+            OrderModel order = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new IllegalArgumentException("주문이 존재하지 않습니다: " + orderId));
+            order.cancel(); // 또는 FAILED 상태로 변경
+            orderRepository.save(order);
+            // 재고 복구
+            List<OrderItemModel> orderItems = orderItemRepository.findByOrderId(order.getId());
+            stockDeductionProcessor.restoreProductStocks(orderItems);
+            // 쿠폰 복구
+            couponProcessor.restoreCoupon(order.getUserId(), order.getCouponCode());
+
+            log.info("결제 실패로 인한 주문 취소 완료 - OrderId: {}", orderId);
+        } catch (Exception e) {
+            log.error("결제 실패 처리 중 오류 발생 - OrderId: {}, Error: {}", orderId, e.getMessage(), e);
+        }
     }
 }

@@ -65,4 +65,8 @@ public class OrderModel extends BaseEntity {
         }
         this.status = OrderStatus.CANCELLED;
     }
-} 
+
+    public boolean isCancellable() {
+        return this.status == OrderStatus.CREATED || this.status == OrderStatus.CONFIRMED;
+    }
+}
