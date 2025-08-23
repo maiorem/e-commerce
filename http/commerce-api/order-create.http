@@ -1,0 +1,26 @@
+### 주문 생성
+POST http://localhost:8080/api/v1/orders
+X-USER-ID: user000026
+Content-Type: application/json
+
+{
+  "payment_method": "CREDIT_CARD",
+  "card_type": "SAMSUNG",
+  "card_number": "1234-5678-9814-1451",
+  "point_amount": null,
+  "coupon_code": null,
+  "items": [
+    {
+        "product_id": 1235,
+        "quantity": 1,
+        "product_name": "상품 2",
+        "product_price": 27000
+    },
+    {
+        "product_id": 234,
+        "quantity": 1,
+        "product_name": "상품 78",
+        "product_price": 12000
+    }
+  ]
+}

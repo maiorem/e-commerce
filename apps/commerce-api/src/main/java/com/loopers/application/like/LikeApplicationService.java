@@ -13,20 +13,12 @@ import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.UserId;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
-import jakarta.persistence.OptimisticLockException;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.StaleObjectStateException;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,8 +34,7 @@ public class LikeApplicationService {
     /**
      * 사용자가 상품을 좋아요 추가
      */
-    @Retryable(retryFor = {OptimisticLockException.class, StaleObjectStateException.class,
-            ObjectOptimisticLockingFailureException.class}, maxAttempts = 10, backoff = @Backoff(delay = 100))
+    @Retry(name = "optimisticLockRetry")
     @Transactional
     public void like(UserId userId, Long productId) {
         ProductModel product = productRepository.findById(productId)
@@ -61,8 +52,7 @@ public class LikeApplicationService {
     /**
      * 사용자가 상품을 좋아요 제거
      */
-    @Retryable(retryFor = {OptimisticLockException.class, StaleObjectStateException.class,
-            ObjectOptimisticLockingFailureException.class}, maxAttempts = 10, backoff = @Backoff(delay = 100))
+    @Retry(name = "optimisticLockRetry")
     @Transactional
     public void unlike(UserId userId, Long productId) {
         ProductModel product = productRepository.findById(productId)

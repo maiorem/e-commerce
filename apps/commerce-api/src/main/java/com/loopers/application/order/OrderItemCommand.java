@@ -1,5 +1,6 @@
 package com.loopers.application.order;
 
+import com.loopers.domain.order.Money;
 import com.loopers.domain.order.OrderItemModel;
 
 import java.util.List;
@@ -34,7 +35,7 @@ public record OrderItemCommand(
             item.orderId(),
             item.productId(),
             item.quantity(),
-            item.productPrice()
+            Money.of(item.productPrice())
         );
     }
 }

@@ -90,5 +90,12 @@ public class PointModel extends BaseEntity {
     public boolean isExpired() {
         return expiredAt != null && LocalDateTime.now().isAfter(expiredAt);
     }
+
+    public void restorePoint(int usedPoints) {
+        if (usedPoints <= 0) {
+            throw new IllegalArgumentException("복원할 포인트는 0보다 커야 합니다.");
+        }
+        this.amount += usedPoints;
+    }
 }
 

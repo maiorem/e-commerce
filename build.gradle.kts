@@ -17,11 +17,6 @@ plugins {
     id("io.spring.dependency-management")
 }
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
-}
 
 allprojects {
     val projectGroup: String by project
@@ -31,13 +26,20 @@ allprojects {
     repositories {
         mavenCentral()
     }
-}
 
+}
 subprojects {
     apply(plugin = "java")
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
     apply(plugin = "org.springframework.boot")
     apply(plugin = "io.spring.dependency-management")
     apply(plugin = "jacoco")
+
+
 
     dependencyManagement {
         imports {
@@ -85,6 +87,7 @@ subprojects {
         jvmArgs("-Xshare:off")
     }
 
+
     tasks.withType<JacocoReport> {
         mustRunAfter("test")
         executionData(fileTree(layout.buildDirectory.asFile).include("jacoco/*.exec"))
@@ -103,6 +106,11 @@ subprojects {
             )
         }
     }
+
+    tasks.withType<JavaCompile> {
+        options.encoding = "UTF-8"
+    }
+
 }
 
 // module-container 는 task 를 실행하지 않도록 한다.

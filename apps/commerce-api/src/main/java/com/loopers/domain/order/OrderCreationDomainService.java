@@ -39,7 +39,7 @@ public class OrderCreationDomainService {
      */
     public int calculateOrderPrice(List<OrderItemModel> orderItems) {
         return orderItems.stream()
-                .mapToInt(orderItem -> orderItem.getPriceAtOrder() * orderItem.getQuantity())
+                .mapToInt(orderItem -> orderItem.getPriceAtOrder().getAmount() * orderItem.getQuantity())
                 .sum();
     }
 

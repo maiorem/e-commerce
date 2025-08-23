@@ -1,7 +1,6 @@
 package com.loopers.domain.coupon;
 
 import com.loopers.domain.user.UserId;
-import com.loopers.support.error.CoreException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -25,7 +24,7 @@ class UserCouponDomainTest {
         // then
         assertThat(userCoupon.getUserId()).isEqualTo(UserId.of("seyoung"));
         assertThat(userCoupon.getCouponCode()).isEqualTo("COUPON123");
-        assertThat(userCoupon.isUsed()).isFalse();
+        assertThat(userCoupon.getStatus()).isEqualTo(UserCoupontStatus.AVAILABLE);
         assertThat(userCoupon.getUsedAt()).isNull();
     }
 
@@ -64,7 +63,7 @@ class UserCouponDomainTest {
 
         // then
         assertThat(result).isTrue();
-        assertThat(userCoupon.isUsed()).isTrue();
+        assertThat(userCoupon.getStatus()).isEqualTo(UserCoupontStatus.USED);
         assertThat(userCoupon.getUsedAt()).isEqualTo(today);
     }
 
@@ -81,24 +80,24 @@ class UserCouponDomainTest {
     }
 
     @Test
-    @DisplayName("사용하지 않은 쿠폰의 isUsed는 false를 반환한다.")
+    @DisplayName("사용하지 않은 쿠폰의 status는 AVAILABLE 반환한다.")
     void isUsed_UnusedCoupon_ReturnsFalse() {
         // given
         UserCouponModel userCoupon = UserCouponModel.create(UserId.of("seyoung"), "COUPON123");
 
         // when & then
-        assertThat(userCoupon.isUsed()).isFalse();
+        assertThat(userCoupon.getStatus()).isEqualTo(UserCoupontStatus.AVAILABLE);
     }
 
     @Test
-    @DisplayName("사용된 쿠폰의 isUsed는 true를 반환한다.")
+    @DisplayName("사용된 쿠폰의 status USED를 반환한다.")
     void isUsed_UsedCoupon_ReturnsTrue() {
         // given
         UserCouponModel userCoupon = UserCouponModel.create(UserId.of("seyoung"), "COUPON123");
         userCoupon.useCoupon(today);
 
         // when & then
-        assertThat(userCoupon.isUsed()).isTrue();
+        assertThat(userCoupon.getStatus()).isEqualTo(UserCoupontStatus.USED);
     }
 
     @Test
@@ -133,15 +132,15 @@ class UserCouponDomainTest {
         // then
         assertThat(userCoupon1.getUserId()).isEqualTo(UserId.of("seyoung"));
         assertThat(userCoupon1.getCouponCode()).isEqualTo("COUPON123");
-        assertThat(userCoupon1.isUsed()).isFalse();
+        assertThat(userCoupon1.getStatus()).isEqualTo(UserCoupontStatus.AVAILABLE);
 
         assertThat(userCoupon2.getUserId()).isEqualTo(UserId.of("seyoung12"));
         assertThat(userCoupon2.getCouponCode()).isEqualTo("COUPON456");
-        assertThat(userCoupon2.isUsed()).isFalse();
+        assertThat(userCoupon2.getStatus()).isEqualTo(UserCoupontStatus.AVAILABLE);
 
         assertThat(userCoupon3.getUserId()).isEqualTo(UserId.of("seyoung"));
         assertThat(userCoupon3.getCouponCode()).isEqualTo("COUPON789");
-        assertThat(userCoupon3.isUsed()).isFalse();
+        assertThat(userCoupon3.getStatus()).isEqualTo(UserCoupontStatus.AVAILABLE);
     }
 
     @Test
@@ -158,8 +157,8 @@ class UserCouponDomainTest {
         // then
         assertThat(result1).isTrue();
         assertThat(result2).isTrue();
-        assertThat(userCoupon1.isUsed()).isTrue();
-        assertThat(userCoupon2.isUsed()).isTrue();
+        assertThat(userCoupon1.getStatus()).isEqualTo(UserCoupontStatus.USED);
+        assertThat(userCoupon2.getStatus()).isEqualTo(UserCoupontStatus.USED);
         assertThat(userCoupon1.getUsedAt()).isEqualTo(today);
         assertThat(userCoupon2.getUsedAt()).isEqualTo(tomorrow);
     }
@@ -175,7 +174,7 @@ class UserCouponDomainTest {
 
         // then
         assertThat(result).isTrue();
-        assertThat(userCoupon.isUsed()).isTrue();
+        assertThat(userCoupon.getStatus()).isEqualTo(UserCoupontStatus.USED);
         assertThat(userCoupon.getUsedAt()).isEqualTo(tomorrow);
     }
 }

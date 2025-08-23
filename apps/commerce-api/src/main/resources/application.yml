@@ -29,8 +29,59 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+logging:
+  level:
+    io.github.resilience4j: DEBUG
+    com.loopers.infrastructure.http.PgClientAdapter: DEBUG
+    org.springframework.aop: DEBUG
+    org.springframework.retry: DEBUG
+
 cache:
   type: redis
+
+payment:
+  pg:
+    callback-url: http://localhost:8080/api/v1/payment/callback
+
+resilience4j:
+  retry:
+    instances:
+      pgRetry:
+        max-attempts: 3
+        wait-duration: 1s
+        retry-exceptions:
+          - feign.FeignException
+          - feign.RetryableException
+          - java.net.SocketTimeoutException
+          - java.net.ConnectException
+          - org.springframework.web.client.ResourceAccessException
+          - org.springframework.web.client.HttpServerErrorException
+        fail-after-max-attempts: true
+        enable-exponential-backoff: false
+        exponential-backoff-multiplier: 2
+      optimisticLockRetry:
+        max-attempts: 10
+        wait-duration: 100ms
+        retry-exceptions:
+          - jakarta.persistence.OptimisticLockException
+          - org.hibernate.StaleObjectStateException
+          - org.springframework.orm.ObjectOptimisticLockingFailureException
+        fail-after-max-attempts: true
+    metrics:
+      enabled: true
+    events:
+      enabled: true
+  circuitbreaker:
+    instances:
+      pgCircuit:
+        failure-rate-threshold: 50 # 실패율 임계값 (default : 50)
+        slow-call-rate-threshold: 50 # 느린 호출 비율 임계값 (default : 50)
+        slow-call-duration-threshold: 2s # 느린 호출 지속 시간 임계값 (default : 2s)
+        minimum-number-of-calls: 10 # 최소 호출 수 (default : 10)
+        sliding-window-size: 10 # 슬라이딩 윈도우 크기 (default : 10)
+        wait-duration-in-open-state: 5s # 오픈 상태에서 대기 시간 (default : 60s)
+        permitted-number-of-calls-in-half-open-state: 3 # 반 오픈 상태에서 허용된 호출 수 (default : 10)
+        automatic-transition-from-open-to-half-open-enabled: true # 오픈 상태에서 반 오픈 상태로 자동 전환 활성화 (default : true)
 
 ---
 spring:

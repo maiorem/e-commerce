@@ -4,11 +4,15 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
-import org.springframework.retry.annotation.EnableRetry;
+import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.TimeZone;
 
-@EnableRetry
+@EnableScheduling
+@EnableAspectJAutoProxy
+@EnableFeignClients
 @ConfigurationPropertiesScan
 @SpringBootApplication
 public class CommerceApiApplication {

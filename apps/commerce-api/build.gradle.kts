@@ -20,8 +20,8 @@ dependencies {
     testImplementation(testFixtures(project(":modules:jpa")))
     testImplementation(testFixtures(project(":modules:redis")))
 
-    // retry
-    implementation("org.springframework.retry:spring-retry")
+    // retry - Resilience4j 사용으로 spring-retry 제거
+    // implementation("org.springframework.retry:spring-retry")
 
     // aspects
     implementation("org.springframework:spring-aspects")
@@ -31,6 +31,13 @@ dependencies {
 
     // Redis Cache
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
+
+    // Feign Client
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.3.0")
+
+    // Resilience4j
+    implementation("io.github.resilience4j:resilience4j-spring-boot3")
+    implementation("org.springframework.boot:spring-boot-starter-aop")
 
 }
 

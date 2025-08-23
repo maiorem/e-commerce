@@ -2,9 +2,7 @@ package com.loopers.application.order;
 
 
 import com.loopers.application.coupon.CouponProcessor;
-import com.loopers.domain.coupon.CouponModel;
-import com.loopers.domain.coupon.CouponType;
-import com.loopers.domain.coupon.UserCouponModel;
+import com.loopers.domain.coupon.*;
 import com.loopers.domain.user.*;
 import com.loopers.infrastructure.coupon.CouponJpaRepository;
 import com.loopers.infrastructure.coupon.UserCouponJpaRepository;
@@ -109,7 +107,7 @@ public class CouponUsageOptimisticLockTest {
 
         Optional<UserCouponModel> updatedUserCoupon = userCouponRepository.findByUserIdAndCouponCode(user.getUserId(), coupon.getCouponCode());
         assertThat(updatedUserCoupon).isPresent();
-        assertThat(updatedUserCoupon.get().isUsed()).isTrue();
+        assertThat(updatedUserCoupon.get().getStatus()).isEqualTo(UserCoupontStatus.USED);
 
     }
 }

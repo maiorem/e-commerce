@@ -1,17 +1,16 @@
 package com.loopers.domain.payment;
 
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
 public interface PaymentRepository {
     
-    PaymentHistoryModel save(PaymentHistoryModel payment);
+    PaymentModel save(PaymentModel payment);
     
-    Optional<PaymentHistoryModel> findById(Long id);
-    
-    Optional<PaymentHistoryModel> findByOrderId(Long orderId);
-    
-    List<PaymentHistoryModel> findAll();
-    
-    void delete(PaymentHistoryModel payment);
-} 
+    Optional<PaymentModel> findById(Long id);
+
+    List<PaymentModel> findAll();
+
+    List<PaymentModel> findByStatusAndCreatedBefore(PaymentStatus paymentStatus, ZonedDateTime localDateTime);
+}

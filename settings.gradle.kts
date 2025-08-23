@@ -2,8 +2,9 @@ rootProject.name = "maiorem-loopers-l2-commerce"
 
 include(
     ":apps:commerce-api",
+    ":apps:pg-simulator",
     ":modules:jpa",
-    "modules:redis",
+    ":modules:redis",
     ":supports:jackson",
     ":supports:logging",
     ":supports:monitoring",

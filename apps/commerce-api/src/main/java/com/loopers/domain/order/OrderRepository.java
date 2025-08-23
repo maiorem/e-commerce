@@ -1,6 +1,8 @@
 package com.loopers.domain.order;
 
 import com.loopers.domain.user.UserId;
+
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -15,4 +17,6 @@ public interface OrderRepository {
     List<OrderModel> findAll();
     
     void delete(OrderModel order);
+
+    List<OrderModel> findByStatusAndCreatedBefore(OrderStatus orderStatus, LocalDateTime localDateTime);
 } 

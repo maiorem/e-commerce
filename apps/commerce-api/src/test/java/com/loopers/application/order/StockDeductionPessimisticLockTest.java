@@ -1,9 +1,13 @@
 package com.loopers.application.order;
 
 import com.loopers.application.product.StockDeductionProcessor;
-import com.loopers.domain.order.OrderItemModel;
+import com.loopers.domain.order.*;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
+import com.loopers.domain.brand.BrandModel;
+import com.loopers.domain.category.CategoryModel;
+import com.loopers.infrastructure.brand.BrandJpaRepository;
+import com.loopers.infrastructure.category.CategoryJpaRepository;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +37,12 @@ public class StockDeductionPessimisticLockTest {
     private ProductRepository productRepository;
 
     @Autowired
+    private BrandJpaRepository brandJpaRepository;
+
+    @Autowired
+    private CategoryJpaRepository categoryJpaRepository;
+
+    @Autowired
     private TransactionTemplate transactionTemplate;
 
     @Autowired
@@ -40,13 +50,23 @@ public class StockDeductionPessimisticLockTest {
 
     private ProductModel product;
     private List<OrderItemModel> orderItems;
+    private BrandModel brand;
+    private CategoryModel category;
 
     @BeforeEach
     void setUp() {
+        databaseCleanUp.truncateAllTables();
+        // Brand와 Category 먼저 생성
+        brand = BrandModel.of("테스트브랜드", "테스트 브랜드입니다");
+        brand = brandJpaRepository.saveAndFlush(brand);
+        
+        category = CategoryModel.of("테스트카테고리", "테스트 카테고리입니다");
+        category = categoryJpaRepository.saveAndFlush(category);
+        
         // 200개 재고를 가진 상품 생성
         ProductModel builderProduct = ProductModel.builder()
-                .brandId(1L)
-                .categoryId(1L)
+                .brandId(brand.getId())
+                .categoryId(category.getId())
                 .name("테스트 상품")
                 .description("테스트 상품 설명")
                 .price(10000)
@@ -59,9 +79,10 @@ public class StockDeductionPessimisticLockTest {
         orderItems = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             OrderItemModel orderItem = OrderItemModel.builder()
+                    .orderId(1L)
                     .productId(product.getId())
                     .quantity(10)
-                    .priceAtOrder(10000)
+                    .priceAtOrder(Money.of(10000))
                     .build();
             orderItems.add(orderItem);
         }
@@ -115,22 +136,23 @@ public class StockDeductionPessimisticLockTest {
     void pessimisticLockTest2() throws InterruptedException {
         // given
         final ProductModel lowStockProduct = ProductModel.builder()
-                .brandId(1L)
-                .categoryId(1L)
+                .brandId(brand.getId())
+                .categoryId(category.getId())
                 .name("재고 부족 상품")
                 .description("재고 부족 상품 설명")
                 .price(10000)
                 .stock(70) // 70개 재고
                 .likesCount(0)
                 .build();
-        productRepository.save(lowStockProduct);
+        ProductModel savedLowStockProduct = productRepository.save(lowStockProduct);
 
         // 주문 아이템 30개 주문
         orderItems = new ArrayList<>();
         OrderItemModel orderItem = OrderItemModel.builder()
-                .productId(lowStockProduct.getId())
+                .orderId(1L)
+                .productId(savedLowStockProduct.getId())
                 .quantity(30)
-                .priceAtOrder(10000)
+                .priceAtOrder(Money.of(10000))
                 .build();
         orderItems.add(orderItem);
 
@@ -165,7 +187,7 @@ public class StockDeductionPessimisticLockTest {
 
         // 최종 재고가 음수가 되지 않아야 함
         Optional<ProductModel> updatedProduct = transactionTemplate.execute(status -> 
-            productRepository.findByIdForUpdate(lowStockProduct.getId())
+            productRepository.findByIdForUpdate(savedLowStockProduct.getId())
         );
         assertThat(updatedProduct).isPresent();
         assertThat(updatedProduct.get().getStock()).isGreaterThanOrEqualTo(0);
@@ -177,21 +199,22 @@ public class StockDeductionPessimisticLockTest {
         // given
         // 재고가 50개인 새로운 상품 생성 (정확히 1개 주문만 가능)
         final ProductModel exactStockProduct = ProductModel.builder()
-                .brandId(1L)
-                .categoryId(1L)
+                .brandId(brand.getId())
+                .categoryId(category.getId())
                 .name("정확한 재고 상품")
                 .description("정확한 재고 상품 설명")
                 .price(10000)
                 .stock(50)
                 .likesCount(0)
                 .build();
-        productRepository.save(exactStockProduct);
+        ProductModel savedExactStockProduct = productRepository.save(exactStockProduct);
 
         orderItems = new ArrayList<>();
         OrderItemModel orderItem = OrderItemModel.builder()
-                .productId(exactStockProduct.getId())
+                .orderId(1L)
+                .productId(savedExactStockProduct.getId())
                 .quantity(50)
-                .priceAtOrder(10000)
+                .priceAtOrder(Money.of(10000))
                 .build();
         orderItems.add(orderItem);
 
@@ -226,7 +249,7 @@ public class StockDeductionPessimisticLockTest {
 
         // 최종 재고가 0이 되어야 함
         Optional<ProductModel> updatedProduct = transactionTemplate.execute(status -> 
-            productRepository.findByIdForUpdate(exactStockProduct.getId())
+            productRepository.findByIdForUpdate(savedExactStockProduct.getId())
         );
         assertThat(updatedProduct).isPresent();
         assertThat(updatedProduct.get().getStock()).isEqualTo(0);
