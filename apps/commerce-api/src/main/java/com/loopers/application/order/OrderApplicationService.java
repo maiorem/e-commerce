@@ -1,6 +1,7 @@
 package com.loopers.application.order;
 
 import com.loopers.application.coupon.CouponProcessor;
+import com.loopers.domain.order.event.OrderCreatedEvent;
 import com.loopers.application.point.PointProcessor;
 import com.loopers.application.product.StockDeductionProcessor;
 import com.loopers.application.user.UserValidator;
@@ -10,6 +11,7 @@ import com.loopers.domain.order.OrderItemModel;
 import com.loopers.domain.order.OrderModel;
 import com.loopers.domain.product.ProductModel;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -31,6 +33,8 @@ public class OrderApplicationService {
     private final CouponProcessor couponProcessor;
 
     private final OrderCreationDomainService orderCreationDomainService;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 주문 생성
@@ -57,10 +61,13 @@ public class OrderApplicationService {
         OrderModel savedOrder = orderPersistenceHandler.saveOrder(order);
 
         // 6. 쿠폰 예약
-        couponProcessor.reserveCoupon(command.userId(), command.couponCode());
+//        couponProcessor.reserveCoupon(command.userId(), command.couponCode());
 
         // 7. 주문 아이템 저장 - 저장된 엔티티 사용
         List<OrderItemModel> savedOrderItems = orderPersistenceHandler.saveOrderItem(savedOrder, orderItems);
+
+        // -- 이벤트 발행 --
+        eventPublisher.publishEvent(OrderCreatedEvent.from(savedOrder));
 
         return OrderInfo.from(savedOrder, OrderItemInfo.createOrderItemInfos(savedOrderItems, products));
     }
