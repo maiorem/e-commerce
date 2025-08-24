@@ -4,6 +4,8 @@ import com.loopers.application.coupon.CouponProcessor;
 import com.loopers.domain.external.DataPlatformResult;
 import com.loopers.domain.order.event.OrderCreatedEvent;
 import com.loopers.domain.external.DataPlatformPort;
+import com.loopers.domain.user.event.UserActionData;
+import com.loopers.domain.user.event.UserActionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -30,6 +32,9 @@ public class OrderEventHandler {
 
             // 2. 데이터 플랫폼으로 주문 정보 전송
             processDataPlatformSending(event);
+
+            // 3. 사용자 행동 추적
+            trackOrderCreationAction(event);
 
             log.info("[OrderEventHandler] 주문 후속 처리 완료 - OrderId: {}", event.getOrderId());
 
@@ -85,6 +90,29 @@ public class OrderEventHandler {
         } catch (Exception e) {
             log.error("[OrderEventHandler] 데이터 플랫폼 전송 중 예외 발생 - OrderId: {}, Error: {}",
                     event.getOrderId(), e.getMessage(), e);
+        }
+    }
+
+    private void trackOrderCreationAction(OrderCreatedEvent event) {
+        try {
+            UserActionData actionData = UserActionData.create(
+                    event.getUserId(),
+                    UserActionType.ORDER_CREATE,
+                    event.getOrderId(),
+                    "amount=" + event.getTotalAmount().getAmount() +
+                            ",payment_method=" + event.getPaymentMethod().name()
+            );
+
+            // DataPlatformPort를 통해 사용자 행동도 전송
+            dataPlatformPort.sendUserActionData(
+                    event.getUserId(),
+                    "ORDER_CREATE",
+                    event.getOrderId(),
+                    event.getOccurredAt()
+            );
+
+        } catch (Exception e) {
+            log.error("주문 생성 행동 추적 실패", e);
         }
     }
 }
