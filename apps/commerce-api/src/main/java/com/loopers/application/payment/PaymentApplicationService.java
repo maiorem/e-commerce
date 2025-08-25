@@ -9,12 +9,15 @@ import com.loopers.domain.order.OrderItemRepository;
 import com.loopers.domain.order.OrderModel;
 import com.loopers.domain.order.OrderRepository;
 import com.loopers.domain.payment.*;
+import com.loopers.domain.payment.event.PaymentFailedEvent;
+import com.loopers.domain.payment.event.PaymentSuccessEvent;
 import com.loopers.domain.point.PointModel;
 import com.loopers.domain.point.PointRepository;
 import com.loopers.support.error.InsufficientPointException;
 import com.loopers.support.error.PaymentFailedException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +42,8 @@ public class PaymentApplicationService {
     private final StockDeductionProcessor stockDeductionProcessor;
     private final PaymentGatewayPort paymentGatewayPort;
     private final PaymentProcessor paymentProcessor;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * 카드 결제 요청
@@ -127,7 +132,6 @@ public class PaymentApplicationService {
     /**
      * 결제 콜백 처리
      */
-    @Transactional
     public void handlePaymentCallback(String transactionKey, PaymentStatus status, String reason) {
 
         CardPayment cardPayment = cardPaymentRepository.findByTransactionKey(transactionKey)
@@ -139,22 +143,27 @@ public class PaymentApplicationService {
         OrderModel order = orderRepository.findById(payment.getOrderId())
                 .orElseThrow(() -> new IllegalArgumentException("주문 내역이 존재하지 않습니다: " + payment.getOrderId()));
 
-        List<OrderItemModel> orderItems = orderItemRepository.findByOrderId(order.getId());
-
         if (status == PaymentStatus.SUCCESS) {
-            order.confirm();
             payment.success();
+            eventPublisher.publishEvent(PaymentSuccessEvent.create(
+                    order.getId(),
+                    payment.getId(),
+                    order.getUserId(),
+                    payment.getFinalOrderPrice(),
+                    payment.getPaymentMethod(),
+                    transactionKey
+            ));
 
-            // 쿠폰 사용 처리
-            couponProcessor.useCoupon(order.getUserId(), order.getCouponCode());
 
         } else {
-            order.cancel();
             payment.fail();
-            // 재고 복구
-            stockDeductionProcessor.restoreProductStocks(orderItems);
-            // 쿠폰 복구
-            couponProcessor.restoreCoupon(order.getUserId(), order.getCouponCode());
+            eventPublisher.publishEvent(PaymentFailedEvent.create(
+                    order.getId(),
+                    order.getUserId(),
+                    payment.getFinalOrderPrice(),
+                    payment.getPaymentMethod(),
+                    reason
+            ));
 
         }
 

@@ -22,14 +22,7 @@ public class ProductLikeDomainService {
         if (isLiked(product.getId(), userId)) {
             return null; // 이미 좋아요가 되어 있으면 아무 동작도 하지 않음
         }
-
-        // LikeModel 생성
-        LikeModel like = LikeModel.create(userId, product.getId());
-        
-        // 상품의 좋아요 수 증가
-        product.incrementLikesCount();
-        
-        return like;
+        return LikeModel.create(userId, product.getId());
     }
 
     /**
@@ -41,15 +34,8 @@ public class ProductLikeDomainService {
         if (!isLiked(product.getId(), userId)) {
             return null; // 이미 좋아요가 취소되어 있으면 아무 동작도 하지 않음
         }
-
-        // 기존 LikeModel 조회
-        LikeModel like = likeRepository.findByUserIdAndProductId(userId, product.getId())
+        return likeRepository.findByUserIdAndProductId(userId, product.getId())
                 .orElse(null);
-        
-        // 상품의 좋아요 수 감소
-        product.decrementLikesCount();
-        
-        return like;
     }
 
     /**

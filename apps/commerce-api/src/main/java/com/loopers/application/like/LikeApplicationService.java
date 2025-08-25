@@ -8,6 +8,8 @@ import com.loopers.domain.category.CategoryRepository;
 import com.loopers.domain.like.LikeModel;
 import com.loopers.domain.like.LikeRepository;
 import com.loopers.domain.like.ProductLikeDomainService;
+import com.loopers.domain.like.event.ProductLikedEvent;
+import com.loopers.domain.like.event.ProductUnlikedEvent;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.UserId;
@@ -15,6 +17,7 @@ import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +34,8 @@ public class LikeApplicationService {
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
 
+    private final ApplicationEventPublisher eventPublisher;
+
     /**
      * 사용자가 상품을 좋아요 추가
      */
@@ -46,6 +51,7 @@ public class LikeApplicationService {
         // null이 반환되면 이미 좋아요가 되어 있는 상태이므로 아무 동작도 하지 않음
         if (like != null) {
             likeRepository.save(like);
+            eventPublisher.publishEvent(ProductLikedEvent.create(productId, userId));
         }
     }
 
@@ -64,6 +70,7 @@ public class LikeApplicationService {
         // null이 반환되면 이미 좋아요가 취소되어 있는 상태이므로 아무 동작도 하지 않음
         if (like != null) {
             likeRepository.delete(like);
+            eventPublisher.publishEvent(ProductUnlikedEvent.create(productId, userId));
         }
     }
 
