@@ -5,6 +5,7 @@ import com.loopers.domain.user.UserId;
 import com.loopers.domain.user.UserModel;
 import com.loopers.domain.user.UserRepository;
 import com.loopers.support.config.TestConfig;
+import com.loopers.testcontainers.MySqlTestContainersConfig;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,7 +23,7 @@ import static org.mockito.Mockito.*;
 
 
 @SpringBootTest
-@Import(TestConfig.class)
+@Import({TestConfig.class, MySqlTestContainersConfig.class})
 class UserApplicationServiceIntegrationTest {
 
     @Autowired

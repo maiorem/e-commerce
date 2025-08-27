@@ -5,6 +5,8 @@ import com.loopers.domain.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import io.github.resilience4j.retry.annotation.Retry;
 
 @Slf4j
 @Component
@@ -14,6 +16,8 @@ public class LikeCountProcessor {
     private final ProductRepository productRepository;
 
 
+    @Retry(name = "optimisticLockRetry")
+    @Transactional
     public void updateProductLikeCount(Long productId, int countDelta) {
         try {
             ProductModel product = productRepository.findById(productId)
