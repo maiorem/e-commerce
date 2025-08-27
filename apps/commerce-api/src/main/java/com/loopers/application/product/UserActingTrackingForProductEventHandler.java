@@ -16,7 +16,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class ProductEventHandler {
+public class UserActingTrackingForProductEventHandler {
 
     private final UserActionTrackingPort userActionTrackingPort;
 

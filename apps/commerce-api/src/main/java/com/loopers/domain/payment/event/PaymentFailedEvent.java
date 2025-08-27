@@ -17,14 +17,15 @@ public class PaymentFailedEvent {
     private final Money amount;
     private final PaymentMethod paymentMethod;
     private final String failureReason;
+    private final String couponCode;
     private final ZonedDateTime occurredAt;
 
     public static PaymentFailedEvent create(Long orderId, UserId userId,
                                             Money amount, PaymentMethod paymentMethod,
-                                            String failureReason) {
+                                            String failureReason, String couponCode) {
         return new PaymentFailedEvent(
                 orderId, userId, amount, paymentMethod,
-                failureReason, ZonedDateTime.now()
+                failureReason, couponCode, ZonedDateTime.now()
         );
     }
 }

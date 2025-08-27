@@ -18,14 +18,15 @@ public class PaymentSuccessEvent {
     private final Money amount;
     private final PaymentMethod paymentMethod;
     private final String transactionKey;
+    private final String couponCode;
     private final ZonedDateTime occurredAt;
 
     public static PaymentSuccessEvent create(Long orderId, Long paymentId, UserId userId,
                                              Money amount, PaymentMethod paymentMethod,
-                                             String transactionKey) {
+                                             String transactionKey, String couponCode) {
         return new PaymentSuccessEvent(
                 orderId, paymentId, userId, amount, paymentMethod,
-                transactionKey, ZonedDateTime.now()
+                transactionKey, couponCode, ZonedDateTime.now()
         );
     }
 }

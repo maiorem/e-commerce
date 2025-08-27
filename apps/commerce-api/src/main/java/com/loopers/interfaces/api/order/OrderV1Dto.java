@@ -17,6 +17,10 @@ public class OrderV1Dto {
 
     public record CreateOrderRequest(
 
+            @JsonProperty("user_id")
+            @Parameter(description = "사용자 ID", example = "user123")
+            String userId,
+
             @JsonProperty("payment_method")
             @Parameter(description = "결제 방법", example = "CREDIT_CARD")
             PaymentMethod paymentMethod,
