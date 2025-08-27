@@ -39,6 +39,9 @@ dependencies {
     implementation("io.github.resilience4j:resilience4j-spring-boot3")
     implementation("org.springframework.boot:spring-boot-starter-aop")
 
+    // test - Awaitility for async/eventually assertions
+    testImplementation("org.awaitility:awaitility:4.2.0")
+
 }
 
 // LargeSeeder 실행을 위한 태스크
