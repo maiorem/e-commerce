@@ -128,7 +128,7 @@ public class LikeApplicationServiceOptimisticLockTest {
         assertThat(successCount.get()).isEqualTo(threadCount);
         assertThat(failureCount.get()).isEqualTo(0);
 
-        // 비동기 이벤트 처리 대기 (좋아요 카운트가 이벤트 핸들러에서 비동기로 업데이트됨)
+        // 비동기 이벤트 처리 대기
         await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
             Optional<ProductModel> updatedProduct = productRepository.findById(product.getId());
             assertThat(updatedProduct).isPresent();

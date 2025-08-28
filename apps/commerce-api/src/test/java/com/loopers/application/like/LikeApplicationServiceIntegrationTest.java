@@ -8,6 +8,7 @@ import com.loopers.domain.user.*;
 import com.loopers.infrastructure.brand.BrandJpaRepository;
 import com.loopers.infrastructure.category.CategoryJpaRepository;
 import com.loopers.infrastructure.product.ProductJpaRepository;
+import com.loopers.support.config.LikeTestConfig;
 import com.loopers.utils.DatabaseCleanUp;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
-@Import(com.loopers.support.config.LikeTestConfig.class)
+@Import(LikeTestConfig.class)
 class LikeApplicationServiceIntegrationTest {
 
     @Autowired

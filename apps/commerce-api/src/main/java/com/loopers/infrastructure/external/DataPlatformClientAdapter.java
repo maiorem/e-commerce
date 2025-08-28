@@ -25,8 +25,7 @@ public class DataPlatformClientAdapter implements DataPlatformPort {
             orderData.put("order_number", event.getOrderNumber());
             orderData.put("user_id", event.getUserId().getValue());
             orderData.put("amount", event.getTotalAmount().getAmount());
-            orderData.put("payment_method", event.getPaymentMethod().name());
-            orderData.put("coupon_code", event.getCouponCode());
+            // 결제 방식과 쿠폰 코드는 이벤트에서 제공되지 않음
             orderData.put("order_date", event.getOrderDate().toString());
             orderData.put("sent_at", event.getOccurredAt().toString());
 

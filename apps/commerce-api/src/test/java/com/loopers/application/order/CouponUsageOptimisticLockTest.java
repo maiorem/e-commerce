@@ -87,9 +87,12 @@ public class CouponUsageOptimisticLockTest {
 
         // when
         for (int i = 1; i <= threadCount; i++) {
+            final long orderId = i;
             executorService.submit(() -> {
                 try {
-                    couponProcessor.useCoupon(user.getUserId(), coupon.getCouponCode());
+                    // 쿠폰을 예약한 다음 사용
+                    couponProcessor.reserveCoupon(user.getUserId(), coupon.getCouponCode(), orderId);
+                    couponProcessor.useCoupon(user.getUserId(), coupon.getCouponCode(), orderId);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failureCount.incrementAndGet();

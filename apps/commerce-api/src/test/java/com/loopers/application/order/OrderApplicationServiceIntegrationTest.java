@@ -1,6 +1,5 @@
 package com.loopers.application.order;
 
-import com.loopers.application.coupon.CouponProcessor;
 import com.loopers.domain.brand.BrandModel;
 import com.loopers.domain.category.CategoryModel;
 import com.loopers.domain.coupon.*;
@@ -23,20 +22,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 @Import(MySqlTestContainersConfig.class)
-@Transactional
 class OrderApplicationServiceIntegrationTest {
 
     @Autowired
@@ -72,9 +69,6 @@ class OrderApplicationServiceIntegrationTest {
     @Autowired
     private DatabaseCleanUp databaseCleanUp;
 
-    @Autowired
-    private CouponProcessor couponProcessor;
-
     private UserId userId;
     private OrderCommand orderCommand;
     private List<OrderItemCommand> orderItemCommands;
@@ -87,23 +81,18 @@ class OrderApplicationServiceIntegrationTest {
     @BeforeEach
     void setUp() {
         databaseCleanUp.truncateAllTables();
-
-        mock(couponProcessor);
         
         userId = UserId.of("seyoung");
         
-        // User 먼저 생성
         UserModel user = UserModel.of(userId, Email.of("seyoung@loopers.com"), Gender.FEMALE, BirthDate.of("2000-01-01"));
         userRepository.save(user);
 
-        // Brand와 Category 먼저 생성
         brand = BrandModel.of("Apple", "Apple Inc.");
         brand = brandJpaRepository.saveAndFlush(brand);
         
         category = CategoryModel.of("전자제품", "전자제품 카테고리");
         category = categoryJpaRepository.saveAndFlush(category);
         
-        // Coupon 생성
         coupon = CouponModel.builder()
             .name("TEST_COUPON")
             .type(CouponType.FIXED_AMOUNT)
@@ -115,11 +104,9 @@ class OrderApplicationServiceIntegrationTest {
             .build();
         coupon = couponRepository.saveAndFlush(coupon);
         
-        // UserCoupon 생성
         userCoupon = UserCouponModel.create(userId, coupon.getCouponCode());
         userCouponRepository.save(userCoupon);
         
-        // Product 생성
         ProductModel product1 = ProductModel.builder()
             .brandId(brand.getId())
             .categoryId(category.getId())
@@ -144,18 +131,13 @@ class OrderApplicationServiceIntegrationTest {
         
         products = List.of(product1, product2);
         
-        // OrderItemCommand 생성
         orderItemCommands = List.of(
             new OrderItemCommand(null, product1.getId(), 2, "iPhone 15", 1000000),
             new OrderItemCommand(null, product2.getId(), 1, "MacBook Pro", 1200000)
         );
         
-        // OrderCommand 생성
         orderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, CardType.SAMSUNG, "1234567890123456", coupon.getCouponCode(), 0, orderItemCommands);
 
-        // Mock CouponProcessor 설정
-        when(couponProcessor.applyCouponDiscount(userId, 3200000, coupon.getCouponCode())).thenReturn(3195000);
-        when(couponProcessor.applyCouponDiscount(userId, 3200000, null)).thenReturn(3200000);
     }
 
     @AfterEach
@@ -179,13 +161,15 @@ class OrderApplicationServiceIntegrationTest {
         List<OrderItemModel> savedOrderItems = orderItemRepository.findByOrderId(result.orderId());
         assertThat(savedOrderItems).hasSize(2);
         
-        // 상품 재고 차감 확인
-        Optional<ProductModel> updatedProduct1 = productRepository.findById(products.get(0).getId());
-        Optional<ProductModel> updatedProduct2 = productRepository.findById(products.get(1).getId());
-        assertThat(updatedProduct1).isPresent();
-        assertThat(updatedProduct2).isPresent();
-        assertThat(updatedProduct1.get().getStock()).isEqualTo(8); // 10 - 2
-        assertThat(updatedProduct2.get().getStock()).isEqualTo(4); // 5 - 1
+        // 상품 재고 차감 확인 (비동기 처리 대기)
+        await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+            Optional<ProductModel> updatedProduct1 = productRepository.findById(products.get(0).getId());
+            Optional<ProductModel> updatedProduct2 = productRepository.findById(products.get(1).getId());
+            assertThat(updatedProduct1).isPresent();
+            assertThat(updatedProduct2).isPresent();
+            assertThat(updatedProduct1.get().getStock()).isEqualTo(8); // 10 - 2
+            assertThat(updatedProduct2.get().getStock()).isEqualTo(4); // 5 - 1
+        });
     }
 
     @Test
@@ -297,8 +281,7 @@ class OrderApplicationServiceIntegrationTest {
 
         OrderCommand percentageOrderCommand = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, CardType.SAMSUNG, "1234567890123456", percentageCoupon.getCouponCode(), 0, orderItemCommands);
 
-        // Mock CouponProcessor 설정 for percentage coupon
-        when(couponProcessor.applyCouponDiscount(userId, 3200000, percentageCoupon.getCouponCode())).thenReturn(3100000);
+        // CouponProcessor는 실제 로직을 사용
 
         // when
         OrderInfo result = orderApplicationService.createOrder(percentageOrderCommand);
@@ -352,7 +335,8 @@ class OrderApplicationServiceIntegrationTest {
         usedCoupon = couponRepository.saveAndFlush(usedCoupon);
         
         UserCouponModel usedUserCoupon = UserCouponModel.create(userId, usedCoupon.getCouponCode());
-        usedUserCoupon.useCoupon(LocalDate.now());
+        usedUserCoupon.reserve(1L);
+        usedUserCoupon.useCoupon(LocalDate.now(), 1L);
         userCouponRepository.save(usedUserCoupon);
         
         OrderCommand orderCommandWithUsedCoupon = new OrderCommand(userId, PaymentMethod.CREDIT_CARD, CardType.SAMSUNG, "1234567890123456", usedCoupon.getCouponCode(), 0, orderItemCommands);
@@ -421,9 +405,12 @@ class OrderApplicationServiceIntegrationTest {
         // then
         assertThat(result).isNotNull();
         
-        Optional<UserCouponModel> usedUserCoupon = userCouponRepository.findByUserIdAndCouponCode(userId, coupon.getCouponCode());
-        assertThat(usedUserCoupon).isPresent();
-        assertThat(usedUserCoupon.get().getStatus()).isEqualTo(UserCoupontStatus.RESERVED); // 주문 생성 시 RESERVED 상태
-        assertThat(usedUserCoupon.get().getUsedAt()).isNull(); // 아직 사용되지 않음
+        // 쿠폰 예약이 비동기로 처리되므로 대기
+        await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+            Optional<UserCouponModel> usedUserCoupon = userCouponRepository.findByUserIdAndCouponCode(userId, coupon.getCouponCode());
+            assertThat(usedUserCoupon).isPresent();
+            assertThat(usedUserCoupon.get().getStatus()).isEqualTo(UserCoupontStatus.RESERVED); // 주문 생성 시 RESERVED 상태
+            assertThat(usedUserCoupon.get().getUsedAt()).isNull(); // 아직 사용되지 않음
+        });
     }
 }
