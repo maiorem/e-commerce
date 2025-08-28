@@ -8,11 +8,11 @@ import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.product.ProductSearchDomainService;
 import com.loopers.domain.product.ProductSortBy;
+import com.loopers.domain.product.event.ProductChangedPublisher;
 import com.loopers.domain.product.event.ProductViewedEvent;
 import com.loopers.domain.user.UserId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -29,7 +29,7 @@ public class ProductApplicationService {
     private final ProductSearchDomainService productSearchDomainService;
     private final ProductCacheService productCacheService;
 
-    private final ApplicationEventPublisher eventPublisher;
+    private final ProductChangedPublisher eventPublisher;
 
     /**
      * 상품 목록 조회 (페이징 / 정렬 - 최신순(기본값), 좋아요순, 가격 낮은 순, 가격 높은 순)
