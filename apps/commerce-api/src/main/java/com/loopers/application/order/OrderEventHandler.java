@@ -1,9 +1,12 @@
 package com.loopers.application.order;
 
 import com.loopers.application.coupon.CouponProcessor;
+import com.loopers.application.product.StockDeductionProcessor;
 import com.loopers.domain.external.DataPlatformPort;
 import com.loopers.domain.external.DataPlatformResult;
+import com.loopers.domain.order.event.OrderCeatedCouponReserveCommand;
 import com.loopers.domain.order.event.OrderCreatedEvent;
+import com.loopers.domain.order.event.OrderCreatedStockDeductionCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -20,30 +23,51 @@ public class OrderEventHandler {
 
     private final DataPlatformPort dataPlatformPort;
     private final CouponProcessor couponProcessor;
+    private final StockDeductionProcessor stockDeductionProcessor;
 
     /**
-     * 쿠폰 예약
+     * 재고 차감 (커맨드)
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void processCouponReserve(OrderCreatedEvent event) {
-        if (event.getCouponCode() != null && !event.getCouponCode().isEmpty()) {
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    public void processStockDeduction(OrderCreatedStockDeductionCommand command) {
+        if (command.orderItemList() != null && !command.orderItemList().isEmpty()) {
+            try {
+                log.info("[OrderEventHandler] 재고차감 처리 시작 - ");
+                stockDeductionProcessor.deductProductStocks(command.orderItemList());
+                log.info("[OrderEventHandler] 재고차감 처리 완료 - ");
+            } catch (Exception e) {
+                log.error("[OrderEventHandler] 재고차감 처리 실패 - ");
+            }
+        } else {
+            log.debug("[OrderEventHandler] 차감할 재고가 없음");
+        }
+
+    }
+
+    /**
+     * 쿠폰 예약 (커맨드)
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
+    public void processCouponReserve(OrderCeatedCouponReserveCommand command) {
+        if (command.couponCode() != null && !command.couponCode().isEmpty()) {
             try {
                 log.info("[OrderEventHandler] 쿠폰 예약 처리 시작 - OrderId: {}, CouponCode: {}",
-                        event.getOrderId(), event.getCouponCode());
+                        command.orderId(), command.couponCode());
 
-                couponProcessor.reserveCoupon(event.getUserId(), event.getCouponCode());
+                couponProcessor.reserveCoupon(command.userId(), command.couponCode());
 
                 log.info("[OrderEventHandler] 쿠폰 예약 처리 완료 - OrderId: {}, CouponCode: {}",
-                        event.getOrderId(), event.getCouponCode());
+                        command.orderId(), command.couponCode());
 
             } catch (Exception e) {
                 log.error("[OrderEventHandler] 쿠폰 예약 처리 실패 - OrderId: {}, CouponCode: {}, Error: {}",
-                        event.getOrderId(), event.getCouponCode(), e.getMessage(), e);
+                        command.orderId(), command.couponCode(), e.getMessage(), e);
 
             }
         } else {
-            log.debug("[OrderEventHandler] 예약할 쿠폰이 없음 - OrderId: {}", event.getOrderId());
+            log.debug("[OrderEventHandler] 예약할 쿠폰이 없음 - OrderId: {}", command.orderId());
         }
     }
 
