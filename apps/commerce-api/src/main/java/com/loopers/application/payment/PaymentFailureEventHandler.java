@@ -2,6 +2,7 @@ package com.loopers.application.payment;
 
 import com.loopers.application.coupon.CouponProcessor;
 import com.loopers.application.product.StockDeductionProcessor;
+import com.loopers.domain.coupon.UserCouponModel;
 import com.loopers.domain.order.OrderItemModel;
 import com.loopers.domain.order.OrderItemRepository;
 import com.loopers.domain.order.OrderModel;
@@ -52,8 +53,7 @@ public class PaymentFailureEventHandler {
     /**
      * 결제 실패 - 재고 복구 이벤트 처리
      */
-    @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void handlePaymentFailedWithStockRestoration(PaymentFailedEvent event) {
 
         try {
@@ -73,12 +73,15 @@ public class PaymentFailureEventHandler {
     /**
      * 결제 실패 - 쿠폰 복구 이벤트 처리
      */
-    @Async
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
     public void handlePaymentFailedWithCouponRestoration(PaymentFailedEvent event) {
 
         try {
-            couponProcessor.restoreCoupon(event.getUserId(), event.getCouponCode());
+            OrderModel order = orderRepository.findById(event.getOrderId())
+                    .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다: " + event.getOrderId()));
+
+            UserCouponModel coupon = couponProcessor.findByOrderId(event.getOrderId());
+            couponProcessor.restoreCoupon(order.getUserId(), coupon.getCouponCode());
             log.info("[PaymentEventHandler] 쿠폰 복구 완료 - OrderId: {}", event.getOrderId());
 
         } catch (Exception e) {

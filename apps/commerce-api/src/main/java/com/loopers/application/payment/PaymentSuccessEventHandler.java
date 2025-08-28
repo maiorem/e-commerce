@@ -1,6 +1,7 @@
 package com.loopers.application.payment;
 
 import com.loopers.application.coupon.CouponProcessor;
+import com.loopers.domain.coupon.UserCouponModel;
 import com.loopers.domain.order.OrderModel;
 import com.loopers.domain.order.OrderRepository;
 import com.loopers.domain.payment.event.PaymentSuccessEvent;
@@ -22,7 +23,7 @@ public class PaymentSuccessEventHandler {
 	/**
 	 * 결제 성공 - 주문 확정 이벤트 처리
 	 */
-	@Async
+    @Async
 	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
 	public void handlePaymentSuccess(PaymentSuccessEvent event) {
 		log.info("[PaymentEventHandler] 결제 성공 이벤트 처리 시작 - OrderId: {}, PaymentId: {}",
@@ -47,14 +48,15 @@ public class PaymentSuccessEventHandler {
 	/**
 	 * 결제 성공 - 쿠폰 사용 확정 이벤트 처리
 	 */
-	@Async
-	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	@TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT)
 	public void handlePaymentSuccessWithCouponConfirmation(PaymentSuccessEvent event) {
 		log.info("[PaymentEventHandler] 결제 성공 - 쿠폰 사용 확정 이벤트 처리 시작 - OrderId: {}, PaymentId: {}",
 				event.getOrderId(), event.getPaymentId());
-
 		try {
-			couponProcessor.useCoupon(event.getUserId(), event.getCouponCode());
+            OrderModel order = orderRepository.findById(event.getOrderId())
+                    .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다: " + event.getOrderId()));
+            UserCouponModel myCoupon = couponProcessor.findByOrderId(event.getOrderId());
+            couponProcessor.useCoupon(order.getUserId(), myCoupon.getCouponCode(), myCoupon.getOrderId());
 			log.info("[PaymentEventHandler] 쿠폰 사용 확정 완료 - OrderId: {}", event.getOrderId());
 
 		} catch (Exception e) {
@@ -62,6 +64,5 @@ public class PaymentSuccessEventHandler {
 					event.getOrderId(), e.getMessage(), e);
 		}
 	}
-
 
 }

@@ -70,7 +70,7 @@ public class PaymentApplicationService {
             }
         } catch (PaymentFailedException e) {
             log.error("카드 결제 실패 - OrderId: {}, Error: {}", orderInfo.orderId(), e.getMessage());
-            throw e; // PaymentFailedException은 다시 던짐
+            throw e;
         } catch (Exception e) {
             log.error("카드 결제 요청 중 예상치 못한 오류 발생 - OrderId: {}, Error: {}", orderInfo.orderId(), e.getMessage(), e);
             throw new PaymentFailedException("카드 결제 처리 중 오류가 발생했습니다: " + e.getMessage(), e);
@@ -81,13 +81,12 @@ public class PaymentApplicationService {
      * 포인트 결제 요청
      */
     @Transactional
-    public void processPointPayment(OrderInfo orderInfo, PaymentMethod paymentMethod, int requestPoints, String couponCode) {
+    public void processPointPayment(OrderInfo orderInfo, PaymentMethod paymentMethod, int requestPoints) {
+        // 1. Payment 생성
+        PaymentModel payment = PaymentModel.create(orderInfo.orderId(), paymentMethod, orderInfo.totalPrice());
+        PaymentModel savedPayment = paymentRepository.save(payment);
 
         try {
-            // 1. Payment 생성
-            PaymentModel payment = PaymentModel.create(orderInfo.orderId(), paymentMethod, orderInfo.totalPrice());
-            PaymentModel savedPayment = paymentRepository.save(payment);
-
             // 2. 포인트 사용 처리
             int actualUsedPoints = pointProcessor.processPointUsage(orderInfo.userId(), orderInfo.totalPrice().getAmount(), requestPoints);
 
@@ -105,15 +104,7 @@ public class PaymentApplicationService {
             payment.success();
 
             // 6. 결제 성공 이벤트 발행
-            paymentSuccessPublisher.publish(PaymentSuccessEvent.create(
-                    orderInfo.orderId(),
-                    savedPayment.getId(),
-                    orderInfo.userId(),
-                    orderInfo.totalPrice(),
-                    paymentMethod,
-                    "POINT-IMMEDIATE",
-                    couponCode
-            ));
+            paymentSuccessPublisher.publish(PaymentSuccessEvent.create(payment,"POINT-IMMEDIATE"));
 
             log.info("포인트 결제 완료: orderId={}, usedPoints={}, remainingPoints={}",
                     orderInfo.orderId(), actualUsedPoints, pointModel.getAmount());
@@ -122,11 +113,19 @@ public class PaymentApplicationService {
             log.error("포인트 부족: orderId={}, requestPoints={}, error={}",
                     orderInfo.orderId(), requestPoints, e.getMessage());
 
+            // 결제 실패 이벤트 발행
+            paymentFailedPublisher.publish(PaymentFailedEvent.create(savedPayment,"포인트 부족"));
+
             throw new PaymentFailedException("포인트가 부족합니다: " + e.getMessage());
 
         } catch (Exception e) {
             log.error("포인트 결제 중 오류 발생: orderId={}, error={}", orderInfo.orderId(), e.getMessage(), e);
 
+            // 결제 실패 이벤트 발행
+            paymentFailedPublisher.publish(PaymentFailedEvent.create(
+                    savedPayment,
+                    "포인트 결제 도중 알 수 없는 오류 발생"
+            ));
             throw new PaymentFailedException("포인트 결제에 실패했습니다: " + e.getMessage());
         }
     }
@@ -142,30 +141,20 @@ public class PaymentApplicationService {
 		PaymentModel payment = paymentRepository.findById(cardPayment.getPaymentId()).orElseThrow(()
 				-> new IllegalArgumentException("결제 정보가 존재하지 않습니다: paymentId=" + cardPayment.getPaymentId()));
 
-		OrderModel order = orderRepository.findById(payment.getOrderId())
-				.orElseThrow(() -> new IllegalArgumentException("주문 내역이 존재하지 않습니다: " + payment.getOrderId()));
-
 		if (status == PaymentStatus.SUCCESS) {
 			payment.success();
+            // 결제 성공 이벤트 발행
             paymentSuccessPublisher.publish(PaymentSuccessEvent.create(
-					order.getId(),
-					payment.getId(),
-					order.getUserId(),
-					payment.getFinalOrderPrice(),
-					payment.getPaymentMethod(),
-					transactionKey,
-					null
+                    payment,
+					transactionKey
 			));
 
 		} else {
 			payment.fail();
+            // 결제 실패 이벤트 발행
             paymentFailedPublisher.publish(PaymentFailedEvent.create(
-					order.getId(),
-					order.getUserId(),
-					payment.getFinalOrderPrice(),
-					payment.getPaymentMethod(),
-					reason,
-					null
+                    payment,
+					reason
 			));
 
 		}

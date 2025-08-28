@@ -56,7 +56,7 @@ public class OrderEventHandler {
                 log.info("[OrderEventHandler] 쿠폰 예약 처리 시작 - OrderId: {}, CouponCode: {}",
                         command.orderId(), command.couponCode());
 
-                couponProcessor.reserveCoupon(command.userId(), command.couponCode());
+                couponProcessor.reserveCoupon(command.userId(), command.couponCode(), command.orderId());
 
                 log.info("[OrderEventHandler] 쿠폰 예약 처리 완료 - OrderId: {}, CouponCode: {}",
                         command.orderId(), command.couponCode());

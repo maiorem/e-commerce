@@ -33,14 +33,10 @@ public class OrderV1Controller implements OrderV1ApiSpec {
             // 결제 요청
             try {
                 switch (request.paymentMethod()) {
-                    case CREDIT_CARD -> {
-                            paymentApplicationService.processCardPayment(
+                    case CREDIT_CARD -> paymentApplicationService.processCardPayment(
                                     orderInfo, request.paymentMethod(), request.cardType(), request.cardNumber());
-                    }
-                    case POINT -> {
-                        paymentApplicationService.processPointPayment(
-                                orderInfo, request.paymentMethod(), request.pointAmount(), request.couponCode());
-                    }
+                    case POINT -> paymentApplicationService.processPointPayment(
+                                orderInfo, request.paymentMethod(), request.pointAmount());
                     default -> throw new IllegalArgumentException("지원하지 않는 결제 방법입니다: " + request.paymentMethod());
                 }
             } catch (Exception e) {
