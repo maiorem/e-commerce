@@ -1,7 +1,7 @@
 package com.loopers.domain.order;
 
 import com.loopers.domain.BaseEntity;
-import com.loopers.domain.payment.PaymentMethod;
+import com.loopers.domain.payment.model.PaymentMethod;
 import com.loopers.domain.user.UserId;
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,6 +1,5 @@
 package com.loopers.application.order;
 
-import com.loopers.application.product.StockDeductionProcessor;
 import com.loopers.application.user.UserValidator;
 import com.loopers.domain.order.OrderCreationDomainService;
 import com.loopers.domain.order.OrderItemModel;
@@ -20,11 +19,7 @@ public class OrderApplicationService {
 	private final UserValidator userValidator;
 
 	private final OrderItemProductsValidator orderItemProductsValidator;
-
-	private final StockDeductionProcessor stockDeductionProcessor;
-
 	private final OrderPersistenceHandler orderPersistenceHandler;
-
 	private final OrderCreationDomainService orderCreationDomainService;
 	private final OrderPriceCalculator orderPriceCalculator;
 

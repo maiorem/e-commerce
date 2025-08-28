@@ -1,7 +1,7 @@
 package com.loopers.infrastructure.payment;
 
-import com.loopers.domain.payment.PointPayment;
-import com.loopers.domain.payment.PointPaymentRepository;
+import com.loopers.domain.payment.model.PointPayment;
+import com.loopers.domain.payment.repository.PointPaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

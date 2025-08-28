@@ -1,6 +1,8 @@
 package com.loopers.domain.payment;
 
 import com.loopers.domain.order.Money;
+import com.loopers.domain.payment.model.CardType;
+import com.loopers.domain.payment.model.PaymentMethod;
 import com.loopers.domain.user.UserId;
 
 public record PaymentData(

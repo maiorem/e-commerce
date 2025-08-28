@@ -1,7 +1,7 @@
 package com.loopers.domain.payment.event;
 
 import com.loopers.domain.order.Money;
-import com.loopers.domain.payment.PaymentMethod;
+import com.loopers.domain.payment.model.PaymentMethod;
 import com.loopers.domain.user.UserId;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

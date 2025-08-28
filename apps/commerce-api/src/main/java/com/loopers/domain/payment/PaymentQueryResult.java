@@ -1,5 +1,7 @@
 package com.loopers.domain.payment;
 
+import com.loopers.domain.payment.model.PaymentStatus;
+
 public record PaymentQueryResult(
         String transactionKey,
         String orderId,

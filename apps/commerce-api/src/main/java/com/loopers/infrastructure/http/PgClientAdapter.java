@@ -1,6 +1,7 @@
 package com.loopers.infrastructure.http;
 
 import com.loopers.domain.payment.*;
+import com.loopers.domain.payment.model.PaymentStatus;
 import feign.FeignException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;

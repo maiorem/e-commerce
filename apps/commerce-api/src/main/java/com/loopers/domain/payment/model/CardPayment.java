@@ -1,6 +1,7 @@
-package com.loopers.domain.payment;
+package com.loopers.domain.payment.model;
 
 import com.loopers.domain.BaseEntity;
+import com.loopers.domain.payment.PaymentData;
 import com.loopers.domain.user.UserId;
 import jakarta.persistence.*;
 import lombok.Getter;

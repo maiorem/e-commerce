@@ -1,5 +1,6 @@
-package com.loopers.domain.payment;
+package com.loopers.domain.payment.repository;
 
+import com.loopers.domain.payment.model.CardPayment;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
