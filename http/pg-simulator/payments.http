@@ -1,6 +1,6 @@
 ### 결제 요청
 POST http://localhost:8082/api/v1/payments
-X-USER-ID: 135135
+X-USER-ID: user000001
 Content-Type: application/json
 
 {
@@ -12,7 +12,7 @@ Content-Type: application/json
 }
 
 ### 결제 정보 확인
-GET http://localhost:8082/api/v1/payments/20250819:TR:a03925
+GET http://localhost:8082/api/v1/payments/20250822:TR:1e0bc4
 X-USER-ID: 135135
 
 ### 주문에 엮인 결제 정보 조회

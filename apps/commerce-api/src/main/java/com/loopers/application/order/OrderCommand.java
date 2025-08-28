@@ -1,7 +1,7 @@
 package com.loopers.application.order;
 
-import com.loopers.domain.payment.CardType;
-import com.loopers.domain.payment.PaymentMethod;
+import com.loopers.domain.payment.model.CardType;
+import com.loopers.domain.payment.model.PaymentMethod;
 import com.loopers.domain.user.UserId;
 
 import java.util.List;

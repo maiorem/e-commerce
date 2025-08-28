@@ -23,4 +23,9 @@ public class UserCouponRepositoryImpl implements UserCouponRepository {
     public UserCouponModel save(UserCouponModel userCoupon) {
         return userCouponJpaRepository.save(userCoupon);
     }
+
+    @Override
+    public Optional<UserCouponModel> findByOrderId(Long orderId) {
+        return userCouponJpaRepository.findByOrderId(orderId);
+    }
 }

@@ -2,6 +2,8 @@ package com.loopers.application.like;
 
 import com.loopers.domain.like.LikeModel;
 import com.loopers.domain.like.ProductLikeDomainService;
+import com.loopers.domain.like.event.ProductLikePublisher;
+import com.loopers.domain.like.event.ProductUnLikePublisher;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.user.UserId;
 import com.loopers.support.error.CoreException;
@@ -25,6 +27,12 @@ class LikeApplicationServiceWithFakeTest {
 
     @Mock
     private ProductLikeDomainService productLikeHandler;
+    
+    @Mock
+    private ProductLikePublisher likeEventPublisher;
+    
+    @Mock
+    private ProductUnLikePublisher unlikeEventPublisher;
 
     private LikeApplicationService likeApplicationService;
     private FakeLikeRepository fakeLikeRepository;
@@ -41,9 +49,11 @@ class LikeApplicationServiceWithFakeTest {
         likeApplicationService = new LikeApplicationService(
                 fakeLikeRepository,
                 fakeProductRepository,
-                productLikeHandler, // Mock 주입
-                null, // BrandRepository
-                null  // CategoryRepository
+                productLikeHandler,
+                null,
+                null,
+                likeEventPublisher,
+                unlikeEventPublisher
         );
         
         userId = UserId.of("seyoung");

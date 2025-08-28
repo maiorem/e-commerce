@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import com.loopers.testcontainers.MySqlTestContainersConfig;
 
 import java.util.List;
 
@@ -24,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
+@Import(MySqlTestContainersConfig.class)
 public class ProductApplicationServiceIntegrationTest {
 
     @Autowired
@@ -553,7 +556,7 @@ public class ProductApplicationServiceIntegrationTest {
                 ProductModel saved = productJpaRepository.save(product);
 
                 // when
-                ProductOutputInfo productDetail = productApplicationService.getProductDetail(saved.getId());
+                ProductOutputInfo productDetail = productApplicationService.getProductDetail(saved.getId(), null);
 
                 // then
                 assertThat(productDetail).isNotNull();
@@ -565,7 +568,7 @@ public class ProductApplicationServiceIntegrationTest {
             @DisplayName("상품 ID가 존재하지 않을 때 예외를 발생시킨다.")
             void getProductDetailNotFound() {
                 // when & then
-                assertThatThrownBy(() -> productApplicationService.getProductDetail(999L))
+                assertThatThrownBy(() -> productApplicationService.getProductDetail(999L, null))
                         .isInstanceOf(IllegalArgumentException.class);
             }
 
@@ -589,7 +592,7 @@ public class ProductApplicationServiceIntegrationTest {
                 ProductModel savedProduct = productJpaRepository.save(product);
 
                 // when
-                ProductOutputInfo productDetail = productApplicationService.getProductDetail(savedProduct.getId());
+                ProductOutputInfo productDetail = productApplicationService.getProductDetail(savedProduct.getId(), null);
 
                 // then
                 assertThat(productDetail).isNotNull();
@@ -615,7 +618,7 @@ public class ProductApplicationServiceIntegrationTest {
                 System.out.println("After save - Saved Product likesCount: " + savedProduct.getLikesCount()); // Diagnostic
 
                 // when
-                ProductOutputInfo productDetail = productApplicationService.getProductDetail(savedProduct.getId());
+                ProductOutputInfo productDetail = productApplicationService.getProductDetail(savedProduct.getId(), null);
                 System.out.println("After service call - ProductDetail likesCount: " + productDetail.likeCount()); // Diagnostic
 
                 // then

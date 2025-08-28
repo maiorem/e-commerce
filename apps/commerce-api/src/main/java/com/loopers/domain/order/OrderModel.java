@@ -1,7 +1,7 @@
 package com.loopers.domain.order;
 
 import com.loopers.domain.BaseEntity;
-import com.loopers.domain.payment.PaymentMethod;
+import com.loopers.domain.payment.model.PaymentMethod;
 import com.loopers.domain.user.UserId;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -26,8 +26,6 @@ public class OrderModel extends BaseEntity {
 
     private Money totalAmount;
 
-    private String couponCode;
-
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
@@ -40,13 +38,12 @@ public class OrderModel extends BaseEntity {
 
     protected OrderModel() {}
 
-    public static OrderModel create(UserId userId, Money totalAmount, String couponCode, PaymentMethod paymentMethod) {
+    public static OrderModel create(UserId userId, Money totalAmount, PaymentMethod paymentMethod) {
         OrderModel order = new OrderModel();
         order.userId = userId;
         order.orderNumber = OrderNumberGenerator.generateOrderNumber();
         order.orderDate = OrderDate.of(LocalDateTime.now());
         order.totalAmount = totalAmount;
-        order.couponCode = couponCode;
         order.paymentMethod = paymentMethod;
         order.status = OrderStatus.CREATED;
         return order;

@@ -59,7 +59,8 @@ class UserCouponDomainTest {
         UserCouponModel userCoupon = UserCouponModel.create(UserId.of("seyoung"), "COUPON123");
 
         // when
-        boolean result = userCoupon.useCoupon(today);
+        userCoupon.reserve(1L);
+        boolean result = userCoupon.useCoupon(today, 1L);
 
         // then
         assertThat(result).isTrue();
@@ -72,10 +73,11 @@ class UserCouponDomainTest {
     void useCoupon_AlreadyUsedCoupon_ThrowsException() {
         // given
         UserCouponModel userCoupon = UserCouponModel.create(UserId.of("seyoung"), "COUPON123");
-        userCoupon.useCoupon(today); // 첫 번째 사용
+        userCoupon.reserve(1L);
+        userCoupon.useCoupon(today, 1L); // 첫 번째 사용
 
         // when & then
-        assertThatThrownBy(() -> userCoupon.useCoupon(tomorrow))
+        assertThatThrownBy(() -> userCoupon.useCoupon(tomorrow, 2L))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -94,7 +96,8 @@ class UserCouponDomainTest {
     void isUsed_UsedCoupon_ReturnsTrue() {
         // given
         UserCouponModel userCoupon = UserCouponModel.create(UserId.of("seyoung"), "COUPON123");
-        userCoupon.useCoupon(today);
+        userCoupon.reserve(1L);
+        userCoupon.useCoupon(today, 1L);
 
         // when & then
         assertThat(userCoupon.getStatus()).isEqualTo(UserCoupontStatus.USED);
@@ -115,7 +118,8 @@ class UserCouponDomainTest {
     void getUsedAt_UsedCoupon_ReturnsUsedDate() {
         // given
         UserCouponModel userCoupon = UserCouponModel.create(UserId.of("seyoung"), "COUPON123");
-        userCoupon.useCoupon(today);
+        userCoupon.reserve(1L);
+        userCoupon.useCoupon(today, 1L);
 
         // when & then
         assertThat(userCoupon.getUsedAt()).isEqualTo(today);
@@ -151,8 +155,10 @@ class UserCouponDomainTest {
         UserCouponModel userCoupon2 = UserCouponModel.create(UserId.of("seyoung"), "COUPON456");
 
         // when
-        boolean result1 = userCoupon1.useCoupon(today);
-        boolean result2 = userCoupon2.useCoupon(tomorrow);
+        userCoupon1.reserve(1L);
+        boolean result1 = userCoupon1.useCoupon(today, 1L);
+        userCoupon2.reserve(2L);
+        boolean result2 = userCoupon2.useCoupon(tomorrow, 2L);
 
         // then
         assertThat(result1).isTrue();
@@ -170,7 +176,8 @@ class UserCouponDomainTest {
         UserCouponModel userCoupon = UserCouponModel.create(UserId.of("seyoung"), "COUPON123");
 
         // when
-        boolean result = userCoupon.useCoupon(tomorrow);
+        userCoupon.reserve(1L);
+        boolean result = userCoupon.useCoupon(tomorrow, 1L);
 
         // then
         assertThat(result).isTrue();

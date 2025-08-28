@@ -58,7 +58,6 @@ class ProductLikeDomainServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.getUserId()).isEqualTo(userId);
             assertThat(result.getProductId()).isEqualTo(productId);
-            verify(product).incrementLikesCount();
             verify(likeRepository).existsByUserIdAndProductId(userId, productId);
         }
 
@@ -100,7 +99,6 @@ class ProductLikeDomainServiceTest {
             assertThat(result).isNotNull();
             assertThat(result.getUserId()).isEqualTo(userId);
             assertThat(result.getProductId()).isEqualTo(productId);
-            verify(product).decrementLikesCount();
             verify(likeRepository).existsByUserIdAndProductId(userId, productId);
             verify(likeRepository).findByUserIdAndProductId(userId, productId);
         }

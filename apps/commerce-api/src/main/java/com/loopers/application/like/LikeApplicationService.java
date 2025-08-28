@@ -8,6 +8,10 @@ import com.loopers.domain.category.CategoryRepository;
 import com.loopers.domain.like.LikeModel;
 import com.loopers.domain.like.LikeRepository;
 import com.loopers.domain.like.ProductLikeDomainService;
+import com.loopers.domain.like.event.ProductLikePublisher;
+import com.loopers.domain.like.event.ProductLikedEvent;
+import com.loopers.domain.like.event.ProductUnLikePublisher;
+import com.loopers.domain.like.event.ProductUnlikedEvent;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.UserId;
@@ -31,6 +35,9 @@ public class LikeApplicationService {
     private final BrandRepository brandRepository;
     private final CategoryRepository categoryRepository;
 
+    private final ProductLikePublisher likeEventPublisher;
+    private final ProductUnLikePublisher unLikeEventPublisher;
+
     /**
      * 사용자가 상품을 좋아요 추가
      */
@@ -46,6 +53,7 @@ public class LikeApplicationService {
         // null이 반환되면 이미 좋아요가 되어 있는 상태이므로 아무 동작도 하지 않음
         if (like != null) {
             likeRepository.save(like);
+            likeEventPublisher.publish(ProductLikedEvent.create(productId, userId));
         }
     }
 
@@ -64,6 +72,7 @@ public class LikeApplicationService {
         // null이 반환되면 이미 좋아요가 취소되어 있는 상태이므로 아무 동작도 하지 않음
         if (like != null) {
             likeRepository.delete(like);
+            unLikeEventPublisher.publish(ProductUnlikedEvent.create(productId, userId));
         }
     }
 

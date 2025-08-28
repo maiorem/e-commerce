@@ -1,5 +1,6 @@
 package com.loopers.application.product;
 
+import com.loopers.domain.product.event.ProductChangedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -37,31 +38,4 @@ public class ProductCacheEventListener {
         }
     }
 
-    /**
-     * 상품 변경 이벤트
-     */
-    public static class ProductChangedEvent {
-        private final Long productId;
-        private final ChangeType changeType;
-
-        public ProductChangedEvent(Long productId, ChangeType changeType) {
-            this.productId = productId;
-            this.changeType = changeType;
-        }
-
-        public Long getProductId() {
-            return productId;
-        }
-
-        public ChangeType getChangeType() {
-            return changeType;
-        }
-    }
-
-    /**
-     * 변경 타입
-     */
-    public enum ChangeType {
-        CREATED, UPDATED, DELETED
-    }
 } 
