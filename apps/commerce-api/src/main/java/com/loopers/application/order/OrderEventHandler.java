@@ -7,6 +7,9 @@ import com.loopers.domain.external.DataPlatformResult;
 import com.loopers.domain.order.event.OrderCeatedCouponReserveCommand;
 import com.loopers.domain.order.event.OrderCreatedEvent;
 import com.loopers.domain.order.event.OrderCreatedStockDeductionCommand;
+import com.loopers.domain.user.event.UserActionData;
+import com.loopers.domain.user.event.UserActionTrackingPort;
+import com.loopers.domain.user.event.UserActionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -22,6 +25,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class OrderEventHandler {
 
     private final DataPlatformPort dataPlatformPort;
+    private final UserActionTrackingPort userActionTrackingPort;
     private final CouponProcessor couponProcessor;
     private final StockDeductionProcessor stockDeductionProcessor;
 
@@ -104,12 +108,12 @@ public class OrderEventHandler {
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void trackOrderCreationAction(OrderCreatedEvent event) {
         try {
-            dataPlatformPort.sendUserActionData(
+            UserActionData actionData = UserActionData.create(
                     event.getUserId(),
-                    "ORDER_CREATE",
-                    event.getOrderId(),
-                    event.getOccurredAt()
+                    UserActionType.ORDER_CREATE,
+                    event.getOrderId()
             );
+            userActionTrackingPort.trackUserAction(actionData);
 
         } catch (Exception e) {
             log.error("주문 생성 행동 추적 실패", e);
