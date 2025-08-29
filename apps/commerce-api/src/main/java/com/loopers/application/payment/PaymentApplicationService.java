@@ -133,6 +133,7 @@ public class PaymentApplicationService {
     /**
 	 * 결제 콜백 처리
 	 */
+    @Transactional
 	public void handlePaymentCallback(String transactionKey, PaymentStatus status, String reason) {
 
 		CardPayment cardPayment = cardPaymentRepository.findByTransactionKey(transactionKey)
@@ -143,6 +144,7 @@ public class PaymentApplicationService {
 
 		if (status == PaymentStatus.SUCCESS) {
 			payment.success();
+            paymentRepository.save(payment);
             // 결제 성공 이벤트 발행
             paymentSuccessPublisher.publish(PaymentSuccessEvent.create(
                     payment,
@@ -151,6 +153,7 @@ public class PaymentApplicationService {
 
 		} else {
 			payment.fail();
+            paymentRepository.save(payment);
             // 결제 실패 이벤트 발행
             paymentFailedPublisher.publish(PaymentFailedEvent.create(
                     payment,

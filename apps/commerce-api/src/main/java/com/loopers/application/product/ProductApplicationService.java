@@ -8,7 +8,7 @@ import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.product.ProductSearchDomainService;
 import com.loopers.domain.product.ProductSortBy;
-import com.loopers.domain.product.event.ProductChangedPublisher;
+import com.loopers.domain.product.event.ProductDetailViewedPublisher;
 import com.loopers.domain.product.event.ProductViewedEvent;
 import com.loopers.domain.user.UserId;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +29,7 @@ public class ProductApplicationService {
     private final ProductSearchDomainService productSearchDomainService;
     private final ProductCacheService productCacheService;
 
-    private final ProductChangedPublisher eventPublisher;
+    private final ProductDetailViewedPublisher detailViewedPublisher;
 
     /**
      * 상품 목록 조회 (페이징 / 정렬 - 최신순(기본값), 좋아요순, 가격 낮은 순, 가격 높은 순)
@@ -162,7 +162,8 @@ public class ProductApplicationService {
 
         if (userId != null && !userId.isBlank()) {
             try {
-                eventPublisher.publishEvent(
+                // 상품 조회 이벤트 발행
+                detailViewedPublisher.publish(
                         ProductViewedEvent.createDetailView(id, UserId.of(userId))
                 );
             } catch (Exception e) {
