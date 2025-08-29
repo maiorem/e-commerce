@@ -8,10 +8,9 @@ import com.loopers.domain.user.event.UserActionTrackingPort;
 import com.loopers.domain.user.event.UserActionType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.event.TransactionPhase;
-import org.springframework.transaction.event.TransactionalEventListener;
 
 @Slf4j
 @Component
@@ -23,7 +22,7 @@ public class UserActingTrackingForProductEventHandler {
     /**
      * 상품 조회 이벤트 처리
      */
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     @Async
     public void handleProductViewed(ProductViewedEvent event) {
         log.info("[ProductEventHandler] 상품 조회 이벤트 처리 - ProductId: {}, UserId: {}, ViewType: {}",
@@ -50,7 +49,7 @@ public class UserActingTrackingForProductEventHandler {
     /**
      * 상품 클릭 이벤트 처리
      */
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     @Async
     public void handleProductClicked(ProductClickedEvent event) {
         log.info("[ProductEventHandler] 상품 클릭 이벤트 처리 - ProductId: {}, UserId: {}, Context: {}",
