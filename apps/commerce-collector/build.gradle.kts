@@ -1,12 +1,5 @@
 plugins {
-    id("java")
-}
-
-group = "com.loopers"
-version = "init"
-
-repositories {
-    mavenCentral()
+    java
 }
 
 dependencies {
