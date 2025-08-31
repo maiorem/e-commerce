@@ -2,6 +2,7 @@ dependencies {
     // add-ons
     implementation(project(":modules:jpa"))
     implementation(project(":modules:redis"))
+    implementation(project(":modules:kafka"))
     implementation(project(":supports:jackson"))
     implementation(project(":supports:logging"))
     implementation(project(":supports:monitoring"))
@@ -20,8 +21,8 @@ dependencies {
     testImplementation(testFixtures(project(":modules:jpa")))
     testImplementation(testFixtures(project(":modules:redis")))
 
-    // retry - Resilience4j 사용으로 spring-retry 제거
-    // implementation("org.springframework.retry:spring-retry")
+    // retry
+    implementation("org.springframework.retry:spring-retry")
 
     // aspects
     implementation("org.springframework:spring-aspects")
