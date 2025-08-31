@@ -83,6 +83,12 @@ resilience4j:
         permitted-number-of-calls-in-half-open-state: 3 # 반 오픈 상태에서 허용된 호출 수 (default : 10)
         automatic-transition-from-open-to-half-open-enabled: true # 오픈 상태에서 반 오픈 상태로 자동 전환 활성화 (default : true)
 
+# Kafka 토픽 설정
+kafka:
+  topics:
+    catalog-events: catalog-events
+    order-events: order-events
+
 ---
 spring:
   config:
