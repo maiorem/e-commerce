@@ -1,4 +1,7 @@
-package com.loopers.domain.payment;
+package com.loopers.domain.payment.repository;
+
+import com.loopers.domain.payment.model.PaymentModel;
+import com.loopers.domain.payment.model.PaymentStatus;
 
 import java.time.ZonedDateTime;
 import java.util.List;

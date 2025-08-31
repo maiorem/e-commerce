@@ -1,7 +1,6 @@
 package com.loopers.domain.coupon;
 
 import com.loopers.domain.user.UserId;
-import com.loopers.support.error.CoreException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,7 +41,6 @@ class CouponValidationDomainServiceTest {
         UserCouponModel userCoupon = UserCouponModel.create(UserId.of("seyoung"), "COUPON123");
 
         // when & then
-        // 예외가 발생하지 않으면 성공
         couponValidationDomainService.validateCouponUsage(userCoupon, coupon, 15000, today);
     }
 
@@ -103,7 +101,8 @@ class CouponValidationDomainServiceTest {
                 .build();
 
         UserCouponModel userCoupon = UserCouponModel.create(UserId.of("seyoung"), "COUPON123");
-        userCoupon.useCoupon(today); // 이미 사용된 쿠폰
+        userCoupon.reserve(1L); // 먼저 예약
+        userCoupon.useCoupon(today, 1L); // 이미 사용된 쿠폰
 
         // when & then
         assertThatThrownBy(() -> couponValidationDomainService.validateCouponUsage(userCoupon, coupon, 15000, today))

@@ -109,8 +109,9 @@ public class FakeProductRepository implements ProductRepository {
             ReflectionTestUtils.setField(product, "id", newId);
         }
         
-        // ID가 있으면 업데이트, 없으면 새로 생성
-        return products.put(product.getId(), product);
+        // 상품을 저장하고 저장된 상품을 반환
+        products.put(product.getId(), product);
+        return product;
     }
     
     @Override

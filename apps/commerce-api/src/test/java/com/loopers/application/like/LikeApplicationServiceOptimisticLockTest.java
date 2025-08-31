@@ -15,6 +15,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import com.loopers.testcontainers.MySqlTestContainersConfig;
+import static org.awaitility.Awaitility.await;
+import java.time.Duration;
 
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -25,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
+@Import(MySqlTestContainersConfig.class)
 public class LikeApplicationServiceOptimisticLockTest {
 
     @Autowired
@@ -123,9 +128,12 @@ public class LikeApplicationServiceOptimisticLockTest {
         assertThat(successCount.get()).isEqualTo(threadCount);
         assertThat(failureCount.get()).isEqualTo(0);
 
-        Optional<ProductModel> updatedProduct = productRepository.findById(product.getId());
-        assertThat(updatedProduct).isPresent();
-        assertThat(updatedProduct.get().getLikesCount()).isEqualTo(threadCount);
+        // 비동기 이벤트 처리 대기
+        await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+            Optional<ProductModel> updatedProduct = productRepository.findById(product.getId());
+            assertThat(updatedProduct).isPresent();
+            assertThat(updatedProduct.get().getLikesCount()).isEqualTo(threadCount);
+        });
     }
 
     @Test
@@ -138,10 +146,12 @@ public class LikeApplicationServiceOptimisticLockTest {
             likeApplicationService.like(UserId.of(userId), currentProduct.getId());
         }
 
-        // 좋아요 수가 10개인지 확인
-        Optional<ProductModel> productAfterLikes = productRepository.findById(product.getId());
-        assertThat(productAfterLikes).isPresent();
-        assertThat(productAfterLikes.get().getLikesCount()).isEqualTo(10);
+        // 좋아요 수가 10개인지 확인 (비동기 이벤트 처리 대기)
+        await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+            Optional<ProductModel> productAfterLikes = productRepository.findById(product.getId());
+            assertThat(productAfterLikes).isPresent();
+            assertThat(productAfterLikes.get().getLikesCount()).isEqualTo(10);
+        });
 
         int threadCount = 3; // 3명이 동시에 좋아요 취소
         CountDownLatch latch = new CountDownLatch(threadCount);
@@ -172,10 +182,12 @@ public class LikeApplicationServiceOptimisticLockTest {
         assertThat(successCount.get()).isEqualTo(threadCount);
         assertThat(failureCount.get()).isEqualTo(0);
 
-        // 최종 좋아요 수 확인 (10 - 3 = 7)
-        Optional<ProductModel> updatedProduct = productRepository.findById(product.getId());
-        assertThat(updatedProduct).isPresent();
-        assertThat(updatedProduct.get().getLikesCount()).isEqualTo(7);
+        // 최종 좋아요 수 확인 (10 - 3 = 7) - 비동기 이벤트 처리 대기
+        await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+            Optional<ProductModel> updatedProduct = productRepository.findById(product.getId());
+            assertThat(updatedProduct).isPresent();
+            assertThat(updatedProduct.get().getLikesCount()).isEqualTo(7);
+        });
     }
 
     @Test
@@ -216,9 +228,12 @@ public class LikeApplicationServiceOptimisticLockTest {
         assertThat(successCount.get()).isEqualTo(threadCount);
         assertThat(failureCount.get()).isEqualTo(0);
 
-        Optional<ProductModel> updatedProduct = productRepository.findById(product.getId());
-        assertThat(updatedProduct).isPresent();
-        assertThat(updatedProduct.get().getLikesCount()).isEqualTo(threadCount);
+        // 비동기 이벤트 처리 대기
+        await().atMost(Duration.ofSeconds(5)).untilAsserted(() -> {
+            Optional<ProductModel> updatedProduct = productRepository.findById(product.getId());
+            assertThat(updatedProduct).isPresent();
+            assertThat(updatedProduct.get().getLikesCount()).isEqualTo(threadCount);
+        });
 
         System.out.println("실행 시간: " + executionTime + "ms"); // 결과 : 651ms
     }

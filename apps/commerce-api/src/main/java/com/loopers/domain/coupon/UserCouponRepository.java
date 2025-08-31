@@ -8,4 +8,6 @@ public interface UserCouponRepository {
     Optional<UserCouponModel> findByUserIdAndCouponCode(UserId userId, String couponCode);
 
     UserCouponModel save(UserCouponModel userCoupon);
+
+    Optional<UserCouponModel> findByOrderId(Long orderId);
 }

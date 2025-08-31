@@ -15,6 +15,11 @@ public class CouponProcessor {
     private final UserCouponRepository userCouponRepository;
     private final CouponValidationDomainService couponValidationDomainService;
 
+    public UserCouponModel findByOrderId(Long orderId) {
+        return userCouponRepository.findByOrderId(orderId).orElse(null);
+    }
+
+
     public int applyCouponDiscount(UserId userId, int orderPrice, String couponCode) {
         if (couponCode == null || couponCode.isEmpty()) {
             return orderPrice;
@@ -38,18 +43,18 @@ public class CouponProcessor {
         return orderPrice;
     }
 
-    public void useCoupon(UserId userId, String couponCode) {
+    public void useCoupon(UserId userId, String couponCode, Long orderId) {
         if (couponCode == null || couponCode.isEmpty()) {
             return;
         }
 
         UserCouponModel userCoupon = userCouponRepository.findByUserIdAndCouponCode(userId, couponCode)
                 .orElseThrow(() -> new IllegalArgumentException("사용자에게 해당 쿠폰이 없습니다."));
-        userCoupon.useCoupon(LocalDate.now());
+        userCoupon.useCoupon(LocalDate.now(),orderId);
         userCouponRepository.save(userCoupon);
     }
 
-    public void reserveCoupon(UserId userId, String couponCode) {
+    public void reserveCoupon(UserId userId, String couponCode, Long orderId) {
         if (couponCode == null || couponCode.isEmpty()) {
             return;
         }
@@ -59,7 +64,7 @@ public class CouponProcessor {
         if (userCoupon.getStatus() != UserCoupontStatus.AVAILABLE) {
             throw new IllegalArgumentException("쿠폰이 사용 가능 상태가 아닙니다. 현재 상태: " + userCoupon.getStatus());
         }
-        userCoupon.reserve();
+        userCoupon.reserve(orderId);
         userCouponRepository.save(userCoupon);
     }
 

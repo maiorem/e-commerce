@@ -1,6 +1,6 @@
 package com.loopers.interfaces.api.payment;
 
-import com.loopers.domain.payment.PaymentStatus;
+import com.loopers.domain.payment.model.PaymentStatus;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 

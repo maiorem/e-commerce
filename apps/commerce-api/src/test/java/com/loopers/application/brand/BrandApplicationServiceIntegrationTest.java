@@ -5,6 +5,7 @@ import com.loopers.domain.product.ProductModel;
 import com.loopers.infrastructure.brand.BrandJpaRepository;
 import com.loopers.infrastructure.product.ProductJpaRepository;
 import com.loopers.support.config.TestConfig;
+import com.loopers.testcontainers.MySqlTestContainersConfig;
 import com.loopers.support.error.CoreException;
 import com.loopers.support.error.ErrorType;
 import com.loopers.utils.DatabaseCleanUp;
@@ -23,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
-@Import(TestConfig.class)
+@Import({TestConfig.class, MySqlTestContainersConfig.class})
 public class BrandApplicationServiceIntegrationTest {
 
     @Autowired

@@ -1,5 +1,6 @@
-package com.loopers.domain.payment;
+package com.loopers.domain.payment.repository;
 
+import com.loopers.domain.payment.model.PointPayment;
 import org.springframework.stereotype.Repository;
 
 @Repository

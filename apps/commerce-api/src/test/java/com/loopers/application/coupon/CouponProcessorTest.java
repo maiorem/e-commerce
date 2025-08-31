@@ -2,8 +2,6 @@ package com.loopers.application.coupon;
 
 import com.loopers.domain.coupon.*;
 import com.loopers.domain.user.UserId;
-import com.loopers.support.error.CoreException;
-import com.loopers.support.error.ErrorType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -146,7 +144,7 @@ class CouponProcessorTest {
     @DisplayName("쿠폰 할인 금액이 주문 총액을 초과하면 예외가 발생한다.")
     void applyCouponDiscount_WithDiscountExceedingOrderPrice_ThrowsException() {
         // given
-        // 최소 주문 금액을 충족하면서도 할인 금액이 주문 금액을 초과하는 상황 생성
+        // 최소 주문 금액을 충족하면서도 할인 금액이 주문 금액을 초과
         CouponModel highDiscountCoupon = CouponModel.builder()
                 .name("높은 할인 쿠폰")
                 .type(CouponType.FIXED_AMOUNT)
@@ -171,7 +169,7 @@ class CouponProcessorTest {
     @DisplayName("쿠폰 코드가 null이면 useCoupon은 아무것도 하지 않는다.")
     void useCoupon_WithNullCouponCode_DoesNothing() {
         // when
-        couponProcessor.useCoupon(userId, null);
+        couponProcessor.useCoupon(userId, null, 1L);
 
         // then
         verifyNoInteractions(userCouponRepository);
@@ -181,7 +179,7 @@ class CouponProcessorTest {
     @DisplayName("쿠폰 코드가 빈 문자열이면 useCoupon은 아무것도 하지 않는다.")
     void useCoupon_WithEmptyCouponCode_DoesNothing() {
         // when
-        couponProcessor.useCoupon(userId, "");
+        couponProcessor.useCoupon(userId, "", 1L);
 
         // then
         verifyNoInteractions(userCouponRepository);
@@ -194,14 +192,14 @@ class CouponProcessorTest {
         UserCouponModel mockUserCoupon = mock(UserCouponModel.class);
         when(userCouponRepository.findByUserIdAndCouponCode(userId, couponCode)).thenReturn(Optional.of(mockUserCoupon));
         when(userCouponRepository.save(any(UserCouponModel.class))).thenReturn(mockUserCoupon);
-        when(mockUserCoupon.useCoupon(any(LocalDate.class))).thenReturn(true);
+        when(mockUserCoupon.useCoupon(any(LocalDate.class), any(Long.class))).thenReturn(true);
 
         // when
-        couponProcessor.useCoupon(userId, couponCode);
+        couponProcessor.useCoupon(userId, couponCode, 1L);
 
         // then
         verify(userCouponRepository).findByUserIdAndCouponCode(userId, couponCode);
-        verify(mockUserCoupon).useCoupon(today);
+        verify(mockUserCoupon).useCoupon(today, 1L);
         verify(userCouponRepository).save(mockUserCoupon);
     }
 
@@ -212,7 +210,7 @@ class CouponProcessorTest {
         when(userCouponRepository.findByUserIdAndCouponCode(userId, couponCode)).thenReturn(Optional.empty());
 
         // when & then
-        assertThatThrownBy(() -> couponProcessor.useCoupon(userId, couponCode))
+        assertThatThrownBy(() -> couponProcessor.useCoupon(userId, couponCode, 1L))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -223,10 +221,10 @@ class CouponProcessorTest {
         UserCouponModel mockUserCoupon = mock(UserCouponModel.class);
         when(userCouponRepository.findByUserIdAndCouponCode(userId, couponCode)).thenReturn(Optional.of(mockUserCoupon));
         doThrow(new IllegalArgumentException("이미 사용된 쿠폰입니다."))
-                .when(mockUserCoupon).useCoupon(any(LocalDate.class));
+                .when(mockUserCoupon).useCoupon(any(LocalDate.class), any(Long.class));
 
         // when & then
-        assertThatThrownBy(() -> couponProcessor.useCoupon(userId, couponCode))
+        assertThatThrownBy(() -> couponProcessor.useCoupon(userId, couponCode, 1L))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
