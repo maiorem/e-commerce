@@ -23,7 +23,7 @@ public class UserCouponModel extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private UserCoupontStatus status = UserCoupontStatus.AVAILABLE;
 
-    private Long orderId = 0L;
+    private Long orderId;
 
     private LocalDate issuedAt;
 
@@ -83,7 +83,7 @@ public class UserCouponModel extends BaseEntity {
             throw new IllegalStateException("예약 취소할 수 없는 쿠폰입니다.");
         }
         this.status = UserCoupontStatus.AVAILABLE;
-        this.orderId = 0L;
+        this.orderId = null;
     }
 
 
