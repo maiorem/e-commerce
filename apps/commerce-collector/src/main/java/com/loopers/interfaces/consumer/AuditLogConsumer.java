@@ -50,6 +50,7 @@ public class AuditLogConsumer {
 
         } catch (Exception e) {
             log.error("감사 로그 배치 처리 실패: {}", e.getMessage(), e);
+            throw e; // DLQ로 전송하기 위해 예외 재발생
         }
     }
 

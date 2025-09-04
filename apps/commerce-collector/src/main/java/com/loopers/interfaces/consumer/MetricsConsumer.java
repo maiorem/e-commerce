@@ -41,6 +41,7 @@ public class MetricsConsumer {
         } catch (Exception e) {
             log.error("상품 조회 메트릭 처리 실패 - EventId: {}, Error: {}",
                     event.getEventId(), e.getMessage(), e);
+            throw e; // DLQ로 전송하기 위해 예외 재발생
         }
     }
 
@@ -66,6 +67,7 @@ public class MetricsConsumer {
         } catch (Exception e) {
             log.error("좋아요 메트릭 처리 실패 - EventId: {}, Error: {}",
                     event.getEventId(), e.getMessage(), e);
+            throw e; // DLQ로 전송하기 위해 예외 재발생
         }
     }
 
@@ -90,6 +92,7 @@ public class MetricsConsumer {
         } catch (Exception e) {
             log.error("주문 메트릭 처리 실패 - EventId: {}, Error: {}",
                     event.getEventId(), e.getMessage(), e);
+            throw e; // DLQ로 전송하기 위해 예외 재발생
         }
     }
 }

@@ -11,6 +11,8 @@ import org.springframework.kafka.core.*;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.support.converter.BatchMessagingMessageConverter;
 import org.springframework.kafka.support.converter.ByteArrayJsonMessageConverter;
+import org.springframework.kafka.listener.DefaultErrorHandler;
+import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,7 +55,8 @@ public class KafkaConfig {
     @Bean(BATCH_LISTENER)
     public ConcurrentKafkaListenerContainerFactory<Object, Object> defaultBatchListenerContainerFactory(
             KafkaProperties kafkaProperties,
-            ByteArrayJsonMessageConverter converter) {
+            ByteArrayJsonMessageConverter converter,
+            KafkaTemplate<Object, Object> kafkaTemplate) {
 
         Map<String, Object> consumerConfig = new HashMap<>(kafkaProperties.buildConsumerProperties());
         consumerConfig.put(ConsumerConfig.MAX_POLL_RECORDS_CONFIG, MAX_POLLING_SIZE);
@@ -69,6 +72,16 @@ public class KafkaConfig {
         factory.setBatchMessageConverter(new BatchMessagingMessageConverter(converter));
         factory.setConcurrency(3);
         factory.setBatchListener(true);
+
+        // DLQ 설정 - 3번 재시도 후 DLQ로 전송
+        DefaultErrorHandler errorHandler = new DefaultErrorHandler(
+            (record, exception) -> {
+                // DLQ로 전송
+                kafkaTemplate.send("dlq-events", record.key(), record.value());
+            },
+            new FixedBackOff(1000L, 3) // 1초 간격 3번 재시도
+        );
+        factory.setCommonErrorHandler(errorHandler);
 
         return factory;
     }
