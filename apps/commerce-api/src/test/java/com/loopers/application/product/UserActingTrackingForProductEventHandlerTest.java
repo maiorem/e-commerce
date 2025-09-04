@@ -2,8 +2,8 @@ package com.loopers.application.product;
 
 import com.loopers.domain.product.event.ClickContext;
 import com.loopers.domain.product.event.ProductClickedEvent;
-import com.loopers.domain.product.event.ProductViewedEvent;
 import com.loopers.domain.user.UserId;
+import com.loopers.event.ProductViewedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -34,7 +34,7 @@ class UserActingTrackingForProductEventHandlerTest {
         @Test
         @DisplayName("상품 조회 이벤트가 정상적으로 처리된다")
         void handleProductViewedEvent() {
-            ProductViewedEvent event = ProductViewedEvent.createDetailView(productId, userId);
+            ProductViewedEvent event = ProductViewedEvent.createDetailView(productId, userId.getValue());
 
             userActingTrackingForProductEventHandler.handleProductViewed(event);
         }

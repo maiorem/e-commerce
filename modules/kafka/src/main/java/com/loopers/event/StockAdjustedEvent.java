@@ -1,4 +1,4 @@
-package com.loopers.domain.product.event;
+package com.loopers.event;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

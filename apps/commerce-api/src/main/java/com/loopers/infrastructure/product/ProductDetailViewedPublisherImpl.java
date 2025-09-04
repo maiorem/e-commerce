@@ -1,7 +1,6 @@
 package com.loopers.infrastructure.product;
 
 import com.loopers.domain.product.event.ProductDetailViewedPublisher;
-import com.loopers.domain.product.event.ProductViewedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +21,7 @@ public class ProductDetailViewedPublisherImpl implements ProductDetailViewedPubl
 
 
     @Override
-    public void publish(ProductViewedEvent event) {
+    public void publish(com.loopers.event.ProductViewedEvent event) {
         applicationEventPublisher.publishEvent(event);
         kafkaTemplate.send(viewTopic, event.getProductId().toString(), event);
     }

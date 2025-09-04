@@ -1,7 +1,7 @@
 package com.loopers.infrastructure.like;
 
 import com.loopers.domain.like.event.LikeChangePublisher;
-import com.loopers.domain.like.event.LikeChangedEvent;
+import com.loopers.event.LikeChangedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;

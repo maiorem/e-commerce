@@ -1,10 +1,10 @@
 package com.loopers.application.like;
 
 import com.loopers.domain.like.event.LikeChangePublisher;
-import com.loopers.domain.like.event.LikeChangedEvent;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.UserId;
+import com.loopers.event.LikeChangedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -35,7 +35,7 @@ public class LikeCountProcessor {
                         productId, product.getLikesCount());
                 int newCount = product.getLikesCount();
 
-                likeChangePublisher.publish(LikeChangedEvent.liked(productId, userId, oldCount, newCount));
+                likeChangePublisher.publish(LikeChangedEvent.liked(productId, userId.getValue(), oldCount, newCount));
 
             } else {
                 product.decrementLikesCount();
@@ -44,7 +44,7 @@ public class LikeCountProcessor {
 
                 int newCount = product.getLikesCount();
 
-                likeChangePublisher.publish(LikeChangedEvent.unliked(productId, userId, oldCount, newCount));
+                likeChangePublisher.publish(LikeChangedEvent.unliked(productId, userId.getValue(), oldCount, newCount));
             }
 
             productRepository.save(product);

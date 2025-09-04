@@ -1,4 +1,4 @@
-package com.loopers.domain.like.event;
+package com.loopers.event;
 
 public enum LikeChangeType {
     LIKE, UNLIKE

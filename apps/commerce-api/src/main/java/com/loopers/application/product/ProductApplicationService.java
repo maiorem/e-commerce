@@ -9,8 +9,7 @@ import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.product.ProductSearchDomainService;
 import com.loopers.domain.product.ProductSortBy;
 import com.loopers.domain.product.event.ProductDetailViewedPublisher;
-import com.loopers.domain.product.event.ProductViewedEvent;
-import com.loopers.domain.user.UserId;
+import com.loopers.event.ProductViewedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -164,7 +163,7 @@ public class ProductApplicationService {
             try {
                 // 상품 조회 이벤트 발행
                 detailViewedPublisher.publish(
-                        ProductViewedEvent.createDetailView(id, UserId.of(userId))
+                        ProductViewedEvent.createDetailView(id, userId)
                 );
             } catch (Exception e) {
                 log.warn("상품 조회 이벤트 발행 실패 - ProductId: {}, UserId: {}", id, userId, e);

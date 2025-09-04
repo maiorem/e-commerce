@@ -2,9 +2,9 @@ package com.loopers.infrastructure.external;
 
 import com.loopers.domain.external.DataPlatformPort;
 import com.loopers.domain.external.DataPlatformResult;
-import com.loopers.domain.order.event.OrderCreatedEvent;
 import com.loopers.domain.payment.event.PaymentFailedEvent;
 import com.loopers.domain.payment.event.PaymentSuccessEvent;
+import com.loopers.event.OrderCreatedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -19,13 +19,13 @@ public class DataPlatformClientAdapter implements DataPlatformPort {
     public DataPlatformResult sendOrderData(OrderCreatedEvent event) {
         try {
             log.info("📊 [Data Platform] 주문 데이터 전송 - OrderId: {}, UserId: {}, Amount: {}",
-                    event.getOrderId(), event.getUserId().getValue(), event.getTotalAmount().getAmount());
+                    event.getOrderId(), event.getUserId(), event.getTotalAmount());
 
             Map<String, Object> orderData = new HashMap<>();
             orderData.put("order_id", event.getOrderId());
             orderData.put("order_number", event.getOrderNumber());
-            orderData.put("user_id", event.getUserId().getValue());
-            orderData.put("amount", event.getTotalAmount().getAmount());
+            orderData.put("user_id", event.getUserId());
+            orderData.put("amount", event.getTotalAmount());
             orderData.put("order_date", event.getOrderDate().toString());
             orderData.put("sent_at", event.getOccurredAt().toString());
 

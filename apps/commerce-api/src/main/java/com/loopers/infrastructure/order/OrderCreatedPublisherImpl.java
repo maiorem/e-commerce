@@ -1,7 +1,7 @@
 package com.loopers.infrastructure.order;
 
-import com.loopers.domain.order.event.OrderCreatedEvent;
 import com.loopers.domain.order.event.OrderCreatedPublisher;
+import com.loopers.event.OrderCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;

@@ -1,7 +1,7 @@
 package com.loopers.infrastructure.product;
 
-import com.loopers.domain.product.event.StockAdjustedEvent;
 import com.loopers.domain.product.event.StockAdjustedPublisher;
+import com.loopers.event.StockAdjustedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;

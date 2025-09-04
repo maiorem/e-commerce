@@ -1,6 +1,5 @@
-package com.loopers.domain.like.event;
+package com.loopers.event;
 
-import com.loopers.domain.user.UserId;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -12,14 +11,14 @@ public class LikeChangedEvent {
 
     private final String eventId;
     private final Long productId;
-    private final UserId userId;
+    private final String userId;
     private final LikeChangeType changeType;
     private final int oldLikeCount;
     private final int newLikeCount;
     private final ZonedDateTime occurredAt;
     private final int version;
 
-    public static LikeChangedEvent liked(Long productId, UserId userId, int oldCount, int newCount) {
+    public static LikeChangedEvent liked(Long productId, String userId, int oldCount, int newCount) {
         return new LikeChangedEvent(
                 "like-changed-" + productId + "-" + System.currentTimeMillis(),
                 productId,
@@ -32,7 +31,7 @@ public class LikeChangedEvent {
         );
     }
 
-    public static LikeChangedEvent unliked(Long productId, UserId userId, int oldCount, int newCount) {
+    public static LikeChangedEvent unliked(Long productId, String userId, int oldCount, int newCount) {
         return new LikeChangedEvent(
                 "like-changed-" + productId + "-" + System.currentTimeMillis(),
                 productId,

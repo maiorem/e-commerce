@@ -1,7 +1,7 @@
 package com.loopers.infrastructure.product;
 
 import com.loopers.domain.product.event.ProductChangedPublisher;
-import com.loopers.domain.product.event.ProductViewedEvent;
+import com.loopers.event.ProductViewedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;

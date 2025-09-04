@@ -5,11 +5,12 @@ import com.loopers.application.product.StockDeductionProcessor;
 import com.loopers.domain.external.DataPlatformPort;
 import com.loopers.domain.external.DataPlatformResult;
 import com.loopers.domain.order.event.OrderCeatedCouponReserveCommand;
-import com.loopers.domain.order.event.OrderCreatedEvent;
 import com.loopers.domain.order.event.OrderCreatedStockDeductionCommand;
+import com.loopers.domain.user.UserId;
 import com.loopers.domain.user.event.UserActionData;
 import com.loopers.domain.user.event.UserActionTrackingPort;
 import com.loopers.domain.user.event.UserActionType;
+import com.loopers.event.OrderCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -109,7 +110,7 @@ public class OrderEventHandler {
     public void trackOrderCreationAction(OrderCreatedEvent event) {
         try {
             UserActionData actionData = UserActionData.create(
-                    event.getUserId(),
+                    UserId.of(event.getUserId()),
                     UserActionType.ORDER_CREATE,
                     event.getOrderId()
             );
