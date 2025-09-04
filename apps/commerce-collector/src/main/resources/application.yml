@@ -26,12 +26,12 @@ spring:
       - logging.yml
       - monitoring.yml
 
-# Custom Topic Configuration
 kafka:
   topics:
-    catalog-events: catalog-events # 상품/재고/좋아요 이벤트 (key=productId)
-    order-events: order-events # 주문/결제 이벤트 (key=orderId)
-    dead-letter-queue: dlq-events # 실패한 메시지 처리
+    stock-events: stock-events
+    like-events: like-events
+    view-events: view-events
+    order-events: order-events
 
 ---
 spring:
@@ -57,6 +57,3 @@ spring:
     activate:
       on-profile: prd
 
-springdoc:
-  api-docs:
-    enabled: false
