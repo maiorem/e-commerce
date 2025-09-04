@@ -12,8 +12,8 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class ProductLikePublisherImpl implements ProductLikePublisher {
 
-    @Value("${kafka.topics.catalog-events}")
-    private String catalogTopic;
+    @Value("${kafka.topics.like-events}")
+    private String likesTopic;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ApplicationEventPublisher applicationEventPublisher;
@@ -21,6 +21,6 @@ public class ProductLikePublisherImpl implements ProductLikePublisher {
     @Override
     public void publish(ProductLikedEvent event) {
         applicationEventPublisher.publishEvent(event);
-        kafkaTemplate.send(catalogTopic, event.getProductId().toString(), event);
+        kafkaTemplate.send(likesTopic, event.getProductId().toString(), event);
     }
 }

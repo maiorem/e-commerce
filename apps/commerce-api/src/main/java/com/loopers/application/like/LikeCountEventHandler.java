@@ -16,7 +16,6 @@ import org.springframework.transaction.event.TransactionalEventListener;
 public class LikeCountEventHandler {
 
     private final LikeCountProcessor likeCountProcessor;
-    private final UserLikeActionTrackingEventHandler userLikeActionTrackingEventHandler;
 
     @Async
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
@@ -26,7 +25,7 @@ public class LikeCountEventHandler {
 
         try {
             // 상품 좋아요 수 증가
-            likeCountProcessor.updateProductLikeCount(event.getProductId(), 1);
+            likeCountProcessor.updateProductLikeCount(event.getProductId(), event.getUserId(), 1);
 
             log.info("[LikeEventHandler] 좋아요 후속 처리 완료 - ProductId: {}", event.getProductId());
 
@@ -45,7 +44,7 @@ public class LikeCountEventHandler {
 
         try {
             // 1. 상품 좋아요 수 감소
-            likeCountProcessor.updateProductLikeCount(event.getProductId(), -1);
+            likeCountProcessor.updateProductLikeCount(event.getProductId(), event.getUserId(), -1);
 
             log.info("[LikeEventHandler] 좋아요 취소 후속 처리 완료 - ProductId: {}", event.getProductId());
 

@@ -13,34 +13,13 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class StockAdjustedPublisherImpl implements StockAdjustedPublisher {
 
-    @Value("${kafka.topics.catalog-events}")
-    private String catalogTopic;
+    @Value("${kafka.topics.stock-events}")
+    private String stockTopic;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     public void publish(StockAdjustedEvent event) {
-        try {
-            String key = event.getProductId().toString();
-
-            log.info("Kafka 재고 변경 이벤트 발행 - ProductId: {}, OldStock: {}, NewStock: {}",
-                    event.getProductId(), event.getOldStock(), event.getNewStock());
-
-            kafkaTemplate.send(catalogTopic, key, event)
-                    .whenComplete((result, ex) -> {
-                        if (ex != null) {
-                            log.error("재고 변경 이벤트 발행 실패 - ProductId: {}, Error: {}",
-                                    event.getProductId(), ex.getMessage(), ex);
-                        } else {
-                            log.info("재고 변경 이벤트 발행 성공 - ProductId: {}, Offset: {}",
-                                    event.getProductId(), result.getRecordMetadata().offset());
-                        }
-                    });
-
-        } catch (Exception e) {
-            log.error("재고 변경 이벤트 발행 중 예외 - ProductId: {}, Error: {}",
-                    event.getProductId(), e.getMessage(), e);
-        }
-
+        kafkaTemplate.send(stockTopic, event.getProductId().toString(), event);
     }
 }

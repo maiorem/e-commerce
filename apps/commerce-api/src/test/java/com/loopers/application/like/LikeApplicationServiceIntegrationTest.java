@@ -107,7 +107,7 @@ class LikeApplicationServiceIntegrationTest {
         });
 
         // processor 호출 검증 (비동기 호출)
-        verify(likeCountProcessor, timeout(1500)).updateProductLikeCount(productId, 1);
+        verify(likeCountProcessor, timeout(1500)).updateProductLikeCount(productId, userId, 1);
 
         // when - 두 번째 좋아요 요청 (중복)
         likeApplicationService.like(userId, productId);
@@ -121,7 +121,7 @@ class LikeApplicationServiceIntegrationTest {
         });
 
         // 중복 요청 후에도 processor는 추가로 호출되지 않음을 확인 (여전히 1번만)
-        verify(likeCountProcessor, times(1)).updateProductLikeCount(productId, 1);
+        verify(likeCountProcessor, times(1)).updateProductLikeCount(productId, userId, 1);
     }
 
     @Test
@@ -144,7 +144,7 @@ class LikeApplicationServiceIntegrationTest {
         });
 
         // processor 호출 검증
-        verify(likeCountProcessor, timeout(1500)).updateProductLikeCount(productId, -1);
+        verify(likeCountProcessor, timeout(1500)).updateProductLikeCount(productId, userId,-1);
 
         // when - 두 번째 좋아요 취소 요청 (중복)
         likeApplicationService.unlike(userId, productId);
@@ -158,7 +158,7 @@ class LikeApplicationServiceIntegrationTest {
         });
 
         // 중복 요청 후에도 processor는 추가로 호출되지 않음을 확인 (여전히 1번만)
-        verify(likeCountProcessor, times(1)).updateProductLikeCount(productId, -1);
+        verify(likeCountProcessor, times(1)).updateProductLikeCount(productId, userId,-1);
     }
 
     @Test

@@ -1,29 +1,27 @@
-package com.loopers.infrastructure.product;
+package com.loopers.infrastructure.like;
 
-import com.loopers.domain.product.event.ProductDetailViewedPublisher;
-import com.loopers.domain.product.event.ProductViewedEvent;
+import com.loopers.domain.like.event.LikeChangePublisher;
+import com.loopers.domain.like.event.LikeChangedEvent;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
-@Slf4j
 @Component
 @RequiredArgsConstructor
-public class ProductDetailViewedPublisherImpl implements ProductDetailViewedPublisher {
+public class LikeChangePublishImpl implements LikeChangePublisher {
 
-    @Value("${kafka.topics.view-events}")
-    private String viewTopic;
+    @Value("${kafka.topics.like-events}")
+    private String likeTopic;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-
     @Override
-    public void publish(ProductViewedEvent event) {
+    public void publish(LikeChangedEvent event) {
         applicationEventPublisher.publishEvent(event);
-        kafkaTemplate.send(viewTopic, event.getProductId().toString(), event);
+        kafkaTemplate.send(likeTopic, String.valueOf(event.getProductId()), event);
+
     }
 }
