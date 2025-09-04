@@ -15,10 +15,12 @@ dependencies {
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
-    testImplementation("org.springframework.kafka:spring-kafka-test")
+    testImplementation("org.springframework.kafka:spring-kafka")
     testImplementation("org.testcontainers:kafka")
 
+    testFixturesImplementation("org.testcontainers:testcontainers")
     testFixturesImplementation("org.testcontainers:kafka")
+    testFixturesImplementation("org.springframework.kafka:spring-kafka")
 }
 tasks.test {
     useJUnitPlatform()
