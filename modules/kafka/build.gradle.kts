@@ -21,6 +21,7 @@ dependencies {
     testFixturesImplementation("org.testcontainers:testcontainers")
     testFixturesImplementation("org.testcontainers:kafka")
     testFixturesImplementation("org.springframework.kafka:spring-kafka")
+    testFixturesImplementation("org.springframework:spring-test")
 }
 tasks.test {
     useJUnitPlatform()
