@@ -23,6 +23,7 @@ spring:
       - logging.yml
       - monitoring.yml
       - redis.yml
+      - kafka.yml
 
 springdoc:
   use-fqn: true
@@ -82,6 +83,13 @@ resilience4j:
         wait-duration-in-open-state: 5s # 오픈 상태에서 대기 시간 (default : 60s)
         permitted-number-of-calls-in-half-open-state: 3 # 반 오픈 상태에서 허용된 호출 수 (default : 10)
         automatic-transition-from-open-to-half-open-enabled: true # 오픈 상태에서 반 오픈 상태로 자동 전환 활성화 (default : true)
+
+kafka:
+  topics:
+    stock-events: stock-events
+    like-events: like-events
+    view-events: view-events
+    order-events: order-events
 
 ---
 spring:

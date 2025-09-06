@@ -2,6 +2,7 @@ dependencies {
     // add-ons
     implementation(project(":modules:jpa"))
     implementation(project(":modules:redis"))
+    implementation(project(":modules:kafka"))
     implementation(project(":supports:jackson"))
     implementation(project(":supports:logging"))
     implementation(project(":supports:monitoring"))
@@ -19,9 +20,10 @@ dependencies {
     // test-fixtures
     testImplementation(testFixtures(project(":modules:jpa")))
     testImplementation(testFixtures(project(":modules:redis")))
+    testImplementation(testFixtures(project(":modules:kafka")))
 
-    // retry - Resilience4j 사용으로 spring-retry 제거
-    // implementation("org.springframework.retry:spring-retry")
+    // retry
+    implementation("org.springframework.retry:spring-retry")
 
     // aspects
     implementation("org.springframework:spring-aspects")
@@ -41,6 +43,7 @@ dependencies {
 
     // test - Awaitility for async/eventually assertions
     testImplementation("org.awaitility:awaitility:4.2.0")
+    testImplementation("org.springframework.kafka:spring-kafka-test")
 
 }
 

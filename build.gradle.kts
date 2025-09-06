@@ -15,6 +15,10 @@ plugins {
     java
     id("org.springframework.boot") apply false
     id("io.spring.dependency-management")
+    val kotlinVersion = "2.0.20"
+    id("org.jetbrains.kotlin.jvm") version kotlinVersion apply false
+    id("org.jetbrains.kotlin.plugin.jpa") version kotlinVersion apply false
+    kotlin("kapt") version kotlinVersion apply false
 }
 
 

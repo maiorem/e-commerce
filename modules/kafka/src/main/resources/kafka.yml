@@ -1,0 +1,64 @@
+spring:
+  kafka:
+    bootstrap-servers: ${BOOTSTRAP_SERVERS}
+    client-id: ${spring.application.name}
+    properties:
+      spring.json.add.type.headers: false # json serialize off
+      request.timeout.ms: 20000
+      retry.backoff.ms: 500
+      auto:
+        create.topics.enable: false
+        register.schemas: false
+        offset.reset: latest
+      use.latest.version: true
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all                    # At Least Once 보장 (모든 replica 확인)
+      enable-idempotence: true     # 중복 메시지 방지
+      retries: 3                   # 실패시 재시도
+      retry-backoff-ms: 1000       # 재시도 간격 1초
+      batch-size: 16384            # 배치 크기 16KB
+      linger-ms: 5                 # 배치 대기시간 5ms
+      buffer-memory: 33554432      # 32MB 버퍼
+      compression-type: lz4        # 압축 타입
+      properties:
+        max.in.flight.requests.per.connection: 1  # 순서 보장을 위해 1로 설정
+    consumer:
+      group-id: loopers-default-consumer
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-serializer: org.apache.kafka.common.serialization.ByteArrayDeserializer
+      properties:
+        enable-auto-commit: false
+        auto.offset.reset: latest
+        session.timeout.ms: 60000
+        heartbeat.interval.ms: 20000
+        max.poll.interval.ms: 300000
+        max.poll.records: 500
+    listener:
+      ack-mode: manual
+
+
+---
+spring:
+    config:
+        activate:
+          on-profile: local, test
+
+---
+spring:
+    config:
+        activate:
+          on-profile: dev
+
+---
+spring:
+    config:
+        activate:
+          on-profile: qa
+
+---
+spring:
+    config:
+        activate:
+          on-profile: prd

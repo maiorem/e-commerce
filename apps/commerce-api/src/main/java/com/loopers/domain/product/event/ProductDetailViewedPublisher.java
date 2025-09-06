@@ -1,8 +1,7 @@
 package com.loopers.domain.product.event;
 
-import org.springframework.stereotype.Component;
+import com.loopers.event.ProductViewedEvent;
 
-@Component
 public interface ProductDetailViewedPublisher {
     void publish(ProductViewedEvent event);
 }

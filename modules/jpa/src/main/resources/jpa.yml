@@ -43,7 +43,7 @@ spring:
 datasource:
   mysql-jpa:
     main:
-      jdbc-url: jdbc:mysql://localhost:3306/loopers
+      jdbc-url: jdbc:mysql://localhost:3307/loopers
       username: application
       password: application
 
@@ -74,7 +74,7 @@ spring:
 datasource:
   mysql-jpa:
     main:
-      jdbc-url: jdbc:mysql://localhost:3306/loopers
+      jdbc-url: jdbc:mysql://localhost:3307/loopers
       username: application
       password: application
 
@@ -87,7 +87,7 @@ spring:
 datasource:
   mysql-jpa:
     main:
-      jdbc-url: jdbc:mysql://localhost:3306/loopers
+      jdbc-url: jdbc:mysql://localhost:3307/loopers
       username: application
       password: application
 
@@ -100,6 +100,6 @@ spring:
 datasource:
   mysql-jpa:
     main:
-      jdbc-url: jdbc:mysql://localhost:3306/loopers
+      jdbc-url: jdbc:mysql://localhost:3307/loopers
       username: application
       password: application

@@ -1,5 +1,5 @@
 plugins {
-    id("java")
+    `java-library`
     `java-test-fixtures`
 }
 
@@ -15,8 +15,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     // Redis
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
-    implementation("org.springframework.boot:spring-boot-starter")
+    api("org.springframework.boot:spring-boot-starter-data-redis")
+    api("org.springframework.boot:spring-boot-starter")
     testImplementation("com.redis:testcontainers-redis")
 }
 
