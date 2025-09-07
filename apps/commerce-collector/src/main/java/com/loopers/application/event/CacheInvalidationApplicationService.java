@@ -8,6 +8,7 @@ import com.loopers.event.StockAdjustedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Component
@@ -20,11 +21,12 @@ public class CacheInvalidationApplicationService {
 
     private static final String CONSUMER_GROUP = "cache-invalidation-group";
 
+    @Transactional
     public void handleStockAdjustedEvent(StockAdjustedEvent event) {
         String eventId = event.getEventId();
         String aggregateId = "product-" + event.getProductId();
 
-        // 1단계: 중복 이벤트 체크 (기존 로직 유지)
+        // 중복 이벤트 체크
         if (idempotentProcessor.isAlreadyProcessed(eventId, CONSUMER_GROUP)) {
             log.info("이미 처리된 재고 조정 이벤트 - EventId: {}", eventId);
             return;
@@ -39,7 +41,7 @@ public class CacheInvalidationApplicationService {
             log.warn("오래된 재고 이벤트 무시 - Event: {}, LastProcessed: {}",
                     event.getOccurredAt(), lastProcessed.getLastProcessedAt());
 
-            // 오래된 이벤트 처리 완료
+            // 오래되어 무시한 이벤트 완료 처리
             idempotentProcessor.markAsProcessed(eventId, CONSUMER_GROUP);
             return;
         }
@@ -69,6 +71,7 @@ public class CacheInvalidationApplicationService {
     }
 
 
+    @Transactional
     public void handleLikeChangedEvent(LikeChangedEvent event) {
         String eventId = event.getEventId();
 
