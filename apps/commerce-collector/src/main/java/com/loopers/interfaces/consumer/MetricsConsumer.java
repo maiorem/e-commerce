@@ -12,6 +12,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.messaging.handler.annotation.Payload;
 
+import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Component;
 
@@ -24,82 +25,89 @@ public class MetricsConsumer {
     private final ConsumerEventMapper eventMapper;
 
     /**
-     * 상품 조회 이벤트 처리 - 조회수 메트릭 업데이트
+     * 상품 조회 이벤트 배치 처리 - 조회수 메트릭 업데이트
      */
     @KafkaListener(
             topics = "${kafka.topics.view-events}",
             groupId = "metrics-group",
             containerFactory = KafkaConfig.BATCH_LISTENER
     )
-    public void handleProductViewedEvent(
-            @Payload Map<String, Object> eventData,
+    public void handleProductViewedEventsBatch(
+            @Payload List<Map<String, Object>> eventDataList,
             Acknowledgment ack
     ) {
-        ProductViewedEvent event = eventMapper.toProductViewedEvent(eventData);
-        log.debug("상품 조회 이벤트 수신 - EventId: {}, ProductId: {}",
-                event.getEventId(), event.getProductId());
+        log.debug("상품 조회 이벤트 배치 처리 시작 - 메시지 수: {}", eventDataList.size());
 
         try {
-            metricsService.handleProductViewedEvent(event);
+            for (Map<String, Object> eventData : eventDataList) {
+                ProductViewedEvent event = eventMapper.toProductViewedEvent(eventData);
+                metricsService.handleProductViewedEvent(event);
+            }
+            
             ack.acknowledge();
+            log.debug("상품 조회 메트릭 배치 처리 완료 - 처리된 메시지 수: {}", eventDataList.size());
 
         } catch (Exception e) {
-            log.error("상품 조회 메트릭 처리 실패 - EventId: {}, Error: {}",
-                    event.getEventId(), e.getMessage(), e);
-            throw e; // DLQ로 전송하기 위해 예외 재발생
+            log.error("상품 조회 메트릭 배치 처리 실패: {}", e.getMessage(), e);
+            throw e;
         }
     }
 
     /**
-     * 좋아요 변경 이벤트 처리 - 좋아요 수 메트릭 업데이트
+     * 좋아요 변경 이벤트 배치 처리 - 좋아요 수 메트릭 업데이트
      */
     @KafkaListener(
             topics = "${kafka.topics.like-events}",
             groupId = "metrics-group",
             containerFactory = KafkaConfig.BATCH_LISTENER
     )
-    public void handleLikeChangedEvent(
-            @Payload Map<String, Object> eventData,
+    public void handleLikeChangedEventsBatch(
+            @Payload List<Map<String, Object>> eventDataList,
             Acknowledgment ack
     ) {
-        LikeChangedEvent event = eventMapper.toLikeChangedEvent(eventData);
-        log.debug("좋아요 변경 이벤트 수신 - EventId: {}, ProductId: {}",
-                event.getEventId(), event.getProductId());
+        log.debug("좋아요 변경 이벤트 배치 처리 시작 - 메시지 수: {}", eventDataList.size());
 
         try {
-            metricsService.handleLikeChangedEvent(event);
+            for (Map<String, Object> eventData : eventDataList) {
+                LikeChangedEvent event = eventMapper.toLikeChangedEvent(eventData);
+                metricsService.handleLikeChangedEvent(event);
+            }
+            
             ack.acknowledge();
+            log.debug("좋아요 변경 메트릭 배치 처리 완료 - 처리된 메시지 수: {}", eventDataList.size());
 
         } catch (Exception e) {
-            log.error("좋아요 메트릭 처리 실패 - EventId: {}, Error: {}",
-                    event.getEventId(), e.getMessage(), e);
-            throw e; // DLQ로 전송하기 위해 예외 재발생
+            log.error("좋아요 변경 메트릭 배치 처리 실패: {}", e.getMessage(), e);
+            throw e;
         }
     }
 
     /**
-     * 주문 생성 이벤트 처리 -
+     * 주문 생성 이벤트 배치 처리 - 주문 메트릭 업데이트
      */
     @KafkaListener(
             topics = "${kafka.topics.order-events}",
             groupId = "metrics-group",
             containerFactory = KafkaConfig.BATCH_LISTENER
     )
-    public void handleOrderCreatedEvent(
-            @Payload Map<String, Object> eventData,
+    public void handleOrderCreatedEventsBatch(
+            @Payload List<Map<String, Object>> eventDataList,
             Acknowledgment ack
     ) {
-        OrderCreatedEvent event = eventMapper.toOrderCreatedEvent(eventData);
-        log.debug("주문 생성 이벤트 수신 - EventId: {}, OrderId: {}",
-                event.getEventId(), event.getOrderId());
+        log.debug("주문 생성 이벤트 배치 처리 시작 - 메시지 수: {}", eventDataList.size());
+        
         try {
-            metricsService.handleOrderCreatedEvent(event);
+            for (Map<String, Object> eventData : eventDataList) {
+                OrderCreatedEvent event = eventMapper.toOrderCreatedEvent(eventData);
+                metricsService.handleOrderCreatedEvent(event);
+            }
+            
             ack.acknowledge();
+            log.debug("주문 생성 메트릭 배치 처리 완료 - 처리된 메시지 수: {}", eventDataList.size());
 
         } catch (Exception e) {
-            log.error("주문 메트릭 처리 실패 - EventId: {}, Error: {}",
-                    event.getEventId(), e.getMessage(), e);
-            throw e; // DLQ로 전송하기 위해 예외 재발생
+            log.error("주문 생성 메트릭 배치 처리 실패: {}", e.getMessage(), e);
+            throw e;
         }
     }
 }
