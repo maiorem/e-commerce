@@ -1,6 +1,6 @@
 package com.loopers.interfaces.kafka;
 
-import com.loopers.event.ProductViewedEvent;
+import com.loopers.domain.product.event.ProductViewedEvent;
 import com.loopers.infrastructure.product.ProductDetailViewedPublisherImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

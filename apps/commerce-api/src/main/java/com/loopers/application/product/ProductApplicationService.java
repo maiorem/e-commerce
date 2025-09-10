@@ -9,7 +9,7 @@ import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.product.ProductSearchDomainService;
 import com.loopers.domain.product.ProductSortBy;
 import com.loopers.domain.product.event.ProductDetailViewedPublisher;
-import com.loopers.event.ProductViewedEvent;
+import com.loopers.domain.product.event.ProductViewedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

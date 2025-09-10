@@ -10,7 +10,7 @@ import com.loopers.domain.user.UserId;
 import com.loopers.domain.user.event.UserActionData;
 import com.loopers.domain.user.event.UserActionTrackingPort;
 import com.loopers.domain.user.event.UserActionType;
-import com.loopers.event.OrderCreatedEvent;
+import com.loopers.domain.order.event.OrderCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;

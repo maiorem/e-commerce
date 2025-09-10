@@ -1,4 +1,4 @@
-package com.loopers.event;
+package com.loopers.domain.order.event;
 
 
 import lombok.Getter;

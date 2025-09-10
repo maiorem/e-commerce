@@ -5,11 +5,14 @@ import com.loopers.config.kafka.KafkaConfig;
 import com.loopers.event.LikeChangedEvent;
 import com.loopers.event.OrderCreatedEvent;
 import com.loopers.event.ProductViewedEvent;
+import com.loopers.infrastructure.event.ConsumerEventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.messaging.handler.annotation.Payload;
+
+import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Component;
 public class MetricsConsumer {
 
     private final MetricsApplicationService metricsService;
+    private final ConsumerEventMapper eventMapper;
 
     /**
      * 상품 조회 이벤트 처리 - 조회수 메트릭 업데이트
@@ -28,9 +32,10 @@ public class MetricsConsumer {
             containerFactory = KafkaConfig.BATCH_LISTENER
     )
     public void handleProductViewedEvent(
-            @Payload ProductViewedEvent event,
+            @Payload Map<String, Object> eventData,
             Acknowledgment ack
     ) {
+        ProductViewedEvent event = eventMapper.toProductViewedEvent(eventData);
         log.debug("상품 조회 이벤트 수신 - EventId: {}, ProductId: {}",
                 event.getEventId(), event.getProductId());
 
@@ -54,9 +59,10 @@ public class MetricsConsumer {
             containerFactory = KafkaConfig.BATCH_LISTENER
     )
     public void handleLikeChangedEvent(
-            @Payload LikeChangedEvent event,
+            @Payload Map<String, Object> eventData,
             Acknowledgment ack
     ) {
+        LikeChangedEvent event = eventMapper.toLikeChangedEvent(eventData);
         log.debug("좋아요 변경 이벤트 수신 - EventId: {}, ProductId: {}",
                 event.getEventId(), event.getProductId());
 
@@ -80,9 +86,10 @@ public class MetricsConsumer {
             containerFactory = KafkaConfig.BATCH_LISTENER
     )
     public void handleOrderCreatedEvent(
-            @Payload OrderCreatedEvent event,
+            @Payload Map<String, Object> eventData,
             Acknowledgment ack
     ) {
+        OrderCreatedEvent event = eventMapper.toOrderCreatedEvent(eventData);
         log.debug("주문 생성 이벤트 수신 - EventId: {}, OrderId: {}",
                 event.getEventId(), event.getOrderId());
         try {
