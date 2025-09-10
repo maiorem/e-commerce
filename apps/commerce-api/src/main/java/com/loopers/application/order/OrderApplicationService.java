@@ -6,7 +6,7 @@ import com.loopers.domain.order.OrderItemModel;
 import com.loopers.domain.order.OrderModel;
 import com.loopers.domain.order.event.*;
 import com.loopers.domain.product.ProductModel;
-import com.loopers.event.OrderCreatedEvent;
+import com.loopers.domain.order.event.OrderCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

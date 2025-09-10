@@ -1,7 +1,8 @@
 package com.loopers.infrastructure.like;
 
 import com.loopers.domain.like.event.LikeChangePublisher;
-import com.loopers.event.LikeChangedEvent;
+import com.loopers.domain.like.event.LikeChangedEvent;
+import com.loopers.infrastructure.event.EventMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -17,11 +18,12 @@ public class LikeChangePublishImpl implements LikeChangePublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final EventMapper eventMapper;
 
     @Override
     public void publish(LikeChangedEvent event) {
         applicationEventPublisher.publishEvent(event);
-        kafkaTemplate.send(likeTopic, String.valueOf(event.getProductId()), event);
+        kafkaTemplate.send(likeTopic, String.valueOf(event.getProductId()), eventMapper.toConsumerEvent(event));
 
     }
 }

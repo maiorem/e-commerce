@@ -3,7 +3,7 @@ package com.loopers.application.product;
 import com.loopers.domain.product.event.ClickContext;
 import com.loopers.domain.product.event.ProductClickedEvent;
 import com.loopers.domain.user.UserId;
-import com.loopers.event.ProductViewedEvent;
+import com.loopers.domain.product.event.ProductViewedEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
