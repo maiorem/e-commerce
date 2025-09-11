@@ -1,6 +1,6 @@
 package com.loopers.application.ranking;
 
-import com.loopers.domain.ranking.RankingService;
+import com.loopers.domain.ranking.RankingCacheProcessor;
 import com.loopers.domain.ranking.RankingPage;
 import com.loopers.domain.ranking.RankingQueryRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RankingApplicationService {
 
-    private final RankingService rankingService;
+    private final RankingCacheProcessor rankingCacheProcessor;
     private final RankingQueryRepository rankingQueryRepository;
 
     public RankingPageInfo getRankingPage(LocalDate date, int page, int size) {
@@ -56,8 +56,8 @@ public class RankingApplicationService {
     }
 
     public RankingInfo getProductRankingInfo(Long productId, LocalDate date) {
-        Long rank = rankingService.getProductRank(productId, date);
-        Double score = rankingService.getProductScore(productId, date);
+        Long rank = rankingCacheProcessor.getProductRank(productId, date);
+        Double score = rankingCacheProcessor.getProductScore(productId, date);
         
         return RankingInfo.builder()
                 .productId(productId)

@@ -16,50 +16,22 @@ public class RankingScheduler {
     private final RankingCacheService rankingCacheService;
 
     /**
-     * 매일 자정에 전날 랭킹을 DB에서 Redis로 동기화
+     * 매일 자정 1분에 전날의 최종 랭킹 점수를 Redis에 업데이트.
      */
-    @Scheduled(cron = "0 0 0 * * ?")
-    public void syncDailyRanking() {
-        LocalDate yesterday = LocalDate.now().minusDays(1);
-        
-        try {
-            log.info("일일 랭킹 동기화 스케줄 실행 - Date: {}", yesterday);
-            rankingCacheService.syncRankingFromDatabase(yesterday);
-            log.info("일일 랭킹 동기화 스케줄 완료 - Date: {}", yesterday);
-        } catch (Exception e) {
-            log.error("일일 랭킹 동기화 스케줄 실패 - Date: {}, Error: {}", yesterday, e.getMessage(), e);
-        }
+    @Scheduled(cron = "0 1 0 * * ?")
+    public void updateAndRefreshRanking() {
+        log.info("일간 랭킹 업데이트 스케줄러 실행");
+        rankingCacheService.updateDailyRanking(LocalDate.now().minusDays(1));
+        log.info("일간 랭킹 업데이트 스케줄러 완료");
     }
 
     /**
-     * 매시간 정각에 오늘 랭킹을 DB에서 Redis로 동기화
+     * 매일 23시 50분에 전날의 랭킹 데이터를 다음날 랭킹으로 이월. (콜드 스타트 대비)
      */
-    @Scheduled(cron = "0 0 * * * ?")
-    public void syncHourlyRanking() {
-        LocalDate today = LocalDate.now();
-        
-        try {
-            log.info("시간별 랭킹 동기화 스케줄 실행 - Date: {}", today);
-            rankingCacheService.syncRankingFromDatabase(today);
-            log.info("시간별 랭킹 동기화 스케줄 완료 - Date: {}", today);
-        } catch (Exception e) {
-            log.error("시간별 랭킹 동기화 스케줄 실패 - Date: {}, Error: {}", today, e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 매 5분마다 오늘 랭킹을 DB에서 Redis로 동기화
-     */
-    @Scheduled(fixedDelay = 300000) // 5분
-    public void syncRealtimeRanking() {
-        LocalDate today = LocalDate.now();
-        
-        try {
-            log.debug("실시간 랭킹 동기화 스케줄 실행 - Date: {}", today);
-            rankingCacheService.syncRankingFromDatabase(today);
-            log.debug("실시간 랭킹 동기화 스케줄 완료 - Date: {}", today);
-        } catch (Exception e) {
-            log.error("실시간 랭킹 동기화 스케줄 실패 - Date: {}, Error: {}", today, e.getMessage(), e);
-        }
+    @Scheduled(cron = "0 50 23 * * ?")
+    public void carryOverRankingScores() {
+        log.info("랭킹 점수 이월 스케줄러 실행");
+        rankingCacheService.carryOverRankingScores();
+        log.info("랭킹 점수 이월 스케줄러 완료");
     }
 }
