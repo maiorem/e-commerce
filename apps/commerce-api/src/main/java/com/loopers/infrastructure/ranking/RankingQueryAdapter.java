@@ -1,6 +1,6 @@
 package com.loopers.infrastructure.ranking;
 
-import com.loopers.domain.ranking.RankingService;
+import com.loopers.domain.ranking.RankingCacheProcessor;
 import com.loopers.domain.ranking.RankingItem;
 import com.loopers.domain.ranking.RankingPage;
 import com.loopers.domain.ranking.RankingQueryRepository;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RankingQueryAdapter implements RankingQueryRepository {
 
-    private final RankingService rankingService;
+    private final RankingCacheProcessor rankingCacheProcessor;
     private final ProductJpaRepository productRepository;
 
     @Override
@@ -30,7 +30,7 @@ public class RankingQueryAdapter implements RankingQueryRepository {
         log.debug("랭킹과 상품 정보 통합 조회 시작 - Date: {}, Page: {}, Size: {}", date, page, size);
         
         // 1. Redis에서 랭킹 조회
-        Set<Object> rankingProductIds = rankingService.getRankingByPage(date, page, size);
+        Set<Object> rankingProductIds = rankingCacheProcessor.getRankingByPage(date, page, size);
         
         if (rankingProductIds.isEmpty()) {
             log.debug("랭킹 데이터가 없습니다 - Date: {}", date);
@@ -50,8 +50,8 @@ public class RankingQueryAdapter implements RankingQueryRepository {
         // 4. 랭킹 아이템 정보 구성
         List<RankingItem> rankingItems = productIds.stream()
                 .map(productId -> {
-                    Long rank = rankingService.getProductRank(productId, date);
-                    Double score = rankingService.getProductScore(productId, date);
+                    Long rank = rankingCacheProcessor.getProductRank(productId, date);
+                    Double score = rankingCacheProcessor.getProductScore(productId, date);
                     ProductModel product = productMap.get(productId);
                     
                     RankingItem.RankingItemBuilder builder = RankingItem.builder()
@@ -76,7 +76,7 @@ public class RankingQueryAdapter implements RankingQueryRepository {
                 .toList();
         
         // 5. 전체 랭킹 수 조회
-        Long totalCount = rankingService.getTotalRankingCount(date);
+        Long totalCount = rankingCacheProcessor.getTotalRankingCount(date);
         
         log.debug("랭킹과 상품 정보 통합 조회 완료 - Date: {}, 조회된 아이템 수: {}, 전체 수: {}", 
                  date, rankingItems.size(), totalCount);
@@ -87,7 +87,7 @@ public class RankingQueryAdapter implements RankingQueryRepository {
                 .pageSize(size)
                 .totalCount(totalCount)
                 .totalPages((int) Math.ceil((double) totalCount / size))
-                .hasNext(page * size < totalCount)
+                .hasNext((long) page * size < totalCount)
                 .build();
     }
 }
