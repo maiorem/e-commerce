@@ -4,7 +4,7 @@ import com.loopers.application.event.CacheInvalidationApplicationService;
 import com.loopers.config.kafka.KafkaConfig;
 import com.loopers.event.LikeChangedEvent;
 import com.loopers.event.StockAdjustedEvent;
-import com.loopers.infrastructure.event.ConsumerEventMapper;
+import com.loopers.application.event.ConsumerEventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;

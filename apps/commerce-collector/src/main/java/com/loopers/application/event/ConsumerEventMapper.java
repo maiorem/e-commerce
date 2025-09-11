@@ -1,4 +1,4 @@
-package com.loopers.infrastructure.event;
+package com.loopers.application.event;
 
 import com.loopers.event.*;
 import org.springframework.stereotype.Component;
