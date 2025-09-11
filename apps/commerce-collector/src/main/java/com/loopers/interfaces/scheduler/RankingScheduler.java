@@ -1,4 +1,4 @@
-package com.loopers.infrastructure.scheduler;
+package com.loopers.interfaces.scheduler;
 
 import com.loopers.application.event.RankingCacheService;
 import lombok.RequiredArgsConstructor;
