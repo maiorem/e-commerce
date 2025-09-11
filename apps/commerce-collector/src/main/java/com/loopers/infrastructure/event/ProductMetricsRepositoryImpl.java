@@ -5,9 +5,12 @@ import com.loopers.domain.repository.ProductMetricsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import static java.time.ZoneId.systemDefault;
 
 @Component
 @RequiredArgsConstructor
@@ -60,7 +63,10 @@ public class ProductMetricsRepositoryImpl implements ProductMetricsRepository {
     }
 
     @Override
-    public List<ProductMetrics> findAll() {
-        return jpaRepository.findAll();
+    public List<ProductMetrics> findAllByLastUpdatedDate(LocalDate date) {
+        return jpaRepository.findAllByUpdatedAtBetween(
+            date.atStartOfDay().atZone(systemDefault()),
+            date.plusDays(1).atStartOfDay().atZone(systemDefault())
+        );
     }
 }

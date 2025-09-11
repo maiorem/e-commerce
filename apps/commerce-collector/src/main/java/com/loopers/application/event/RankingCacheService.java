@@ -37,17 +37,16 @@ public class RankingCacheService {
      */
     public void updateDailyRanking(LocalDate date) {
         String key = generateDailyKey(date);
-        List<ProductMetrics> allMetrics = productMetricsRepository.findAll(); // DB에서 모든 상품 메트릭 조회
+        List<ProductMetrics> dateMetrics = productMetricsRepository.findAllByLastUpdatedDate(date);
 
-        for (ProductMetrics metric : allMetrics) {
+        for (ProductMetrics metric : dateMetrics) {
             double score = calculateRankingScore(metric);
             if (score > 0) {
                 cacheRepository.addOrUpdateScore(key, metric.getProductId().toString(), score);
             }
         }
-
         cacheRepository.expire(key, RANKING_TTL);
-        log.info("일간 랭킹 업데이트 완료 - 키: {}", key);
+        log.info("일간 랭킹 업데이트 완료 - 날짜: {}, 키: {}, 처리된 상품 수: {}", date, key, dateMetrics.size());
     }
 
     /**

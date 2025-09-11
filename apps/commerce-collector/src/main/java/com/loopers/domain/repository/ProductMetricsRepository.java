@@ -2,6 +2,7 @@ package com.loopers.domain.repository;
 
 import com.loopers.domain.entity.ProductMetrics;
 
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -15,5 +16,5 @@ public interface ProductMetricsRepository {
     void updateLikeCountBatch(Long productId, Long finalCount, ZonedDateTime lastLikedAt);
     void incrementSalesCountBatch(Long productId, int salesCount, Long totalAmount);
 
-    List<ProductMetrics> findAll();
+    List<ProductMetrics> findAllByLastUpdatedDate(LocalDate date);
 }
