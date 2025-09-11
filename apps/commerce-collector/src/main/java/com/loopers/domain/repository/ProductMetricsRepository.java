@@ -16,4 +16,9 @@ public interface ProductMetricsRepository {
     ProductMetrics upsertSalesCount(Long productId, Long amount);
     
     List<ProductMetrics> findAllByLastUpdatedDate(LocalDate date);
+    
+    // 배치 처리 메서드들
+    void incrementViewCountBatch(Long productId, int incrementCount, ZonedDateTime lastViewedAt);
+    void updateLikeCountBatch(Long productId, Long finalCount, ZonedDateTime lastLikedAt);
+    void incrementSalesCountBatch(Long productId, int salesCount, Long totalAmount);
 }

@@ -1,11 +1,9 @@
 package com.loopers.interfaces.consumer;
 
 import com.loopers.application.event.MetricsApplicationService;
+import com.loopers.application.event.MetricsBatchAggregator;
+import com.loopers.application.event.ProductMetricsAggregation;
 import com.loopers.config.kafka.KafkaConfig;
-import com.loopers.event.LikeChangedEvent;
-import com.loopers.event.OrderCreatedEvent;
-import com.loopers.event.ProductViewedEvent;
-import com.loopers.infrastructure.event.ConsumerEventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -22,7 +20,7 @@ import org.springframework.stereotype.Component;
 public class MetricsConsumer {
 
     private final MetricsApplicationService metricsService;
-    private final ConsumerEventMapper eventMapper;
+    private final MetricsBatchAggregator batchAggregator;
 
     /**
      * 상품 조회 이벤트 배치 처리 - 조회수 메트릭 업데이트
@@ -36,25 +34,11 @@ public class MetricsConsumer {
             @Payload List<Map<String, Object>> eventDataList,
             Acknowledgment ack
     ) {
-        log.debug("상품 조회 이벤트 배치 처리 시작 - 메시지 수: {}", eventDataList.size());
-
-        try {
-            for (Map<String, Object> eventData : eventDataList) {
-                ProductViewedEvent event = eventMapper.toProductViewedEvent(eventData);
-                metricsService.handleProductViewedEvent(event);
-            }
-            
-            ack.acknowledge();
-            log.debug("상품 조회 메트릭 배치 처리 완료 - 처리된 메시지 수: {}", eventDataList.size());
-
-        } catch (Exception e) {
-            log.error("상품 조회 메트릭 배치 처리 실패: {}", e.getMessage(), e);
-            throw e;
-        }
+        handleEventsBatchOptimized(eventDataList, ack, "VIEW");
     }
 
     /**
-     * 좋아요 변경 이벤트 배치 처리 - 좋아요 수 메트릭 업데이트
+     * 좋아요 변경 이벤트 배치 처리 - 좋아요 수 메트릭 업데이트 (최적화)
      */
     @KafkaListener(
             topics = "${kafka.topics.like-events}",
@@ -65,25 +49,11 @@ public class MetricsConsumer {
             @Payload List<Map<String, Object>> eventDataList,
             Acknowledgment ack
     ) {
-        log.debug("좋아요 변경 이벤트 배치 처리 시작 - 메시지 수: {}", eventDataList.size());
-
-        try {
-            for (Map<String, Object> eventData : eventDataList) {
-                LikeChangedEvent event = eventMapper.toLikeChangedEvent(eventData);
-                metricsService.handleLikeChangedEvent(event);
-            }
-            
-            ack.acknowledge();
-            log.debug("좋아요 변경 메트릭 배치 처리 완료 - 처리된 메시지 수: {}", eventDataList.size());
-
-        } catch (Exception e) {
-            log.error("좋아요 변경 메트릭 배치 처리 실패: {}", e.getMessage(), e);
-            throw e;
-        }
+        handleEventsBatchOptimized(eventDataList, ack, "LIKE");
     }
 
     /**
-     * 주문 생성 이벤트 배치 처리 - 주문 메트릭 업데이트
+     * 주문 생성 이벤트 배치 처리 - 주문 메트릭 업데이트 (최적화)
      */
     @KafkaListener(
             topics = "${kafka.topics.order-events}",
@@ -94,19 +64,37 @@ public class MetricsConsumer {
             @Payload List<Map<String, Object>> eventDataList,
             Acknowledgment ack
     ) {
-        log.debug("주문 생성 이벤트 배치 처리 시작 - 메시지 수: {}", eventDataList.size());
+        handleEventsBatchOptimized(eventDataList, ack, "ORDER");
+    }
+    
+    /**
+     * 메모리 집계 후 배치 DB 업데이트
+     */
+    private void handleEventsBatchOptimized(List<Map<String, Object>> eventDataList, 
+                                           Acknowledgment ack, 
+                                           String eventType) {
+        log.info("메트릭 배치 처리 시작 - EventType: {}, 메시지 수: {}", eventType, eventDataList.size());
         
         try {
-            for (Map<String, Object> eventData : eventDataList) {
-                OrderCreatedEvent event = eventMapper.toOrderCreatedEvent(eventData);
-                metricsService.handleOrderCreatedEvent(event);
-            }
+            // 1. 메모리에서 집계
+            ProductMetricsAggregation aggregation = batchAggregator.aggregateEvents(eventDataList);
+            
+            // 2. 집계된 데이터를 배치로 DB 업데이트
+            metricsService.updateMetricsBatch(aggregation);
+            
+            // 3. 멱등성 처리
+            metricsService.markEventsAsProcessed(eventDataList);
             
             ack.acknowledge();
-            log.debug("주문 생성 메트릭 배치 처리 완료 - 처리된 메시지 수: {}", eventDataList.size());
-
+            
+            log.info("메트릭 배치 처리 완료 - EventType: {}, 처리된 상품 수: View={}, Like={}, Sales={}", 
+                    eventType,
+                    aggregation.getViewCounts().size(),
+                    aggregation.getLikeUpdates().size(), 
+                    aggregation.getSalesData().size());
+            
         } catch (Exception e) {
-            log.error("주문 생성 메트릭 배치 처리 실패: {}", e.getMessage(), e);
+            log.error("메트릭 배치 처리 실패 - EventType: {}, Error: {}", eventType, e.getMessage(), e);
             throw e;
         }
     }
