@@ -28,6 +28,9 @@ public class ProductMetrics extends BaseEntity {
     @Column(name = "sales_count", nullable = false)
     private Long salesCount = 0L;
 
+    @Column(name = "total_sales_amount", nullable = false)
+    private Long totalSalesAmount = 0L;
+
     @Column(name = "last_viewed_at")
     private ZonedDateTime lastViewedAt;
 
@@ -50,8 +53,9 @@ public class ProductMetrics extends BaseEntity {
         this.lastLikedAt = likedAt;
     }
 
-    public void incrementSalesCount() {
+    public void incrementSalesCount(Long amount) {
         this.salesCount++;
+        this.totalSalesAmount += amount;
     }
 
 }

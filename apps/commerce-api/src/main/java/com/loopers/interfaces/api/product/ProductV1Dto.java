@@ -37,8 +37,22 @@ public class ProductV1Dto {
             String categoryName,
             int price,
             int likeCount,
-            int stockCount
+            int stockCount,
+            RankingInfoDto rankingInfo
     ) {
+        public static ProductResponseDto from(
+                Long id,
+                String productName,
+                String brandName,
+                String categoryName,
+                int price,
+                int likeCount,
+                int stockCount,
+                RankingInfoDto rankingInfo
+        ) {
+            return new ProductResponseDto(id, productName, brandName, categoryName, price, likeCount, stockCount, rankingInfo);
+        }
+
         public static ProductResponseDto from(
                 Long id,
                 String productName,
@@ -48,7 +62,7 @@ public class ProductV1Dto {
                 int likeCount,
                 int stockCount
         ) {
-            return new ProductResponseDto(id, productName, brandName, categoryName, price, likeCount, stockCount);
+            return new ProductResponseDto(id, productName, brandName, categoryName, price, likeCount, stockCount, null);
         }
     }
 
@@ -67,7 +81,8 @@ public class ProductV1Dto {
                             product.categoryName(),
                             product.price(),
                             product.likeCount(),
-                            product.stock()
+                            product.stock(),
+                            null // 목록에서는 랭킹 정보 제외
                     )).toList();
 
             // 마지막 상품의 정보로 다음 커서 생성
@@ -91,6 +106,15 @@ public class ProductV1Dto {
                     lastProduct.price(),
                     lastProduct.lastCreatedAt()
             );
+        }
+    }
+
+    public record RankingInfoDto(
+            Long rank,
+            Double score
+    ) {
+        public static RankingInfoDto from(Long rank, Double score) {
+            return new RankingInfoDto(rank, score);
         }
     }
 }

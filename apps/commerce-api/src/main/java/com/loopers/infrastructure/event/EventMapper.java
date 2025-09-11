@@ -7,7 +7,9 @@ import com.loopers.domain.product.event.StockAdjustedEvent;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class EventMapper {
@@ -43,6 +45,21 @@ public class EventMapper {
         consumerEvent.put("totalAmount", domainEvent.getTotalAmount());
         consumerEvent.put("orderDate", domainEvent.getOrderDate());
         consumerEvent.put("occurredAt", domainEvent.getOccurredAt());
+        
+        // OrderItem 정보 추가
+        List<Map<String, Object>> orderItemsMap = domainEvent.getOrderItems().stream()
+                .map(item -> {
+                    Map<String, Object> itemMap = new HashMap<>();
+                    itemMap.put("productId", item.getProductId());
+                    itemMap.put("productName", item.getProductName());
+                    itemMap.put("price", item.getPrice());
+                    itemMap.put("quantity", item.getQuantity());
+                    itemMap.put("itemTotalAmount", item.getItemTotalAmount());
+                    return itemMap;
+                })
+                .collect(Collectors.toList());
+        consumerEvent.put("orderItems", orderItemsMap);
+        
         return consumerEvent;
     }
 

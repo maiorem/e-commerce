@@ -66,9 +66,20 @@ public class MetricsApplicationService {
             log.debug("이미 처리된 주문 생성 이벤트 - EventId: {}", eventId);
             return;
         }
+        
+        // 주문 아이템별 판매 수와 금액 업데이트
+        event.getOrderItems().forEach(item -> {
+            long totalAmount = (long) item.getPrice() * item.getQuantity();
+            productMetricsRepository.upsertSalesCount(item.getProductId(), totalAmount);
+            
+            log.debug("주문 상품 메트릭 업데이트 - ProductId: {}, Amount: {}", 
+                     item.getProductId(), totalAmount);
+        });
+        
         idempotentProcessor.markAsProcessed(eventId, CONSUMER_GROUP);
 
-        log.info("주문 메트릭 업데이트 완료 - OrderId: {}", event.getOrderId());
+        log.info("주문 메트릭 업데이트 완료 - OrderId: {}, 상품 수: {}", 
+                 event.getOrderId(), event.getOrderItems().size());
     }
 
 
