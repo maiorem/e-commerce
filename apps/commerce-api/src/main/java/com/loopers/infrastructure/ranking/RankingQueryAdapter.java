@@ -74,6 +74,18 @@ public class RankingQueryAdapter implements RankingQueryRepository {
                     return builder.build();
                 })
                 .toList();
+
+        // 동일 점수 상품들의 정렬 기준 추가
+        List<RankingItem> sortedRankingItems = rankingItems.stream()
+                .sorted((a, b) -> {
+                    int scoreCompare = Double.compare(b.getScore(), a.getScore());
+                    if (scoreCompare == 0) {
+                        // 점수가 같으면 상품 ID 오름차순 (등록일 대용)
+                        return Long.compare(a.getProductId(), b.getProductId());
+                    }
+                    return scoreCompare;
+                })
+                .toList();
         
         // 5. 전체 랭킹 수 조회
         Long totalCount = rankingCacheProcessor.getTotalRankingCount(date);
@@ -82,7 +94,7 @@ public class RankingQueryAdapter implements RankingQueryRepository {
                  date, rankingItems.size(), totalCount);
         
         return RankingPage.builder()
-                .items(rankingItems)
+                .items(sortedRankingItems)
                 .currentPage(page)
                 .pageSize(size)
                 .totalCount(totalCount)
