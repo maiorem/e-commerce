@@ -6,7 +6,7 @@ import com.loopers.domain.order.OrderItemModel;
 import com.loopers.domain.order.OrderModel;
 import com.loopers.domain.order.event.*;
 import com.loopers.domain.product.ProductModel;
-import com.loopers.event.OrderCreatedEvent;
+import com.loopers.domain.order.event.OrderCreatedEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,12 +51,23 @@ public class OrderApplicationService {
 		// 5. 주문 아이템 저장
 		List<OrderItemModel> savedOrderItems = orderPersistenceHandler.saveOrderItem(savedOrder, orderItems);
 
-		// -- 주문생성 이벤트 발행 --
-        orderCreatedPublisher.publish(OrderCreatedEvent.from(savedOrder.getId(), savedOrder.getOrderNumber().getValue(), savedOrder.getUserId().getValue(), savedOrder.getTotalAmount().getAmount(), savedOrder.getOrderDate().getValue()));
-        // -- 쿠폰예약 커맨드 발행 --
-        couponReservePublisher.publish(OrderCeatedCouponReserveCommand.create(savedOrder.getId(), savedOrder.getUserId(), command.couponCode()));
-        // -- 재고차감 커맨드 발행 --
-        stockDeductionPublisher.publish(OrderCreatedStockDeductionCommand.create(orderItems));
+		// 6. 이벤트 및 커맨드 발행
+		// 주문 생성 이벤트 발행
+		orderCreatedPublisher.publish(OrderCreatedEvent.from(
+			savedOrder.getId(),
+			savedOrder.getOrderNumber().getValue(),
+			savedOrder.getUserId().getValue(),
+			savedOrder.getTotalAmount().getAmount(),
+			savedOrder.getOrderDate().getValue(),
+			savedOrderItems,
+			products
+		));
+		
+		// 쿠폰 예약 커맨드 발행
+		couponReservePublisher.publish(OrderCeatedCouponReserveCommand.create(savedOrder.getId(), savedOrder.getUserId(), command.couponCode()));
+		
+		// 재고 차감 커맨드 발행
+		stockDeductionPublisher.publish(OrderCreatedStockDeductionCommand.create(orderItems));
 
 		return OrderInfo.from(savedOrder, OrderItemInfo.createOrderItemInfos(savedOrderItems, products));
 	}

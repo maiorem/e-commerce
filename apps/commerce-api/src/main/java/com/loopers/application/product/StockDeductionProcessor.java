@@ -4,7 +4,7 @@ import com.loopers.domain.order.OrderItemModel;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.product.ProductStockDomainService;
-import com.loopers.event.StockAdjustedEvent;
+import com.loopers.domain.product.event.StockAdjustedEvent;
 import com.loopers.domain.product.event.StockAdjustedPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -4,6 +4,7 @@ import com.loopers.application.event.CacheInvalidationApplicationService;
 import com.loopers.config.kafka.KafkaConfig;
 import com.loopers.event.LikeChangedEvent;
 import com.loopers.event.StockAdjustedEvent;
+import com.loopers.application.event.ConsumerEventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -21,6 +22,7 @@ import java.util.Map;
 public class CacheInvalidationConsumer {
 
     private final CacheInvalidationApplicationService cacheInvalidationService;
+    private final ConsumerEventMapper eventMapper;
 
     /**
      * 재고 조정 이벤트 처리 - 재고 소진 시 캐시 무효화
@@ -31,10 +33,11 @@ public class CacheInvalidationConsumer {
             containerFactory = KafkaConfig.BATCH_LISTENER
     )
     public void handleStockAdjustedEvent(
-            @Payload StockAdjustedEvent event,
+            @Payload Map<String, Object> eventData,
             @Header Map<String, Object> headers,
             Acknowledgment ack
     ) {
+        StockAdjustedEvent event = eventMapper.toStockAdjustedEvent(eventData);
         Long offset = (Long) headers.get(KafkaHeaders.OFFSET);
         Integer partition = (Integer) headers.get(KafkaHeaders.RECEIVED_PARTITION);
 
@@ -58,14 +61,15 @@ public class CacheInvalidationConsumer {
      * 좋아요 변경 이벤트 처리 - 좋아요 수 변경 시 캐시 무효화
      */
     @KafkaListener(
-            topics = "like-events",
+            topics = "${kafka.topics.like-events}",
             groupId = "cache-invalidation-group",
             containerFactory = KafkaConfig.BATCH_LISTENER
     )
     public void handleLikeChangedEvent(
-            @Payload LikeChangedEvent event,
+            @Payload Map<String, Object> eventData,
             Acknowledgment ack
     ) {
+        LikeChangedEvent event = eventMapper.toLikeChangedEvent(eventData);
         log.info("좋아요 변경 이벤트 수신 - EventId: {}, ProductId: {}",
                 event.getEventId(), event.getProductId());
 

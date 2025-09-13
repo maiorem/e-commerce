@@ -1,7 +1,8 @@
 package com.loopers.infrastructure.order;
 
 import com.loopers.domain.order.event.OrderCreatedPublisher;
-import com.loopers.event.OrderCreatedEvent;
+import com.loopers.domain.order.event.OrderCreatedEvent;
+import com.loopers.infrastructure.event.EventMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
@@ -17,10 +18,11 @@ public class OrderCreatedPublisherImpl implements OrderCreatedPublisher {
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final EventMapper eventMapper;
 
     @Override
     public void publish(OrderCreatedEvent event) {
         applicationEventPublisher.publishEvent(event);
-        kafkaTemplate.send(orderTopic, event.getOrderId().toString(), event);
+        kafkaTemplate.send(orderTopic, event.getOrderId().toString(), eventMapper.toConsumerEvent(event));
     }
 }

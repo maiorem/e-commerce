@@ -5,8 +5,12 @@ import com.loopers.domain.repository.ProductMetricsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Optional;
+
+import static java.time.ZoneId.systemDefault;
 
 @Component
 @RequiredArgsConstructor
@@ -25,20 +29,44 @@ public class ProductMetricsRepositoryImpl implements ProductMetricsRepository {
     }
 
     @Override
-    public ProductMetrics upsertViewCount(Long productId, ZonedDateTime viewedAt) {
+    public void incrementViewCountBatch(Long productId, int incrementCount, ZonedDateTime lastViewedAt) {
         ProductMetrics metrics = findByProductId(productId)
                 .orElse(ProductMetrics.of(productId));
-
-        metrics.incrementViewCount(viewedAt);
-        return save(metrics);
+        
+        // 기존 조회수에 증가분 추가
+        for (int i = 0; i < incrementCount; i++) {
+            metrics.incrementViewCount(lastViewedAt);
+        }
+        save(metrics);
+    }
+    
+    @Override
+    public void updateLikeCountBatch(Long productId, Long finalCount, ZonedDateTime lastLikedAt) {
+        ProductMetrics metrics = findByProductId(productId)
+                .orElse(ProductMetrics.of(productId));
+        
+        metrics.updateLikeCount(finalCount, lastLikedAt);
+        save(metrics);
+    }
+    
+    @Override
+    public void incrementSalesCountBatch(Long productId, int salesCount, Long totalAmount) {
+        ProductMetrics metrics = findByProductId(productId)
+                .orElse(ProductMetrics.of(productId));
+        
+        // 판매 건수와 금액을 증가분만큼 추가
+        for (int i = 0; i < salesCount; i++) {
+            long avgAmount = totalAmount / salesCount;
+            metrics.incrementSalesCount(avgAmount);
+        }
+        save(metrics);
     }
 
     @Override
-    public ProductMetrics upsertLikeCount(Long productId, Long newLikeCount, ZonedDateTime likedAt) {
-        ProductMetrics metrics = findByProductId(productId)
-                .orElse(ProductMetrics.of(productId));
-
-        metrics.updateLikeCount(newLikeCount, likedAt);
-        return save(metrics);
+    public List<ProductMetrics> findAllByLastUpdatedDate(LocalDate date) {
+        return jpaRepository.findAllByUpdatedAtBetween(
+            date.atStartOfDay().atZone(systemDefault()),
+            date.plusDays(1).atStartOfDay().atZone(systemDefault())
+        );
     }
 }

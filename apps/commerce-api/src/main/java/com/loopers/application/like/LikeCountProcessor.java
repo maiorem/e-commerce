@@ -4,7 +4,7 @@ import com.loopers.domain.like.event.LikeChangePublisher;
 import com.loopers.domain.product.ProductModel;
 import com.loopers.domain.product.ProductRepository;
 import com.loopers.domain.user.UserId;
-import com.loopers.event.LikeChangedEvent;
+import com.loopers.domain.like.event.LikeChangedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

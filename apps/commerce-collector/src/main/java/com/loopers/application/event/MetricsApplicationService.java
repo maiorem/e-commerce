@@ -2,12 +2,13 @@ package com.loopers.application.event;
 
 
 import com.loopers.domain.repository.ProductMetricsRepository;
-import com.loopers.event.LikeChangedEvent;
-import com.loopers.event.OrderCreatedEvent;
-import com.loopers.event.ProductViewedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -18,58 +19,54 @@ public class MetricsApplicationService {
     private final ProductMetricsRepository productMetricsRepository;
 
     private static final String CONSUMER_GROUP = "metrics-group";
-
-    public void handleProductViewedEvent(ProductViewedEvent event) {
-        String eventId = event.getEventId();
-
-        if (idempotentProcessor.isAlreadyProcessed(eventId, CONSUMER_GROUP)) {
-            log.debug("이미 처리된 상품 조회 이벤트 - EventId: {}", eventId);
-            return;
-        }
-
-        // 조회수 증가
-        productMetricsRepository.upsertViewCount(
-                event.getProductId(),
-                event.getOccurredAt()
-        );
-
-        idempotentProcessor.markAsProcessed(eventId, CONSUMER_GROUP);
-
-        log.debug("상품 조회 메트릭 업데이트 완료 - ProductId: {}", event.getProductId());
+    
+    /**
+     * 배치 메트릭 업데이트 - 집계된 데이터를 배치로 처리
+     */
+    @Transactional
+    public void updateMetricsBatch(ProductMetricsAggregation aggregation) {
+        log.info("배치 메트릭 업데이트 시작 - View: {}, Like: {}, Sales: {}", 
+                aggregation.getViewCounts().size(),
+                aggregation.getLikeUpdates().size(),
+                aggregation.getSalesData().size());
+        
+        // View 배치 업데이트
+        aggregation.getViewCounts().values().forEach(viewCount -> 
+            productMetricsRepository.incrementViewCountBatch(
+                viewCount.getProductId(), 
+                viewCount.getCount(),
+                viewCount.getLastViewedAt()
+            ));
+        
+        // Like 배치 업데이트
+        aggregation.getLikeUpdates().values().forEach(likeUpdate ->
+            productMetricsRepository.updateLikeCountBatch(
+                likeUpdate.getProductId(),
+                likeUpdate.getFinalLikeCount(), 
+                likeUpdate.getLastLikedAt()
+            ));
+        
+        // Sales 배치 업데이트
+        aggregation.getSalesData().values().forEach(salesData ->
+            productMetricsRepository.incrementSalesCountBatch(
+                salesData.getProductId(),
+                salesData.getSalesCount(),
+                salesData.getTotalAmount()
+            ));
+            
+        log.info("배치 메트릭 업데이트 완료");
     }
-
-    public void handleLikeChangedEvent(LikeChangedEvent event) {
-        String eventId = event.getEventId();
-
-        if (idempotentProcessor.isAlreadyProcessed(eventId, CONSUMER_GROUP)) {
-            log.debug("이미 처리된 좋아요 변경 이벤트 - EventId: {}", eventId);
-            return;
-        }
-
-        // 좋아요 수 업데이트
-        productMetricsRepository.upsertLikeCount(
-                event.getProductId(),
-                (long) event.getNewLikeCount(),
-                event.getOccurredAt()
-        );
-
-        idempotentProcessor.markAsProcessed(eventId, CONSUMER_GROUP);
-
-        log.debug("좋아요 메트릭 업데이트 완료 - ProductId: {}, LikeCount: {}",
-                event.getProductId(), event.getNewLikeCount());
+    
+    /**
+     * 이벤트 전체를 처리 완료로 마크
+     */
+    public void markEventsAsProcessed(List<Map<String, Object>> eventDataList) {
+        eventDataList.forEach(eventData -> {
+            String eventId = (String) eventData.get("eventId");
+            idempotentProcessor.markAsProcessed(eventId, CONSUMER_GROUP);
+        });
+        
+        log.debug("이벤트 멱등성 마크 완료 - 처리된 이벤트 수: {}", eventDataList.size());
     }
-
-    public void handleOrderCreatedEvent(OrderCreatedEvent event) {
-        String eventId = event.getEventId();
-
-        if (idempotentProcessor.isAlreadyProcessed(eventId, CONSUMER_GROUP)) {
-            log.debug("이미 처리된 주문 생성 이벤트 - EventId: {}", eventId);
-            return;
-        }
-        idempotentProcessor.markAsProcessed(eventId, CONSUMER_GROUP);
-
-        log.info("주문 메트릭 업데이트 완료 - OrderId: {}", event.getOrderId());
-    }
-
 
 }

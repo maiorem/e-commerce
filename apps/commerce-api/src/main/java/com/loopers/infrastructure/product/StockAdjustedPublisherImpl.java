@@ -1,7 +1,8 @@
 package com.loopers.infrastructure.product;
 
 import com.loopers.domain.product.event.StockAdjustedPublisher;
-import com.loopers.event.StockAdjustedEvent;
+import com.loopers.domain.product.event.StockAdjustedEvent;
+import com.loopers.infrastructure.event.EventMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,9 +18,10 @@ public class StockAdjustedPublisherImpl implements StockAdjustedPublisher {
     private String stockTopic;
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final EventMapper eventMapper;
 
     @Override
     public void publish(StockAdjustedEvent event) {
-        kafkaTemplate.send(stockTopic, event.getProductId().toString(), event);
+        kafkaTemplate.send(stockTopic, event.getProductId().toString(), eventMapper.toConsumerEvent(event));
     }
 }

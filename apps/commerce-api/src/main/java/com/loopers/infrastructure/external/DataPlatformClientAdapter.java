@@ -4,7 +4,7 @@ import com.loopers.domain.external.DataPlatformPort;
 import com.loopers.domain.external.DataPlatformResult;
 import com.loopers.domain.payment.event.PaymentFailedEvent;
 import com.loopers.domain.payment.event.PaymentSuccessEvent;
-import com.loopers.event.OrderCreatedEvent;
+import com.loopers.domain.order.event.OrderCreatedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

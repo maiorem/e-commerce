@@ -6,7 +6,7 @@ import com.loopers.domain.user.UserId;
 import com.loopers.domain.user.event.UserActionData;
 import com.loopers.domain.user.event.UserActionTrackingPort;
 import com.loopers.domain.user.event.UserActionType;
-import com.loopers.event.ProductViewedEvent;
+import com.loopers.domain.product.event.ProductViewedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
