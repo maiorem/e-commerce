@@ -14,6 +14,9 @@ dependencies {
     // web
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
+    
+    // Spring Batch
+    implementation("org.springframework.boot:spring-boot-starter-batch")
 
     // querydsl
     implementation("com.querydsl:querydsl-apt::jakarta")
