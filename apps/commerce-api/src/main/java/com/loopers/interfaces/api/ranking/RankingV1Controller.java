@@ -21,10 +21,11 @@ public class RankingV1Controller implements RankingV1ApiSpec {
     @GetMapping
     public ApiResponse<RankingV1Dto.RankingPageResponse> getRankings(
             @RequestParam(name = "date") @DateTimeFormat(pattern = "yyyyMMdd") LocalDate date,
+            @RequestParam(name = "period", defaultValue = "daily") String period,
             @RequestParam(name = "size", defaultValue = "20") int size,
             @RequestParam(name = "page", defaultValue = "1") int page) {
         
-        log.info("랭킹 페이지 조회 요청 - Date: {}, Page: {}, Size: {}", date, page, size);
+        log.info("랭킹 페이지 조회 요청 - Date: {}, Period: {}, Page: {}, Size: {}", date, period, page, size);
         
         // 페이지 유효성 검증
         if (page < 1) {
@@ -34,7 +35,7 @@ public class RankingV1Controller implements RankingV1ApiSpec {
             size = 20;
         }
         
-        RankingPageInfo rankingPageInfo = rankingApplicationService.getRankingPage(date, page, size);
+        RankingPageInfo rankingPageInfo = rankingApplicationService.getRankingPage(date, period, page, size);
         RankingV1Dto.RankingPageResponse response = RankingV1Dto.RankingPageResponse.from(rankingPageInfo);
         
         return ApiResponse.success(response);

@@ -8,10 +8,15 @@ import com.loopers.infrastructure.product.ProductJpaRepository;
 import com.loopers.domain.product.ProductModel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.temporal.WeekFields;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -24,6 +29,8 @@ public class RankingQueryAdapter implements RankingQueryRepository {
 
     private final RankingCacheProcessor rankingCacheProcessor;
     private final ProductJpaRepository productRepository;
+    private final WeeklyRankingJpaQueryRepository weeklyRankingRepository;
+    private final MonthlyRankingJpaQueryRepository monthlyRankingRepository;
 
     @Override
     public RankingPage getRankingWithProducts(LocalDate date, int page, int size) {
@@ -100,6 +107,131 @@ public class RankingQueryAdapter implements RankingQueryRepository {
                 .totalCount(totalCount)
                 .totalPages((int) Math.ceil((double) totalCount / size))
                 .hasNext((long) page * size < totalCount)
+                .build();
+    }
+
+    @Override
+    public RankingPage getWeeklyRankingWithProducts(LocalDate date, int page, int size) {
+        log.debug("주간 랭킹과 상품 정보 통합 조회 시작 - Date: {}, Page: {}, Size: {}", date, page, size);
+        
+        WeekFields weekFields = WeekFields.of(Locale.getDefault());
+        int weekYear = date.get(weekFields.weekBasedYear());
+        int weekNumber = date.get(weekFields.weekOfWeekBasedYear());
+        
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<WeeklyRankingQueryEntity> weeklyRankings = weeklyRankingRepository.findByWeekYearAndWeekNumber(weekYear, weekNumber, pageable);
+        
+        if (weeklyRankings.isEmpty()) {
+            log.debug("주간 랭킹 데이터가 없습니다 - Date: {}, Week: {}년 {}주차", date, weekYear, weekNumber);
+            return RankingPage.empty(page, size);
+        }
+        
+        return buildRankingPageFromWeeklyEntities(weeklyRankings, page, size);
+    }
+
+    @Override
+    public RankingPage getMonthlyRankingWithProducts(LocalDate date, int page, int size) {
+        log.debug("월간 랭킹과 상품 정보 통합 조회 시작 - Date: {}, Page: {}, Size: {}", date, page, size);
+        
+        int year = date.getYear();
+        int month = date.getMonthValue();
+        
+        Pageable pageable = PageRequest.of(page - 1, size);
+        Page<MonthlyRankingQueryEntity> monthlyRankings = monthlyRankingRepository.findByYearAndMonth(year, month, pageable);
+        
+        if (monthlyRankings.isEmpty()) {
+            log.debug("월간 랭킹 데이터가 없습니다 - Date: {}, Month: {}년 {}월", date, year, month);
+            return RankingPage.empty(page, size);
+        }
+        
+        return buildRankingPageFromMonthlyEntities(monthlyRankings, page, size);
+    }
+
+    private RankingPage buildRankingPageFromWeeklyEntities(Page<WeeklyRankingQueryEntity> weeklyRankings, int page, int size) {
+        List<Long> productIds = weeklyRankings.getContent().stream()
+                .map(WeeklyRankingQueryEntity::getProductId)
+                .toList();
+        
+        List<ProductModel> products = productRepository.findAllById(productIds);
+        Map<Long, ProductModel> productMap = products.stream()
+                .collect(Collectors.toMap(ProductModel::getId, Function.identity()));
+        
+        List<RankingItem> rankingItems = weeklyRankings.getContent().stream()
+                .map(entity -> {
+                    ProductModel product = productMap.get(entity.getProductId());
+                    
+                    RankingItem.RankingItemBuilder builder = RankingItem.builder()
+                            .productId(entity.getProductId())
+                            .rank((long) entity.getRankPosition())
+                            .score(entity.getTotalScore());
+                    
+                    if (product != null) {
+                        RankingItem.ProductInfo productInfo = RankingItem.ProductInfo.builder()
+                                .name(product.getName())
+                                .description(product.getDescription())
+                                .price(product.getPrice())
+                                .brandName("Brand " + product.getBrandId())
+                                .likeCount(product.getLikesCount())
+                                .build();
+                        
+                        builder = builder.productInfo(productInfo);
+                    }
+                    
+                    return builder.build();
+                })
+                .toList();
+        
+        return RankingPage.builder()
+                .items(rankingItems)
+                .currentPage(page)
+                .pageSize(size)
+                .totalCount(weeklyRankings.getTotalElements())
+                .totalPages(weeklyRankings.getTotalPages())
+                .hasNext(weeklyRankings.hasNext())
+                .build();
+    }
+
+    private RankingPage buildRankingPageFromMonthlyEntities(Page<MonthlyRankingQueryEntity> monthlyRankings, int page, int size) {
+        List<Long> productIds = monthlyRankings.getContent().stream()
+                .map(MonthlyRankingQueryEntity::getProductId)
+                .toList();
+        
+        List<ProductModel> products = productRepository.findAllById(productIds);
+        Map<Long, ProductModel> productMap = products.stream()
+                .collect(Collectors.toMap(ProductModel::getId, Function.identity()));
+        
+        List<RankingItem> rankingItems = monthlyRankings.getContent().stream()
+                .map(entity -> {
+                    ProductModel product = productMap.get(entity.getProductId());
+                    
+                    RankingItem.RankingItemBuilder builder = RankingItem.builder()
+                            .productId(entity.getProductId())
+                            .rank((long) entity.getRankPosition())
+                            .score(entity.getTotalScore());
+                    
+                    if (product != null) {
+                        RankingItem.ProductInfo productInfo = RankingItem.ProductInfo.builder()
+                                .name(product.getName())
+                                .description(product.getDescription())
+                                .price(product.getPrice())
+                                .brandName("Brand " + product.getBrandId())
+                                .likeCount(product.getLikesCount())
+                                .build();
+                        
+                        builder = builder.productInfo(productInfo);
+                    }
+                    
+                    return builder.build();
+                })
+                .toList();
+        
+        return RankingPage.builder()
+                .items(rankingItems)
+                .currentPage(page)
+                .pageSize(size)
+                .totalCount(monthlyRankings.getTotalElements())
+                .totalPages(monthlyRankings.getTotalPages())
+                .hasNext(monthlyRankings.hasNext())
                 .build();
     }
 }
