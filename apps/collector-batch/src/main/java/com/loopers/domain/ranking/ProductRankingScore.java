@@ -15,7 +15,10 @@ public class ProductRankingScore {
     private final Double score;
 
     public static ProductRankingScore calculate(Long viewCount, Long likeCount, Long salesCount, Long totalSalesAmount) {
-        double calculatedScore = viewCount + (likeCount * 2) + (salesCount * 5) + (totalSalesAmount * 0.001);
+        double viewScore = 0.1 * viewCount;
+        double likeScore = 0.2 * likeCount;
+        double orderScore = 0.6 * Math.log10(totalSalesAmount + 1);
+        double calculatedScore = viewScore + likeScore + orderScore;
 
         return new ProductRankingScore(viewCount, likeCount, salesCount, totalSalesAmount, calculatedScore);
     }
