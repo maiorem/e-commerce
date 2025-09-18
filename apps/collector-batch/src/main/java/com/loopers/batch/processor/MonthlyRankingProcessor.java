@@ -1,24 +1,43 @@
 package com.loopers.batch.processor;
 
-import com.loopers.domain.entity.ProductMetrics;
+import com.loopers.domain.model.ProductMetrics;
 import com.loopers.domain.ranking.ScoredProductMetrics;
+import com.loopers.domain.repository.RankingAggregationRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+
+import java.time.LocalDate;
 
 @Slf4j
 @Component
 @StepScope
-public class MonthlyRankingProcessor implements ItemProcessor<ProductMetrics, ScoredProductMetrics> {
+@RequiredArgsConstructor
+public class MonthlyRankingProcessor implements ItemProcessor<ProductMetrics, ProductMetrics> {
+
+    private final RankingAggregationRepository rankingAggregationRepository;
+
+    @Value("#{jobParameters['targetDate']}")
+    private String targetDateParam;
 
     @Override
-    public ScoredProductMetrics process(ProductMetrics productMetrics) {
-        ScoredProductMetrics result = ScoredProductMetrics.of(productMetrics);
+    public ProductMetrics process(ProductMetrics productMetrics) throws Exception {
+        LocalDate targetDate = LocalDate.parse(targetDateParam);
+        int year = targetDate.getYear();
+        int month = targetDate.getMonthValue();
 
-        log.debug("ProductMetrics 처리 완료 - Product ID: {}, Score: {}",
-                 result.metrics().getProductId(), result.score().getScore());
+        ScoredProductMetrics scoredMetrics = ScoredProductMetrics.of(productMetrics);
+        double score = scoredMetrics.score().getScore();
 
-        return result;
+        rankingAggregationRepository.saveMonthlyScore(
+            year, month, productMetrics.getProductId().toString(), score);
+
+        log.debug("월간 랭킹 점수 저장 완료 - Product ID: {}, Score: {}, Month: {}년 {}월",
+                productMetrics.getProductId(), score, year, month);
+
+        return null;
     }
 }

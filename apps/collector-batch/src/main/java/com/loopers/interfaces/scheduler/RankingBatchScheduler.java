@@ -27,9 +27,9 @@ public class RankingBatchScheduler {
     private final Job monthlyRankingJob;
 
     /**
-     * 매일 자정 5분에 주간 랭킹 배치 실행 (최근 7일 기준)
+     * 매일 자정 10분에 주간 랭킹 배치 실행 (최근 7일 기준)
      */
-    @Scheduled(cron = "0 5 0 * * ?")
+    @Scheduled(cron = "0 10 0 * * ?")
     public void runWeeklyRankingBatch() {
         try {
             log.info("주간 랭킹 배치 스케줄러 실행 시작");
@@ -52,7 +52,7 @@ public class RankingBatchScheduler {
 
             jobLauncher.run(weeklyRankingJob, jobParameters);
 
-            log.info("주간 랭킹 배치 스케줄러 실행 완료 - {}년 {}주차 (기간: {} ~ {})",
+            log.info("주간 랭킹 배치 스케줄러 실행 완료 - {}년 {}주차 (집계기간: {} ~ {})",
                     weekYear, weekNumber, startDate, endDate);
 
         } catch (Exception e) {
@@ -65,16 +65,16 @@ public class RankingBatchScheduler {
     }
 
     /**
-     * 매일 자정 10분에 월간 랭킹 배치 실행 (현재 월 1일부터 어제까지)
+     * 매일 자정 15분에 월간 랭킹 배치 실행 (현재 월 1일부터 어제까지)
      */
-    @Scheduled(cron = "0 10 0 * * ?")
+    @Scheduled(cron = "0 15 0 * * ?")
     public void runMonthlyRankingBatch() {
         try {
             log.info("월간 랭킹 배치 스케줄러 실행 시작");
 
             LocalDate today = LocalDate.now();
             LocalDate endDate = today.minusDays(1); // 어제까지
-            LocalDate startDate = endDate.withDayOfMonth(1); // 현재 월 1일부터
+            LocalDate startDate = endDate.withDayOfMonth(1); // 어제 기준 월의 1일부터
 
             JobParameters jobParameters = new JobParametersBuilder()
                     .addString("startDate", startDate.toString())
@@ -86,7 +86,7 @@ public class RankingBatchScheduler {
 
             jobLauncher.run(monthlyRankingJob, jobParameters);
 
-            log.info("월간 랭킹 배치 스케줄러 실행 완료 - {}년 {}월 (기간: {} ~ {})",
+            log.info("월간 랭킹 배치 스케줄러 실행 완료 - {}년 {}월 (집계기간: {} ~ {})",
                     endDate.getYear(), endDate.getMonthValue(), startDate, endDate);
 
         } catch (Exception e) {
