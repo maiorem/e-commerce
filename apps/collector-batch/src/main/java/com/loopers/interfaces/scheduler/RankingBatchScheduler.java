@@ -2,6 +2,8 @@ package com.loopers.interfaces.scheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Marker;
+import org.slf4j.MarkerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -17,6 +19,8 @@ import java.util.Locale;
 @Component
 @RequiredArgsConstructor
 public class RankingBatchScheduler {
+
+    private static final Marker BATCH_FAILURE = MarkerFactory.getMarker("BATCH_FAILURE");
 
     private final JobLauncher jobLauncher;
     private final Job weeklyRankingJob;
@@ -52,7 +56,11 @@ public class RankingBatchScheduler {
                     weekYear, weekNumber, startDate, endDate);
 
         } catch (Exception e) {
-            log.error("주간 랭킹 배치 실행 중 오류 발생", e);
+            log.error(BATCH_FAILURE, "주간 랭킹 배치 실행 실패\n" +
+                    "배치명: weeklyRankingJob\n" +
+                    "실행시간: {}\n" +
+                    "오류내용: {}",
+                    LocalDate.now(), e.getMessage(), e);
         }
     }
 
@@ -82,7 +90,11 @@ public class RankingBatchScheduler {
                     endDate.getYear(), endDate.getMonthValue(), startDate, endDate);
 
         } catch (Exception e) {
-            log.error("월간 랭킹 배치 실행 중 오류 발생", e);
+            log.error(BATCH_FAILURE, "월간 랭킹 배치 실행 실패\n" +
+                    "배치명: monthlyRankingJob\n" +
+                    "실행시간: {}\n" +
+                    "오류내용: {}",
+                    LocalDate.now(), e.getMessage(), e);
         }
     }
 }

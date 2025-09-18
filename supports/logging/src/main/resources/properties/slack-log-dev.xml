@@ -1,6 +1,5 @@
 <included>
-    <property name="SLACK_USERNAME" value=""/>
-    <property name="SLACK_CHANNEL" value=""/>
-    <property name="SLACK_WEBHOOK_URI"
-              value=""/>
+    <property name="SLACK_USERNAME" value="${SLACK_USERNAME:-loopers-batch}"/>
+    <property name="SLACK_CHANNEL" value="${SLACK_CHANNEL:-#batch-alarm}"/>
+    <property name="SLACK_WEBHOOK_URI" value="${SLACK_WEBHOOK_URI:-}"/>
 </included>
