@@ -27,7 +27,7 @@ public class MonthlyRankingQueryEntity {
     @Column(name = "rank_position", nullable = false)
     private Integer rankPosition;
 
-    @Column(name = "total_score", nullable = false, precision = 10, scale = 2)
+    @Column(name = "total_score", nullable = false)
     private Double totalScore;
 
     @Column(name = "view_count", nullable = false)
