@@ -5,7 +5,6 @@ import com.loopers.batch.reader.ProductMetricsReader;
 import com.loopers.batch.tasklet.WeeklyRankingPersistenceTasklet;
 import com.loopers.config.BatchConfigProperties;
 import com.loopers.domain.entity.ProductMetrics;
-import com.loopers.monitoring.BatchPerformanceMonitor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
@@ -30,7 +29,6 @@ public class WeeklyRankingBatchJob {
     private final ProductMetricsReader productMetricsReader;
     private final WeeklyRankingProcessor weeklyRankingProcessor;
     private final WeeklyRankingPersistenceTasklet weeklyRankingPersistenceTasklet;
-    private final BatchPerformanceMonitor performanceMonitor;
 
     @Bean
     public Job weeklyRankingJob() {
@@ -47,7 +45,6 @@ public class WeeklyRankingBatchJob {
                 .reader(productMetricsReader)
                 .processor(weeklyRankingProcessor)
                 .writer(new ListItemWriter<>()) // null을 반환하므로 빈 Writer 사용
-                .listener(performanceMonitor)
                 .faultTolerant()
                 .skipLimit(batchConfigProperties.getSkipLimit())
                 .skip(Exception.class)
