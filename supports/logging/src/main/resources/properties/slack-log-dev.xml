@@ -1,6 +1,5 @@
 <included>
-    <property name="SLACK_USERNAME" value="maiorem00"/>
-    <property name="SLACK_CHANNEL" value="#batch-alarm"/>
-    <property name="SLACK_WEBHOOK_URI"
-              value="https://hooks.slack.com/services/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"/>
+    <property name="SLACK_USERNAME" value="${SLACK_USERNAME:-loopers-batch}"/>
+    <property name="SLACK_CHANNEL" value="${SLACK_CHANNEL:-#batch-alarm}"/>
+    <property name="SLACK_WEBHOOK_URI" value="${SLACK_WEBHOOK_URI:-}"/>
 </included>
