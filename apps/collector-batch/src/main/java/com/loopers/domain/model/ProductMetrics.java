@@ -38,4 +38,7 @@ public class ProductMetrics extends BaseEntity {
 
     @Column(name = "last_liked_at")
     private ZonedDateTime lastLikedAt;
+
+    @Column(name = "aggregate_date", nullable = false)
+    private ZonedDateTime aggregateDate;
 }

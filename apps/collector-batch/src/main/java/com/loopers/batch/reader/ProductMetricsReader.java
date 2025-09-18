@@ -40,10 +40,10 @@ public class ProductMetricsReader extends RepositoryItemReader<ProductMetrics> {
         ZonedDateTime startDateTime = startDate.atStartOfDay().atZone(java.time.ZoneId.systemDefault());
         ZonedDateTime endDateTime = endDate.plusDays(1).atStartOfDay().atZone(java.time.ZoneId.systemDefault());
 
-        log.info("ProductMetrics Reader 초기화 - 기간: {} ~ {}", startDateTime, endDateTime);
+        log.info("ProductMetrics Reader 초기화 - 집계 기간: {} ~ {}", startDateTime, endDateTime);
 
         setRepository(productMetricsJpaRepository);
-        setMethodName("findByUpdatedAtBetween");
+        setMethodName("findByAggregateDateBetween");
 
         setArguments(java.util.Arrays.asList(startDateTime, endDateTime));
 

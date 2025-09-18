@@ -37,25 +37,32 @@ public class ProductMetrics extends BaseEntity {
     @Column(name = "last_liked_at")
     private ZonedDateTime lastLikedAt;
 
+    @Column(name = "aggregate_date", nullable = false)
+    private ZonedDateTime aggregateDate;
+
     public static ProductMetrics of(Long productId) {
         ProductMetrics metrics = new ProductMetrics();
         metrics.productId = productId;
+        metrics.aggregateDate = ZonedDateTime.now(); // 생성 시점을 집계 기준일로 설정
         return metrics;
     }
 
     public void incrementViewCount(ZonedDateTime viewedAt) {
         this.viewCount++;
         this.lastViewedAt = viewedAt;
+        this.aggregateDate = ZonedDateTime.now(); // 메트릭 업데이트 시점으로 집계 기준일 갱신
     }
 
     public void updateLikeCount(Long newLikeCount, ZonedDateTime likedAt) {
         this.likeCount = newLikeCount;
         this.lastLikedAt = likedAt;
+        this.aggregateDate = ZonedDateTime.now(); // 메트릭 업데이트 시점으로 집계 기준일 갱신
     }
 
     public void incrementSalesCount(Long amount) {
         this.salesCount++;
         this.totalSalesAmount += amount;
+        this.aggregateDate = ZonedDateTime.now(); // 메트릭 업데이트 시점으로 집계 기준일 갱신
     }
 
 }

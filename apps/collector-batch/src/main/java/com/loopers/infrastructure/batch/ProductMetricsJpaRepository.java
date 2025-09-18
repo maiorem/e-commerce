@@ -12,5 +12,5 @@ import org.springframework.data.domain.Pageable;
 @Repository
 public interface ProductMetricsJpaRepository extends JpaRepository<ProductMetrics, Long> {
     Optional<ProductMetrics> findByProductId(Long productId);
-    Page<ProductMetrics> findByUpdatedAtBetween(ZonedDateTime startDate, ZonedDateTime endDate, Pageable pageable);
+    Page<ProductMetrics> findByAggregateDateBetween(ZonedDateTime startDate, ZonedDateTime endDate, Pageable pageable);
 }
