@@ -1,10 +1,14 @@
 package com.loopers.batch.tasklet;
 
+import com.loopers.domain.model.RankedProductScore;
 import com.loopers.domain.ranking.MonthlyProductRanking;
 import com.loopers.domain.repository.MonthlyProductRankingRepository;
 import com.loopers.domain.repository.RankingAggregationRepository;
+import com.loopers.domain.repository.ProductMetricsRepository;
+import com.loopers.domain.model.ProductMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -26,6 +30,7 @@ public class MonthlyRankingPersistenceTasklet implements Tasklet {
 
     private final RankingAggregationRepository rankingAggregationRepository;
     private final MonthlyProductRankingRepository monthlyProductRankingRepository;
+    private final ProductMetricsRepository productMetricsRepository;
 
     @Value("#{jobParameters['targetDate']}")
     private String targetDateParam;
@@ -47,7 +52,7 @@ public class MonthlyRankingPersistenceTasklet implements Tasklet {
         monthlyProductRankingRepository.deleteByYearAndMonth(year, month);
 
         // 2. Repository에서 TOP N 랭킹 조회
-        Set<RankingAggregationRepository.RankedProductScore> topRankings =
+        Set<RankedProductScore> topRankings =
             rankingAggregationRepository.getTopRankings(rankingKey, maxRankSize);
 
         if (topRankings.isEmpty()) {
@@ -55,35 +60,46 @@ public class MonthlyRankingPersistenceTasklet implements Tasklet {
             return RepeatStatus.FINISHED;
         }
 
-        // 3. MonthlyProductRanking 엔티티로 변환
         List<MonthlyProductRanking> rankings = new ArrayList<>();
         int rank = 1;
 
-        for (RankingAggregationRepository.RankedProductScore rankedScore : topRankings) {
+        for (RankedProductScore rankedScore : topRankings) {
             if (rankedScore.productId() != null && rankedScore.score() != null) {
-                MonthlyProductRanking ranking = MonthlyProductRanking.create(
-                    Long.parseLong(rankedScore.productId()),
-                    year,
-                    month,
-                    rank,
-                    rankedScore.score(),
-                    0L, 0L, 0L, 0L // Redis에는 세부 지표가 없으므로 0으로 설정
-                );
-                rankings.add(ranking);
-                rank++;
+                Long productId = Long.parseLong(rankedScore.productId());
+
+                ProductMetrics metrics = productMetricsRepository.findByProductId(productId)
+                    .orElse(null);
+
+                if (metrics != null) {
+                    MonthlyProductRanking ranking = MonthlyProductRanking.create(
+                        productId,
+                        year,
+                        month,
+                        rank,
+                        rankedScore.score(),
+                        metrics.getViewCount(),
+                        metrics.getLikeCount(),
+                        metrics.getSalesCount(),
+                        metrics.getTotalSalesAmount()
+                    );
+                    rankings.add(ranking);
+                    rank++;
+                } else {
+                    log.warn("ProductMetrics 조회 실패 - Product ID: {}", productId);
+                }
             }
         }
 
-        // 4. DB에 영속화
+        // 3. DB에 영속화
         monthlyProductRankingRepository.saveAllRankings(rankings);
 
-        // 5. Redis 임시 데이터 정리 (30일 후 만료)
+        // 4. Redis 임시 데이터 정리 (30일 후 만료)
         rankingAggregationRepository.setExpiration(rankingKey, 30);
 
         log.info("월간 랭킹 영속화 완료 - {}년 {}월, 저장된 랭킹 수: {}개",
                 year, month, rankings.size());
 
-        contribution.setExitStatus(org.springframework.batch.core.ExitStatus.COMPLETED);
+        contribution.setExitStatus(ExitStatus.COMPLETED);
         return RepeatStatus.FINISHED;
     }
 }

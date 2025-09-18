@@ -1,5 +1,7 @@
 package com.loopers.domain.repository;
 
+import com.loopers.domain.model.RankedProductScore;
+
 import java.util.Set;
 
 /**
@@ -26,9 +28,4 @@ public interface RankingAggregationRepository {
      * 임시 데이터 TTL 설정
      */
     void setExpiration(String rankingKey, long timeoutDays);
-
-    /**
-     * 랭킹된 상품 점수 정보
-     */
-    record RankedProductScore(String productId, Double score) {}
 }

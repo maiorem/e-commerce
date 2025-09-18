@@ -1,10 +1,14 @@
 package com.loopers.batch.tasklet;
 
+import com.loopers.domain.model.ProductMetrics;
+import com.loopers.domain.model.RankedProductScore;
 import com.loopers.domain.ranking.WeeklyProductRanking;
 import com.loopers.domain.repository.RankingAggregationRepository;
 import com.loopers.domain.repository.WeeklyProductRankingRepository;
+import com.loopers.domain.repository.ProductMetricsRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.batch.core.ExitStatus;
 import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
@@ -28,6 +32,7 @@ public class WeeklyRankingPersistenceTasklet implements Tasklet {
 
     private final RankingAggregationRepository rankingAggregationRepository;
     private final WeeklyProductRankingRepository weeklyProductRankingRepository;
+    private final ProductMetricsRepository productMetricsRepository;
 
     @Value("#{jobParameters['targetDate']}")
     private String targetDateParam;
@@ -50,7 +55,7 @@ public class WeeklyRankingPersistenceTasklet implements Tasklet {
         weeklyProductRankingRepository.deleteByWeekYearAndWeekNumber(weekYear, weekNumber);
 
         // 2. Repository에서 TOP N 랭킹 조회
-        Set<RankingAggregationRepository.RankedProductScore> topRankings =
+        Set<RankedProductScore> topRankings =
             rankingAggregationRepository.getTopRankings(rankingKey, maxRankSize);
 
         if (topRankings.isEmpty()) {
@@ -58,35 +63,46 @@ public class WeeklyRankingPersistenceTasklet implements Tasklet {
             return RepeatStatus.FINISHED;
         }
 
-        // 3. WeeklyProductRanking 엔티티로 변환
         List<WeeklyProductRanking> rankings = new ArrayList<>();
         int rank = 1;
 
-        for (RankingAggregationRepository.RankedProductScore rankedScore : topRankings) {
+        for (RankedProductScore rankedScore : topRankings) {
             if (rankedScore.productId() != null && rankedScore.score() != null) {
-                WeeklyProductRanking ranking = WeeklyProductRanking.create(
-                    Long.parseLong(rankedScore.productId()),
-                    weekYear,
-                    weekNumber,
-                    rank,
-                    rankedScore.score(),
-                    0L, 0L, 0L, 0L // Redis에는 세부 지표가 없으므로 0으로 설정
-                );
-                rankings.add(ranking);
-                rank++;
+                Long productId = Long.parseLong(rankedScore.productId());
+
+                ProductMetrics metrics = productMetricsRepository.findByProductId(productId)
+                    .orElse(null);
+
+                if (metrics != null) {
+                    WeeklyProductRanking ranking = WeeklyProductRanking.create(
+                        productId,
+                        weekYear,
+                        weekNumber,
+                        rank,
+                        rankedScore.score(),
+                        metrics.getViewCount(),
+                        metrics.getLikeCount(),
+                        metrics.getSalesCount(),
+                        metrics.getTotalSalesAmount()
+                    );
+                    rankings.add(ranking);
+                    rank++;
+                } else {
+                    log.warn("ProductMetrics 조회 실패 - Product ID: {}", productId);
+                }
             }
         }
 
-        // 4. DB에 영속화
+        // 3. DB 영속화
         weeklyProductRankingRepository.saveAllRankings(rankings);
 
-        // 5. Redis 임시 데이터 정리 (7일 후 만료)
+        // 4. 캐시 임시 데이터 정리 (7일 후 만료)
         rankingAggregationRepository.setExpiration(rankingKey, 7);
 
         log.info("주간 랭킹 영속화 완료 - {}년 {}주차, 저장된 랭킹 수: {}개",
                 weekYear, weekNumber, rankings.size());
 
-        contribution.setExitStatus(org.springframework.batch.core.ExitStatus.COMPLETED);
+        contribution.setExitStatus(ExitStatus.COMPLETED);
         return RepeatStatus.FINISHED;
     }
 }

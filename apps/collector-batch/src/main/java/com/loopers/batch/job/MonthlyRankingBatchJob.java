@@ -4,7 +4,7 @@ import com.loopers.batch.processor.MonthlyRankingProcessor;
 import com.loopers.batch.reader.ProductMetricsReader;
 import com.loopers.batch.tasklet.MonthlyRankingPersistenceTasklet;
 import com.loopers.config.BatchConfigProperties;
-import com.loopers.domain.entity.ProductMetrics;
+import com.loopers.domain.model.ProductMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;

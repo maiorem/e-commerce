@@ -1,16 +1,16 @@
 package com.loopers.infrastructure.batch;
 
-import com.loopers.domain.entity.ProductMetrics;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import com.loopers.domain.model.ProductMetrics;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.ZonedDateTime;
+import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface ProductMetricsJpaRepository extends JpaRepository<ProductMetrics, Long> {
-
-    Page<ProductMetrics> findByUpdatedAtBetween(ZonedDateTime start, ZonedDateTime end, Pageable pageable);
-
+    Optional<ProductMetrics> findByProductId(Long productId);
+    Page<ProductMetrics> findByUpdatedAtBetween(ZonedDateTime startDate, ZonedDateTime endDate, Pageable pageable);
 }

@@ -1,6 +1,6 @@
 package com.loopers.batch.processor;
 
-import com.loopers.domain.entity.ProductMetrics;
+import com.loopers.domain.model.ProductMetrics;
 import com.loopers.domain.ranking.ScoredProductMetrics;
 import com.loopers.domain.repository.RankingAggregationRepository;
 import lombok.RequiredArgsConstructor;

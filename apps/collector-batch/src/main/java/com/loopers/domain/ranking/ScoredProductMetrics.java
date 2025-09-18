@@ -1,6 +1,6 @@
 package com.loopers.domain.ranking;
 
-import com.loopers.domain.entity.ProductMetrics;
+import com.loopers.domain.model.ProductMetrics;
 
 public record ScoredProductMetrics(ProductMetrics metrics, ProductRankingScore score) {
 

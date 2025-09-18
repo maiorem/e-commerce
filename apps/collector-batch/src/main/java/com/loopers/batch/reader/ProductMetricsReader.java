@@ -1,7 +1,7 @@
 package com.loopers.batch.reader;
 
 import com.loopers.config.BatchConfigProperties;
-import com.loopers.domain.entity.ProductMetrics;
+import com.loopers.domain.model.ProductMetrics;
 import com.loopers.infrastructure.batch.ProductMetricsJpaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +23,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ProductMetricsReader extends RepositoryItemReader<ProductMetrics> {
 
-    // Spring Batch RepositoryItemReader requires Spring Data Repository directly
     private final ProductMetricsJpaRepository productMetricsJpaRepository;
     private final BatchConfigProperties batchConfigProperties;
 
