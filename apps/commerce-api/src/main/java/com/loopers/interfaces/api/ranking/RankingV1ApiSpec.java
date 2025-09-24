@@ -13,12 +13,15 @@ import java.time.LocalDate;
 public interface RankingV1ApiSpec {
 
     @Operation(
-            summary = "일간 상품 랭킹 조회",
-            description = "특정 날짜의 상품 랭킹을 페이지네이션으로 조회합니다."
+            summary = "상품 랭킹 조회",
+            description = "특정 날짜의 상품 랭킹을 기간별(일간/주간/월간)로 페이지네이션하여 조회합니다."
     )
     ApiResponse<RankingV1Dto.RankingPageResponse> getRankings(
             @Parameter(description = "조회할 날짜 (yyyyMMdd 형식)", required = true, example = "20231215")
             @RequestParam(name = "date") @DateTimeFormat(pattern = "yyyyMMdd") LocalDate date,
+            
+            @Parameter(description = "랭킹 기간 (daily: 일간, weekly: 주간, monthly: 월간)", example = "daily")
+            @RequestParam(name = "period", defaultValue = "daily") String period,
             
             @Parameter(description = "페이지당 항목 수 (1-100, 기본값: 20)", example = "20")
             @RequestParam(name = "size", defaultValue = "20") int size,

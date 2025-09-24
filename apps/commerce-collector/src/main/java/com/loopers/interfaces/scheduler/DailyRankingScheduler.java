@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class RankingScheduler {
+public class DailyRankingScheduler {
 
     private final RankingCacheService rankingCacheService;
 
@@ -26,7 +26,7 @@ public class RankingScheduler {
     }
 
     /**
-     * 매일 23시 50분에 전날의 랭킹 데이터를 다음날 랭킹으로 이월. (콜드 스타트 대비)
+     * 매일 23시 50분에 전날의 랭킹 데이터를 다음날 랭킹으로 이월.
      */
     @Scheduled(cron = "0 50 23 * * ?")
     public void carryOverRankingScores() {
